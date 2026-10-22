@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Placeholder surface until the user's design direction lands (plan S8). */
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}

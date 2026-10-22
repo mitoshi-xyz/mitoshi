@@ -1,0 +1,36 @@
+# Agent research, notes and prompts stay out of git
+context/
+.firecrawl/
+codex-*.md
+.claude/
+
+# OS / editors
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Node / builds
+node_modules/
+.pnpm-store/
+.turbo/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Rust
+target/
+
+# Cloudflare
+.wrangler/
+
+# Secrets and local state (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.sqlite
+*.sqlite-journal
