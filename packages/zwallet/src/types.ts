@@ -53,7 +53,7 @@ export interface SyncProgress {
 /** Messages from the main thread to the wallet worker. */
 export type Request =
   | { id: number; kind: "open"; network: Network; lwd: string; wasmUrl: string; saved?: Uint8Array }
-  | { id: number; kind: "create"; seedHex: string }
+  | { id: number; kind: "create"; seedHex: string; birthday?: number }
   | { id: number; kind: "sync" }
   | { id: number; kind: "summary" }
   | { id: number; kind: "freshAddress" }

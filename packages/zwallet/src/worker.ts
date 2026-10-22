@@ -38,7 +38,7 @@ async function handle(req: Request): Promise<unknown> {
     }
     case "create": {
       const w = ready();
-      const birthday = await createAccount(w.core, w.lwd, req.seedHex);
+      const birthday = await createAccount(w.core, w.lwd, req.seedHex, req.birthday);
       persist();
       return { birthday };
     }

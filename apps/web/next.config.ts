@@ -9,6 +9,7 @@ const config: NextConfig = {
   poweredByHeader: false,
   devIndicators: false,
   images: { unoptimized: true },
+  transpilePackages: ["@mitoshi/zwallet"],
   output: "export",
 };
 

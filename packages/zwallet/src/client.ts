@@ -51,8 +51,8 @@ export class WalletClient {
     );
   }
 
-  create(seedHex: string): Promise<{ birthday: number }> {
-    return this.request({ kind: "create", seedHex });
+  create(seedHex: string, birthday?: number): Promise<{ birthday: number }> {
+    return this.request(birthday === undefined ? { kind: "create", seedHex } : { kind: "create", seedHex, birthday });
   }
 
   sync(): Promise<Summary> {

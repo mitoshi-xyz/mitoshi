@@ -37,12 +37,14 @@ export class Lwd {
   }
 }
 
-/** Creates the account with a birthday just below the tip. */
-export async function createAccount(core: CoreModule, lwd: Lwd, seedHex: string): Promise<number> {
-  const tip = await lwd.tip();
-  const prior = await lwd.treeState(tip - BIRTHDAY_LOOKBACK_BLOCKS - 1);
-  const { birthday } = core.call<{ birthday: number }>("createAccount", { seed: seedHex }, prior);
-  return birthday;
+/**
+ * Creates the account. A new wallet's birthday is just below the tip; a restored wallet passes the
+ * height to start scanning from.
+ */
+export async function createAccount(core: CoreModule, lwd: Lwd, seedHex: string, birthday?: number): Promise<number> {
+  const start = birthday ?? (await lwd.tip()) - BIRTHDAY_LOOKBACK_BLOCKS;
+  const prior = await lwd.treeState(start - 1);
+  return core.call<{ birthday: number }>("createAccount", { seed: seedHex }, prior).birthday;
 }
 
 /**
