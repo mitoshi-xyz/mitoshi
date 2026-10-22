@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import type { ReactNode } from "react";
 import { THEME_INIT } from "@/features/theme/theme";
 import { fontVariables } from "@/lib/fonts";
@@ -24,12 +23,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-theme="dark" className={fontVariables} suppressHydrationWarning>
-      <body>
-        <Script id="mitoshi-theme" strategy="beforeInteractive">
-          {THEME_INIT}
-        </Script>
-        {children}
-      </body>
+      <head>
+        {/* A plain inline script, so it is in the HTML verbatim and the CSP allows it by hash (scripts/headers.mjs);
+            it sets the theme before the first paint. */}
+        <script id="mitoshi-theme" dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

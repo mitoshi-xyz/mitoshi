@@ -6,8 +6,14 @@ export const RELAY =
   process.env.NEXT_PUBLIC_RELAY ??
   (process.env.NODE_ENV === "development" ? "https://mitoshi-web.kakure-price-relay.workers.dev/relay" : "/relay");
 
-/** Zcash network the app runs on. Development uses testnet; production is mainnet. */
-export const ZEC_NETWORK: "main" | "test" = process.env.NEXT_PUBLIC_ZEC_NETWORK === "main" ? "main" : "test";
+/**
+ * Zcash network the app runs on. A production build is mainnet and development is testnet, unless
+ * NEXT_PUBLIC_ZEC_NETWORK says otherwise (`dev:main` runs mainnet locally).
+ */
+export const ZEC_NETWORK: "main" | "test" =
+  (process.env.NEXT_PUBLIC_ZEC_NETWORK ?? (process.env.NODE_ENV === "production" ? "main" : "test")) === "main"
+    ? "main"
+    : "test";
 
 /** How often an open wallet checks for new blocks. */
 export const WALLET_SYNC_INTERVAL_MS = 30_000;
