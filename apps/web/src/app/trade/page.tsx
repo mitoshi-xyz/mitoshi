@@ -5,7 +5,7 @@ import { Terminal } from "@/features/trade/terminal";
 
 export default function TradePage() {
   return (
-    <AppShell wide>
+    <AppShell bleed>
       <Terminal />
     </AppShell>
   );

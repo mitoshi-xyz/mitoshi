@@ -6,7 +6,16 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!context", "!**/generated", "!**/rust", "!**/fixtures/*.json"]
+    "includes": [
+      "**",
+      "!context",
+      "!**/generated",
+      "!**/rust",
+      "!**/fixtures/*.json",
+      "!**/public/marks",
+      "!**/scripts/venues",
+      "!**/*.generated.ts"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -75,5 +84,10 @@
         }
       }
     }
-  ]
+  ],
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
 }

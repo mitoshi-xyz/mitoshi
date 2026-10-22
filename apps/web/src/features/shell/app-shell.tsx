@@ -1,49 +1,82 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { type ReactNode, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { type ReactNode, useEffect, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
 import { startJobs } from "../private-wallets/jobs";
 import { loadRegistry } from "../private-wallets/registry-store";
 import { bootWallet } from "../wallet/wallet-store";
-
-const LINKS = [
-  { href: "/markets", label: "Markets" },
-  { href: "/wallet", label: "Balance" },
-  { href: "/wallets", label: "Private wallets" },
-] as const;
+import { Dock } from "./dock";
+import { More } from "./more";
+import { Palette } from "./palette";
+import { PLACES } from "./places";
+import { Rail } from "./rail";
+import { TopLine } from "./top-line";
 
 /** One query cache for the whole app (markets, accounts), kept across screens. */
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
-/** The app frame: navigation, the network badge, and the engine boot shared by every screen. */
-export function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
-  const path = usePathname();
+const typing = (e: KeyboardEvent) => {
+  const t = e.target as HTMLElement | null;
+  return t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || t?.isContentEditable === true;
+};
+
+/**
+ * The app frame: the floating rail, the top line, one framed stage, the phone dock, More and ⌘K. It also boots
+ * the wallet engine and the private-wallet jobs once, and keeps keys 1–6 and ⌘K / "/" working everywhere.
+ */
+export function AppShell({ children, bleed = false }: { children: ReactNode; bleed?: boolean; wide?: boolean }) {
+  const router = useRouter();
+  const [palette, setPalette] = useState(false);
+  const [more, setMore] = useState(false);
+
   useEffect(() => {
+    document.documentElement.dataset.network = ZEC_NETWORK;
     void bootWallet();
     void loadRegistry().then(startJobs);
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPalette((p) => !p);
+        return;
+      }
+      if (typing(e) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "/") {
+        e.preventDefault();
+        setPalette(true);
+        return;
+      }
+      const place = PLACES.find((p) => p.key === e.key);
+      if (place) router.push(place.href);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <main className={`mx-auto flex min-h-dvh flex-col gap-6 px-4 py-8 sm:px-6 ${wide ? "max-w-6xl" : "max-w-xl"}`}>
-        <header className="flex items-center justify-between gap-4">
-          <nav className="flex gap-4">
-            {LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={path.startsWith(l.href) ? "font-semibold" : "opacity-60 hover:opacity-100"}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-          <span className="text-xs opacity-60">{ZEC_NETWORK === "main" ? "Zcash mainnet" : "Zcash testnet"}</span>
-        </header>
-        {children}
-      </main>
+      <div className="mt-shell">
+        <a
+          href="#main"
+          className="fixed top-2 left-2 z-[var(--z-skip)] -translate-y-[200%] rounded-full bg-accent px-4 py-2 font-bold text-accent-ink text-sm focus-visible:translate-y-0"
+        >
+          Skip to content
+        </a>
+        <Rail />
+        <div className="mt-column">
+          <TopLine onSearch={() => setPalette(true)} />
+          <main id="main" tabIndex={-1} className="mt-stage" data-bleed={bleed ? "" : undefined}>
+            {children}
+          </main>
+        </div>
+        <Dock onMore={() => setMore(true)} />
+        <More open={more} onClose={() => setMore(false)} />
+        <Palette open={palette} onClose={() => setPalette(false)} />
+      </div>
     </QueryClientProvider>
   );
 }

@@ -5,7 +5,7 @@ import { AppShell } from "@/features/shell/app-shell";
 
 export default function EventPage() {
   return (
-    <AppShell wide>
+    <AppShell>
       <EventView />
     </AppShell>
   );

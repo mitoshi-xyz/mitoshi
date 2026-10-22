@@ -5,7 +5,7 @@ import { TokenView } from "@/features/solana/token-view";
 
 export default function TokenPage() {
   return (
-    <AppShell wide>
+    <AppShell>
       <TokenView />
     </AppShell>
   );

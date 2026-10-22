@@ -5,7 +5,7 @@ import { AppShell } from "@/features/shell/app-shell";
 
 export default function MarketsPage() {
   return (
-    <AppShell wide>
+    <AppShell>
       <MarketsView />
     </AppShell>
   );

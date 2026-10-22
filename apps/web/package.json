@@ -6,7 +6,8 @@
     "dev": "next dev --port 3300",
     "build": "next build && node scripts/headers.mjs",
     "typecheck": "next typegen && tsc --noEmit",
-    "dev:main": "NEXT_PUBLIC_ZEC_NETWORK=main NEXT_DIST_DIR=.next-main next dev --port 3301"
+    "dev:main": "NEXT_PUBLIC_ZEC_NETWORK=main NEXT_DIST_DIR=.next-main next dev --port 3301",
+    "marks": "node scripts/marks.mjs"
   },
   "dependencies": {
     "@mitoshi/chart": "workspace:*",
@@ -15,8 +16,11 @@
     "@mitoshi/rails": "workspace:*",
     "@mitoshi/venues": "workspace:*",
     "@mitoshi/zwallet": "workspace:*",
+    "@number-flow/react": "catalog:",
     "@scure/bip39": "2.4.0",
     "@tanstack/react-query": "catalog:",
+    "lucide-react": "catalog:",
+    "motion": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -27,6 +31,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@web3icons/core": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   }

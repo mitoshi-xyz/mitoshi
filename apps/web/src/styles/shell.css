@@ -1,0 +1,177 @@
+/*
+ * The app shell's geometry (Mitoshi's AppShell, as Kakure runs it): a floating rail, one framed stage, a phone dock.
+ * Breakpoints: dock < 768 px <= 88 px icon rail < 1280 px <= 248 px rail.
+ */
+:root {
+  --inset: 16px;
+  --rail-compact: 88px;
+  --rail-wide: 248px;
+  --nav-item: 48px;
+  --nav-gap: 10px;
+  --dock-h: 64px;
+}
+
+.mt-shell {
+  min-height: 100dvh;
+  background: var(--canvas);
+}
+
+.mt-rail {
+  display: none;
+}
+@media (min-width: 768px) {
+  .mt-rail {
+    position: fixed;
+    inset: var(--inset) auto var(--inset) var(--inset);
+    z-index: var(--z-chrome);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    width: var(--rail-compact);
+    padding: 22px 12px;
+    border-radius: var(--radius-rail);
+    background: var(--rail);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+}
+@media (min-width: 1280px) {
+  .mt-rail {
+    width: var(--rail-wide);
+    padding: 22px;
+  }
+}
+
+.mt-column {
+  display: flex;
+  min-width: 0;
+  min-height: 100dvh;
+  flex-direction: column;
+  padding: 0 12px calc(var(--dock-h) + 28px);
+}
+@media (min-width: 768px) {
+  .mt-column {
+    padding: 0 var(--inset) var(--inset) calc(var(--rail-compact) + var(--inset) * 2);
+  }
+}
+@media (min-width: 1280px) {
+  .mt-column {
+    padding-left: calc(var(--rail-wide) + var(--inset) * 2);
+  }
+}
+
+.mt-stage {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  border: 2px solid var(--stage-edge);
+  border-radius: var(--radius-xl);
+  background: var(--stage);
+}
+@media (min-width: 768px) {
+  .mt-stage {
+    padding: 24px;
+  }
+}
+@media (min-width: 1280px) {
+  .mt-stage {
+    padding: 32px;
+  }
+}
+/* The terminal fills the stage edge to edge. */
+.mt-stage[data-bleed] {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Places: 48 px rows, one active pill that slides between them. */
+.mt-nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nav-gap);
+}
+.mt-nav-pill {
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--nav-item);
+  border-radius: 24px;
+  background: var(--rail-active);
+  transform: translateY(calc(var(--i, 0) * (var(--nav-item) + var(--nav-gap))));
+  transition:
+    transform var(--dur-pill) var(--ease-out),
+    opacity var(--dur-state) var(--ease-out);
+}
+.mt-nav-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: var(--nav-item);
+  padding: 0 12px;
+  border-radius: 24px;
+  color: color-mix(in srgb, var(--ink) 78%, transparent);
+  font: 600 16px / 24px var(--font-sans);
+  letter-spacing: -0.01em;
+  transition:
+    background-color var(--dur-hover) var(--ease-out),
+    color var(--dur-hover) var(--ease-out);
+}
+.mt-nav-item:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--rail-active) 45%, transparent);
+}
+.mt-nav-item[aria-current="page"] {
+  color: var(--ink);
+  background: transparent;
+}
+.mt-nav-label,
+.mt-nav-key,
+.mt-wide {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .mt-nav-item {
+    justify-content: flex-start;
+  }
+  .mt-nav-label,
+  .mt-wide {
+    display: inline;
+  }
+  .mt-nav-key {
+    display: inline;
+    margin-left: auto;
+    color: var(--muted);
+    font: 500 12px / 1 var(--font-mono);
+    opacity: 0;
+    transition: opacity var(--dur-hover);
+  }
+  .mt-nav-item:hover .mt-nav-key {
+    opacity: 1;
+  }
+  .mt-narrow {
+    display: none;
+  }
+}
+
+/* The phone dock: a floating capsule with the seal in the middle. */
+.mt-dock {
+  position: fixed;
+  inset: auto 12px max(12px, env(safe-area-inset-bottom)) 12px;
+  z-index: var(--z-chrome);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: var(--dock-h);
+  padding: 0 8px;
+  border-radius: 32px;
+  background: color-mix(in srgb, var(--rail) 92%, transparent);
+  backdrop-filter: blur(16px);
+}
+@media (min-width: 768px) {
+  .mt-dock {
+    display: none;
+  }
+}
