@@ -16,9 +16,11 @@ import {
 } from "@mitoshi/engine";
 import { ASSETS, type AssetKey, formatUnits, type QuoteResponse } from "@mitoshi/rails";
 import { ZEC_NETWORK } from "@/constants";
+import { toast } from "@/kit";
 import { deviceSeed, freshAddress, previewSend, refreshWallet, send, walletState } from "../wallet/wallet-store";
 import { currentRegistry, mutate, putWallet, walletById } from "./registry-store";
 import { oneclick, quote, withSwap } from "./swaps";
+import { VENUES } from "./venues";
 
 export { confidentialSwaps } from "./swaps";
 
@@ -218,21 +220,49 @@ async function poll(id: string) {
       : {}),
     ...(st.swapDetails.refundedAmount ? { refundedAmount: st.swapDetails.refundedAmount } : {}),
   });
+  const venue = VENUES[w.venue];
   if (kind === "fund") {
-    if (st.status === "SUCCESS") next = advance(next, "ready", now, arrivedNote(w, st.swapDetails.amountOut));
+    if (st.status === "SUCCESS") {
+      next = advance(next, "ready", now, arrivedNote(w, st.swapDetails.amountOut));
+      toast({
+        tone: "up",
+        title: `Your ${venue.name} wallet is ready`,
+        body: arrivedNote(w, st.swapDetails.amountOut),
+        action: { label: venue.trade.label, href: venue.trade.href },
+      });
+    }
     if (st.status === "REFUNDED") {
       next = advance(next, "refunded", now, "NEAR refunded the swap; the ZEC is back in your balance (resting)");
+      toast({
+        tone: "info",
+        title: "NEAR refunded a funding",
+        body: "The ZEC is back in your balance, resting 2–6 h.",
+      });
       void refreshWallet();
     }
-    if (st.status === "FAILED") next = advance(next, "failed", now, "NEAR could not complete the swap");
+    if (st.status === "FAILED") {
+      next = advance(next, "failed", now, "NEAR could not complete the swap");
+      toast({ tone: "down", title: `A ${venue.name} funding stopped`, action: { label: "See it", href: "/wallets" } });
+    }
     if (st.status === "PENDING_DEPOSIT" && !swap.depositTx && Date.parse(swap.deadline) < now) {
       next = advance(next, "failed", now, "The deposit was never sent");
     }
   } else if (st.status === "SUCCESS") {
     next = advance(next, "retired", now, "Home: the ZEC is back in your balance (resting)");
+    toast({
+      tone: "up",
+      title: `Home from ${venue.name}`,
+      body: "The ZEC is back in your shielded balance, resting 2–6 h.",
+      action: { label: "Balance", href: "/wallet" },
+    });
     void refreshWallet();
   } else if (st.status === "REFUNDED" || st.status === "FAILED") {
     next = advance(next, "failed", now, "The trip home was refunded to the wallet; try again");
+    toast({
+      tone: "down",
+      title: `The trip home from ${venue.name} was refunded`,
+      action: { label: "Try again", href: "/wallets" },
+    });
   }
   putWallet(next);
 }

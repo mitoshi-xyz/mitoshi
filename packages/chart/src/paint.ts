@@ -80,6 +80,12 @@ export function paintAxis(
   }
 }
 
+/** How wide the axis must be for a price label (the pill's bold text, its padding and gap). */
+export function axisWidthFor(ctx: CanvasRenderingContext2D, colors: Colors, text: string): number {
+  ctx.font = `600 ${AXIS_FONT}px ${colors.mono}`;
+  return Math.ceil(ctx.measureText(text).width + 2 * PILL_PAD + PILL_GAP + AXIS_GAP);
+}
+
 /** A price riding the axis on a rounded pill. */
 export function paintPill(
   ctx: CanvasRenderingContext2D,

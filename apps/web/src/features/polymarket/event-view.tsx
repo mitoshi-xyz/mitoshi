@@ -52,7 +52,7 @@ export function EventView() {
     return (
       <div className="flex flex-col gap-4">
         <Skeleton className="h-16 w-2/3" label="Loading the event" />
-        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
           <Skeleton className="h-96 rounded-xl" />
           <Skeleton className="h-96 rounded-xl" />
         </div>
@@ -94,7 +94,7 @@ export function EventView() {
         </div>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-5">
           <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface-1 p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">

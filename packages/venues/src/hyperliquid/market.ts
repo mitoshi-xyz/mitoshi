@@ -120,4 +120,13 @@ export class HyperliquidMarket {
       firstSeen: times.length ? Math.min(...times) : null,
     };
   }
+
+  /** An account's profit and loss over the last 24 hours, from Hyperliquid's own portfolio record. */
+  async dayPnl(user: `0x${string}`): Promise<number> {
+    const periods = await this.info.portfolio({ user });
+    const day = periods.find(([period]) => period === "day")?.[1].pnlHistory ?? [];
+    const first = day[0];
+    const last = day.at(-1);
+    return first && last ? Number(last[1]) - Number(first[1]) : 0;
+  }
 }

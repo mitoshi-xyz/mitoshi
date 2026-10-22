@@ -51,7 +51,7 @@ export function MarketsHero() {
   }, [coin]);
 
   return (
-    <section className="grid overflow-hidden rounded-xl border border-hairline bg-surface-1 lg:grid-cols-[1fr_320px]">
+    <section className="grid grid-cols-[minmax(0,1fr)] overflow-hidden rounded-xl border border-hairline bg-surface-1 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="relative flex min-h-[300px] flex-col">
         <div className="flex flex-wrap items-center justify-between gap-3 p-4">
           <div className="flex items-center gap-3">

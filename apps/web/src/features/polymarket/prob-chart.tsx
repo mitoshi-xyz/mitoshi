@@ -3,6 +3,7 @@
 import { MarketChart } from "@mitoshi/chart";
 import { HISTORY, type HistoryRange } from "@mitoshi/venues/polymarket";
 import { useEffect, useRef, useState } from "react";
+import { ChartLoading } from "@/kit";
 import { pmMarket } from "./pm";
 
 const PCT = 100;
@@ -79,13 +80,7 @@ export function ProbabilityChart({
       </div>
       <div className="relative h-72">
         <div ref={box} className="absolute inset-0" />
-        {load === "loading" ? (
-          <div
-            role="status"
-            aria-label="Loading the chart"
-            className="absolute inset-0 rounded-lg bg-surface-2/50 [animation:mt-pulse_1200ms_var(--ease)_infinite]"
-          />
-        ) : null}
+        {load === "loading" ? <ChartLoading verb="Loading the odds history, privately" /> : null}
         {load === "error" ? (
           <p className="absolute inset-0 flex items-center justify-center text-down text-sm">
             Could not load the history. Pick another range to retry.

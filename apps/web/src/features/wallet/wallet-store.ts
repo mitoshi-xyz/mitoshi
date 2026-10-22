@@ -9,14 +9,17 @@ import {
   type Summary,
   type SyncProgress,
   WalletClient,
+  ZAT_PER_ZEC,
 } from "@mitoshi/zwallet";
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { useSyncExternalStore } from "react";
 import { IRONWOOD_ACTIVATION, RELAY, WALLET_SYNC_INTERVAL_MS, ZEC_NETWORK } from "@/constants";
-import { vaultGet, vaultPut } from "../vault/vault";
+import { toast } from "@/kit";
+import { currentRegistry } from "../private-wallets/registry-store";
+import { vaultGet, vaultLockState, vaultPut } from "../vault/vault";
 
-export type WalletPhase = "idle" | "loading" | "empty" | "creating" | "syncing" | "ready" | "error";
+export type WalletPhase = "idle" | "loading" | "locked" | "empty" | "creating" | "syncing" | "ready" | "error";
 
 /** What creating a wallet is doing right now: saving the words, then making the account. */
 export type CreatingStep = "vault" | "account";
@@ -136,6 +139,38 @@ async function applyRest(c: WalletClient, tip: number) {
   return { notes, restingUntil: soonest?.until ?? null, restingFrom: soonest?.from ?? null };
 }
 
+const ZEC_DIGITS = 8;
+const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
+const fmt = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
+
+/**
+ * Toasts for what a sync turned up: a deposit that arrived, a withdrawal that confirmed. Money
+ * moved by private wallets (fundings, trips home) is announced by their own jobs instead.
+ */
+function announce(before: HistoryEntry[], after: HistoryEntry[]) {
+  const seen = new Map(before.map((h) => [h.txid, h]));
+  const swaps = currentRegistry().wallets.flatMap((w) => w.swaps);
+  const ours = (txid: string) => swaps.some((s) => s.depositTx === txid || s.settledTx === txid);
+  for (const h of after) {
+    if (h.internal || ours(h.txid)) continue;
+    const old = seen.get(h.txid);
+    if (!old && h.delta > 0) {
+      toast({
+        tone: "up",
+        title: `Deposit arrived: +${fmt(h.delta)} ${UNIT}`,
+        body: h.fromPublic ? "From a public address: it rests 2–6 h first." : "Shielded. It confirms in a block.",
+        action: { label: "Balance", href: "/wallet" },
+      });
+    } else if (old && old.minedHeight === null && h.minedHeight !== null && h.delta < 0) {
+      toast({
+        tone: "up",
+        title: `Withdrawal confirmed: ${fmt(-h.delta)} ${UNIT}`,
+        action: { label: "Receipt", href: "/wallet" },
+      });
+    }
+  }
+}
+
 function fail(e: unknown) {
   set({ phase: "error", error: e instanceof Error ? e.message : String(e) });
 }
@@ -156,6 +191,7 @@ async function sync() {
       summary = await c.summary();
     }
     const history = await c.history();
+    if (state.syncedAt !== null) announce(state.history, history);
     set({ phase: "ready", summary, progress: null, syncError: null, syncedAt: Date.now(), history, ...rest });
   } catch (e) {
     // A failed sync is not a broken wallet: keep what we know and let the next round retry.
@@ -170,9 +206,15 @@ function startSyncing() {
 
 /** Opens the wallet engine with whatever this device has saved. Safe to call more than once. */
 export async function bootWallet() {
-  if (state.phase !== "idle") return;
+  if (state.phase !== "idle" && state.phase !== "locked") return;
   set({ phase: "loading" });
   try {
+    // A passphrase-locked vault opens nothing until it is unlocked (the engine included).
+    const lock = await vaultLockState();
+    if (lock.lockOn && !lock.unlocked) {
+      set({ phase: "locked" });
+      return;
+    }
     client = new WalletClient({
       onProgress: (progress) => set({ progress }),
       onLoad: (engine) => set({ engine }),

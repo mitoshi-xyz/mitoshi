@@ -4,10 +4,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
+import { primeFeedback, Toaster } from "@/kit";
 import { WalletDrawers } from "../private-wallets/drawers";
 import { startJobs } from "../private-wallets/jobs";
 import { loadRegistry } from "../private-wallets/registry-store";
-import { bootWallet } from "../wallet/wallet-store";
+import { LockScreen } from "../vault/lock-screen";
+import { bootWallet, useWallet } from "../wallet/wallet-store";
 import { Dock } from "./dock";
 import { More } from "./more";
 import { Palette } from "./palette";
@@ -31,11 +33,14 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
   const router = useRouter();
   const [palette, setPalette] = useState(false);
   const [more, setMore] = useState(false);
+  const wallet = useWallet();
 
   useEffect(() => {
     document.documentElement.dataset.network = ZEC_NETWORK;
+    primeFeedback();
     void bootWallet();
-    void loadRegistry().then(startJobs);
+    // A locked vault refuses the read; the lock screen loads the registry once it opens.
+    loadRegistry().then(startJobs, () => undefined);
   }, []);
 
   useEffect(() => {
@@ -70,14 +75,20 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         <Rail />
         <div className="mt-column">
           <TopLine onSearch={() => setPalette(true)} />
-          <main id="main" tabIndex={-1} className="mt-stage" data-bleed={bleed ? "" : undefined}>
-            {children}
+          <main
+            id="main"
+            tabIndex={-1}
+            className="mt-stage"
+            data-bleed={bleed && wallet.phase !== "locked" ? "" : undefined}
+          >
+            {wallet.phase === "locked" ? <LockScreen /> : children}
           </main>
         </div>
         <Dock onMore={() => setMore(true)} />
         <More open={more} onClose={() => setMore(false)} />
         <Palette open={palette} onClose={() => setPalette(false)} />
         <WalletDrawers />
+        <Toaster />
       </div>
     </QueryClientProvider>
   );

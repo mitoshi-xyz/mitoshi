@@ -1,4 +1,18 @@
-import { CandlestickChart, Coins, LayoutGrid, type LucideIcon, ShieldCheck, Target, WalletCards } from "lucide-react";
+import {
+  Activity,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  CandlestickChart,
+  ChartPie,
+  Coins,
+  EyeOff,
+  LayoutGrid,
+  type LucideIcon,
+  Settings,
+  ShieldCheck,
+  Target,
+  WalletCards,
+} from "lucide-react";
 
 export interface Place {
   id: string;
@@ -52,22 +66,76 @@ export const PLACES: readonly Place[] = [
     paths: ["/tokens", "/token"],
   },
   {
+    id: "portfolio",
+    name: "Portfolio",
+    href: "/portfolio",
+    key: "5",
+    icon: ChartPie,
+    description: "Every position on every venue, in one private view.",
+    paths: ["/portfolio"],
+  },
+  {
     id: "wallets",
     name: "Wallets",
     href: "/wallets",
-    key: "5",
+    key: "6",
     icon: WalletCards,
     description: "Your private wallets: one per trade, never linked.",
     paths: ["/wallets"],
   },
+];
+
+export interface Page {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  description: string;
+  group: "money" | "mitoshi";
+}
+
+/** Pages off the rail: in More, and in ⌘K. */
+export const PAGES: readonly Page[] = [
   {
-    id: "balance",
     name: "Balance",
     href: "/wallet",
-    key: "6",
     icon: ShieldCheck,
-    description: "Your shielded ZEC: deposit, withdraw, history.",
-    paths: ["/wallet"],
+    description: "Your shielded ZEC and its history.",
+    group: "money",
+  },
+  {
+    name: "Deposit",
+    href: "/wallet#deposit",
+    icon: ArrowDownToLine,
+    description: "A fresh shielded address.",
+    group: "money",
+  },
+  {
+    name: "Withdraw",
+    href: "/wallet#withdraw",
+    icon: ArrowUpFromLine,
+    description: "Send ZEC out, with the leak meter.",
+    group: "money",
+  },
+  {
+    name: "Privacy",
+    href: "/privacy",
+    icon: EyeOff,
+    description: "Who sees what, and what the public sees.",
+    group: "mitoshi",
+  },
+  {
+    name: "Settings",
+    href: "/settings",
+    icon: Settings,
+    description: "Backup, lock, keep ready, sounds, Forget.",
+    group: "mitoshi",
+  },
+  {
+    name: "Status",
+    href: "/settings#status",
+    icon: Activity,
+    description: "Every party on the private path, live.",
+    group: "mitoshi",
   },
 ];
 

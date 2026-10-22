@@ -16,6 +16,7 @@ node_modules/
 .turbo/
 .next/
 .next-main/
+.next-*/
 out/
 dist/
 coverage/

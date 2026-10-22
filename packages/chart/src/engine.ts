@@ -40,7 +40,8 @@ import {
   WATERMARK_SIZE,
   ZOOM_STEP,
 } from "./constants";
-import { paintAxis, paintDots, paintLevels, paintPill, paintWatermark } from "./paint";
+import { attachPointer, watchBox } from "./input";
+import { axisWidthFor, paintAxis, paintDots, paintLevels, paintPill, paintWatermark } from "./paint";
 import { type Frame, paintCandles, paintCrosshair, paintHistoryLine, paintTimeLabels } from "./paint-history";
 import { type Point, paintGuide, paintHead, paintLiveLine } from "./paint-live";
 import type { Bar, ChartMode, ChartOptions, Levels } from "./types";
@@ -165,62 +166,46 @@ export class MarketChart {
   // ── plumbing ──
 
   private listen() {
-    const ro = new ResizeObserver(() => this.resize());
-    ro.observe(this.box);
-    const io = new IntersectionObserver(([e]) => {
-      this.visible = Boolean(e?.isIntersecting);
-    });
-    io.observe(this.box);
-    const theme = new MutationObserver(() => {
-      this.colors = readColors();
-      this.dirty = true;
-    });
-    theme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-network"] });
-    const move = (e: PointerEvent) => {
-      const r = this.canvas.getBoundingClientRect();
-      const x = e.clientX - r.left;
-      this.hover = { x, y: e.clientY - r.top };
-      if (this.drag && this.mode !== "live") {
-        const spacing = this.plotW() / this.count;
-        const maxOffset = Math.max(0, this.bars.length - MIN_BARS);
-        this.offset = Math.min(maxOffset, Math.max(0, this.drag.offset + (x - this.drag.x) / spacing));
-      }
-      this.dirty = true;
-    };
-    const down = (e: PointerEvent) => {
-      const r = this.canvas.getBoundingClientRect();
-      this.drag = { x: e.clientX - r.left, offset: this.offset };
-      this.canvas.setPointerCapture(e.pointerId);
-    };
-    const up = () => {
-      this.drag = null;
-    };
-    const leave = () => {
-      this.hover = null;
-      this.dirty = true;
-    };
-    const wheel = (e: WheelEvent) => {
-      if (this.mode === "live") return;
-      e.preventDefault();
-      const next = e.deltaY > 0 ? this.count * ZOOM_STEP : this.count / ZOOM_STEP;
-      this.count = Math.round(Math.min(MAX_BARS, Math.max(MIN_BARS, next)));
-      this.yLo = Number.NaN;
-      this.dirty = true;
-    };
-    this.canvas.addEventListener("pointermove", move);
-    this.canvas.addEventListener("pointerdown", down);
-    this.canvas.addEventListener("pointerup", up);
-    this.canvas.addEventListener("pointerleave", leave);
-    this.canvas.addEventListener("wheel", wheel, { passive: false });
-    const vis = () => {
-      this.dirty = true;
-    };
-    document.addEventListener("visibilitychange", vis);
     this.cleanups.push(
-      () => ro.disconnect(),
-      () => io.disconnect(),
-      () => theme.disconnect(),
-      () => document.removeEventListener("visibilitychange", vis),
+      watchBox(this.box, {
+        onResize: () => this.resize(),
+        onVisible: (v) => {
+          this.visible = v;
+        },
+        onRepaint: (themeChanged) => {
+          if (themeChanged) this.colors = readColors();
+          this.dirty = true;
+        },
+      }),
+      attachPointer(this.canvas, {
+        move: (x, y) => {
+          this.hover = { x, y };
+          if (this.drag && this.mode !== "live") {
+            const spacing = this.plotW() / this.count;
+            const maxOffset = Math.max(0, this.bars.length - MIN_BARS);
+            this.offset = Math.min(maxOffset, Math.max(0, this.drag.offset + (x - this.drag.x) / spacing));
+          }
+          this.dirty = true;
+        },
+        down: (x) => {
+          this.drag = { x, offset: this.offset };
+        },
+        up: () => {
+          this.drag = null;
+        },
+        leave: () => {
+          this.hover = null;
+          this.dirty = true;
+        },
+        wheel: (deltaY) => {
+          if (this.mode === "live") return false;
+          const next = deltaY > 0 ? this.count * ZOOM_STEP : this.count / ZOOM_STEP;
+          this.count = Math.round(Math.min(MAX_BARS, Math.max(MIN_BARS, next)));
+          this.yLo = Number.NaN;
+          this.dirty = true;
+          return true;
+        },
+      }),
     );
   }
 
@@ -249,8 +234,18 @@ export class MarketChart {
     }
   };
 
+  /** The price axis grows to fit its widest label (tiny prices have many digits), never below AXIS_W. */
+  private axisW = AXIS_W;
+
+  private fitAxis() {
+    const last = this.bars.at(-1);
+    const sample = this.mode === "live" ? this.shown : (last?.c ?? Number.NaN);
+    if (!Number.isFinite(sample)) return;
+    this.axisW = Math.max(AXIS_W, axisWidthFor(this.ctx, this.colors, this.format(sample)));
+  }
+
   private plotW() {
-    return this.w - AXIS_W;
+    return this.w - this.axisW;
   }
 
   private plotH() {
@@ -291,6 +286,7 @@ export class MarketChart {
     const { ctx } = this;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.w, this.h);
+    this.fitAxis();
     this.drawDots();
     this.drawWatermark();
     if (this.mode === "live") this.drawLive();
@@ -312,7 +308,7 @@ export class MarketChart {
   }
 
   private pill(y: number, text: string, fill: string, ink: string) {
-    paintPill(this.ctx, this.colors, this.plotW(), AXIS_W, y, text, fill, ink);
+    paintPill(this.ctx, this.colors, this.plotW(), this.axisW, y, text, fill, ink);
   }
 
   private drawLevels(yOf: (p: number) => number) {

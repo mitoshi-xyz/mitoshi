@@ -49,7 +49,7 @@ export function MarketsView() {
 
       <section className="flex flex-col gap-4">
         <SectionHead index="01" title="Predictions" venue="polymarket" href="/predict" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {events.isPending
             ? Array.from({ length: SKELETONS }, (_, i) => <Skeleton key={`e-${i}`} className="h-52 rounded-xl" />)
             : (events.data ?? []).slice(0, EVENTS_ON_HOME).map((e) => <EventCard key={e.id} e={e} />)}

@@ -44,7 +44,7 @@ export function EventGrid() {
           onChange={(e) => setTyped(e.target.value)}
         />
       </div>
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] pb-1">
         {CATEGORIES.map((c) => (
           <button
             key={c.slug}
@@ -70,7 +70,7 @@ export function EventGrid() {
           action={{ label: "Try again", onClick: () => void events.refetch() }}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {events.isPending
             ? Array.from({ length: SKELETON_CARDS }, (_, i) => <Skeleton key={`s-${i}`} className="h-56 rounded-xl" />)
             : (events.data ?? []).map((e) => <EventCard key={e.id} e={e} />)}

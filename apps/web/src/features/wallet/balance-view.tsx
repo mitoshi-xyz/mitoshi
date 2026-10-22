@@ -3,7 +3,7 @@
 import { ZAT_PER_ZEC } from "@mitoshi/zwallet";
 import { ArrowDownToLine, ArrowUpFromLine, Eye, EyeOff, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
 import { Button, CountdownRing, RollingNumber } from "@/kit";
 import { usd } from "../format";
@@ -60,6 +60,21 @@ export function BalanceView({ state }: { state: WalletState }) {
   const [hidden, setHidden] = useHideAmounts();
   const [deposit, setDeposit] = useState(false);
   const [withdraw, setWithdraw] = useState(false);
+
+  // /wallet#deposit and /wallet#withdraw open their drawer (More, the palette, links elsewhere).
+  useEffect(() => {
+    const open = () => {
+      if (window.location.hash === "#deposit") setDeposit(true);
+      if (window.location.hash === "#withdraw") setWithdraw(true);
+    };
+    open();
+    window.addEventListener("hashchange", open);
+    return () => window.removeEventListener("hashchange", open);
+  }, []);
+  const close = (set: (v: boolean) => void) => () => {
+    set(false);
+    if (window.location.hash) history.replaceState(null, "", window.location.pathname);
+  };
   const b = state.summary?.balance;
   const spendable = b ? b.ironwood.spendable + b.orchard.spendable : 0;
   const resting = b ? b.ironwood.locked + b.orchard.locked : 0;
@@ -117,7 +132,7 @@ export function BalanceView({ state }: { state: WalletState }) {
             {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
-        <div className="mt-5 grid gap-2 sm:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <Pocket
             label="Resting"
             value={show(resting)}
@@ -171,8 +186,8 @@ export function BalanceView({ state }: { state: WalletState }) {
         <History entries={state.history} tip={state.summary?.tip ?? null} />
       </section>
 
-      <DepositDrawer open={deposit} onClose={() => setDeposit(false)} />
-      <WithdrawDrawer open={withdraw} onClose={() => setWithdraw(false)} />
+      <DepositDrawer open={deposit} onClose={close(setDeposit)} />
+      <WithdrawDrawer open={withdraw} onClose={close(setWithdraw)} />
     </section>
   );
 }

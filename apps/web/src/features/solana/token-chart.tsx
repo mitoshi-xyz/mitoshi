@@ -3,6 +3,8 @@
 import { type ChartMode, MarketChart } from "@mitoshi/chart";
 import { CANDLE_INTERVALS, type CandleInterval } from "@mitoshi/venues/solana";
 import { useEffect, useRef, useState } from "react";
+import { ChartLoading } from "@/kit";
+import { price } from "../format";
 import { solMarket } from "./sol";
 
 const CANDLE_REFRESH_MS = 30_000;
@@ -18,7 +20,7 @@ export function TokenChart({ mint, livePrice }: { mint: string; livePrice: numbe
 
   useEffect(() => {
     if (!box.current) return;
-    const c = new MarketChart(box.current, { mode: "candles" });
+    const c = new MarketChart(box.current, { mode: "candles", format: price });
     chart.current = c;
     return () => {
       c.dispose();
@@ -59,7 +61,7 @@ export function TokenChart({ mint, livePrice }: { mint: string; livePrice: numbe
 
   return (
     <div className="flex h-full flex-col gap-2 p-4">
-      <div className="flex items-center justify-between gap-2 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <div className="flex gap-0.5 rounded-full bg-surface-1 p-0.5">
           {(Object.keys(CANDLE_INTERVALS) as CandleInterval[]).map((i) => (
             <button
@@ -87,13 +89,7 @@ export function TokenChart({ mint, livePrice }: { mint: string; livePrice: numbe
       </div>
       <div className="relative min-h-[380px] flex-1">
         <div ref={box} className="absolute inset-0" />
-        {load === "loading" ? (
-          <div
-            role="status"
-            aria-label="Loading the chart"
-            className="absolute inset-0 rounded-lg bg-surface-1/50 [animation:mt-pulse_1200ms_var(--ease)_infinite]"
-          />
-        ) : null}
+        {load === "loading" ? <ChartLoading verb="Loading candles, privately" /> : null}
         {load === "empty" ? (
           <p className="absolute inset-0 flex items-center justify-center text-ink-2 text-sm">
             No trading history for this token yet.

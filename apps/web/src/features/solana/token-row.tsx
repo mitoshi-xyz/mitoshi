@@ -15,7 +15,7 @@ export function TokenRow({ t, live }: { t: SolToken; live: number | undefined })
   return (
     <Link
       href={`/token#${t.mint}`}
-      className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-1 sm:grid-cols-[minmax(160px,1.6fr)_1fr_88px_1fr_1fr]"
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-1 sm:grid-cols-[minmax(160px,1.6fr)_1fr_88px_1fr_1fr]"
     >
       <span className="flex min-w-0 items-center gap-3">
         <Mark symbol={t.symbol} src={t.icon} size={32} />

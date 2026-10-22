@@ -34,7 +34,7 @@ export function KeepReady() {
           While Mitoshi is open, it holds a funded wallet per venue, so a trade never waits for the funding.
         </p>
       </div>
-      <div className="grid gap-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
         {VENUE_ORDER.map((id) => {
           const v = VENUES[id];
           const size = registry.keepReady[id];

@@ -29,12 +29,12 @@ export default function WalletsPage() {
       ) : (
         <div className="flex flex-col gap-6">
           <Skeleton className="h-10 w-64" label="Opening the wallet engine" />
-          <div className="grid gap-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
             <Skeleton className="h-16 rounded-xl" />
             <Skeleton className="h-16 rounded-xl" />
             <Skeleton className="h-16 rounded-xl" />
           </div>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <Skeleton className="h-56 rounded-xl" />
             <Skeleton className="h-56 rounded-xl" />
           </div>

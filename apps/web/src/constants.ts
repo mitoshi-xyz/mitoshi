@@ -18,3 +18,7 @@ export const IRONWOOD_ACTIVATION = { main: 3_428_143, test: 4_134_000 } as const
 export const VAULT_DB = { name: "mitoshi-vault", version: 1, keys: "keys", records: "records" } as const;
 export const VAULT_KEY_BITS = 256;
 export const VAULT_IV_BYTES = 12;
+/** The passphrase lock: PBKDF2-SHA-256 at OWASP's 2023 count, with a 16-byte salt. */
+export const LOCK_PBKDF2_ITERATIONS = 600_000;
+export const LOCK_SALT_BYTES = 16;
+export const LOCK_MIN_CHARS = 8;

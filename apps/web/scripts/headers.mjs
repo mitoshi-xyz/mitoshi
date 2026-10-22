@@ -9,7 +9,8 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
-const OUT = new URL("../out/", import.meta.url).pathname;
+// The export lands in out/, or in the build folder itself when NEXT_DIST_DIR names one (next.config.ts).
+const OUT = new URL(`../${process.env.NEXT_DIST_DIR ?? "out"}/`, import.meta.url).pathname;
 const MAX_LINE = 2000;
 
 const BASE_POLICY = [

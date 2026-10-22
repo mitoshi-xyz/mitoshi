@@ -103,7 +103,7 @@ export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number
 
       <div className="flex items-baseline justify-between gap-3 text-[13px]">
         <span className="num">
-          {hidden ? MASK : `${zec(w.sizeZat)} ZEC`}
+          {w.recovered ? "Found from your words" : hidden ? MASK : `${zec(w.sizeZat)} ZEC`}
           {fund?.settledOut ? (
             <span className="text-ink-2"> → {hidden ? MASK : venueAmount(w, fund.settledOut)}</span>
           ) : null}

@@ -83,7 +83,7 @@ export function PrivateWallets() {
             {...(tab === "live" ? { action: { label: "New private wallet", onClick: () => openFund() } } : {})}
           />
         ) : (
-          <ul className="grid gap-3 lg:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {shown.map((w) => (
               <WalletCard key={w.id} w={w} now={now} onPublic={openPublicView} />
             ))}

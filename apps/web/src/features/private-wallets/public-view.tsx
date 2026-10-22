@@ -35,7 +35,7 @@ interface LinkCheck {
  * Whether anything public ties this wallet to another of yours, checked against everything this
  * device knows: addresses, swap deposit addresses, refund and payout addresses.
  */
-function linkChecks(w: PrivateWallet, r: Registry): LinkCheck[] {
+export function linkChecks(w: PrivateWallet, r: Registry): LinkCheck[] {
   const others = r.wallets.filter((x) => x.id !== w.id);
   const otherAddresses = new Set(others.map((x) => x.address.toLowerCase()));
   const otherSwapEnds = new Set(

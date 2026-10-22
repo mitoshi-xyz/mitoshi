@@ -74,7 +74,7 @@ export function Terminal() {
   const positions = live.length;
 
   return (
-    <div className="grid min-h-[calc(100dvh-96px)] lg:h-[calc(100dvh-96px)] lg:grid-cols-[1fr_360px]">
+    <div className="grid min-h-[calc(100dvh-96px)] grid-cols-[minmax(0,1fr)] lg:h-[calc(100dvh-96px)] lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="relative flex min-h-[520px] flex-col border-hairline lg:border-r">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 pt-4">
           {perp ? (

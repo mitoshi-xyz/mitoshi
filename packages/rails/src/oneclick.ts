@@ -101,6 +101,11 @@ export class OneClick {
     await json(res, "deposit submit");
   }
 
+  /** The assets 1Click can swap: also a cheap check that it answers at all. */
+  async tokens(): Promise<{ assetId: string; symbol: string; blockchain: string }[]> {
+    return json(await this.send(`${ONECLICK_API}/tokens`, { headers: { accept: "application/json" } }), "tokens");
+  }
+
   async status(depositAddress: string): Promise<StatusResponse> {
     const url = `${ONECLICK_API}/status?depositAddress=${encodeURIComponent(depositAddress)}`;
     return json<StatusResponse>(await this.send(url, { headers: { accept: "application/json" } }), "status");

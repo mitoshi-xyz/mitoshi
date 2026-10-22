@@ -90,3 +90,18 @@ export function LiveDot({ tone = "up" }: { tone?: "up" | "accent" | "muted" }) {
     </span>
   );
 }
+
+/** A chart's loading state: the chart's own space, pulsing, with the wait in words in the middle. */
+export function ChartLoading({ verb, className }: { verb: string; className?: string }) {
+  return (
+    <div
+      role="status"
+      className={cx("absolute inset-0 flex items-center justify-center rounded-lg bg-surface-1/80", className)}
+    >
+      <span className="absolute inset-0 rounded-lg bg-surface-2/40 [animation:mt-pulse_1200ms_var(--ease)_infinite]" />
+      <span className="relative">
+        <Wait verb={verb} />
+      </span>
+    </div>
+  );
+}

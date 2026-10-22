@@ -5,7 +5,7 @@ import { ZAT_PER_ZEC } from "@mitoshi/zwallet";
 import { ClipboardPaste, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
-import { cx, Drawer, SlideToConfirm, TxSteps, Wait } from "@/kit";
+import { cue, cx, Drawer, SlideToConfirm, TxSteps, Wait } from "@/kit";
 import { LeakMeter } from "../privacy/leak-meter";
 import { useRegistry } from "../private-wallets/registry-store";
 import { previewSend, send, useWallet } from "./wallet-store";
@@ -110,9 +110,11 @@ export function WithdrawDrawer({ open, onClose }: { open: boolean; onClose: () =
     try {
       const r = await send(to.trim(), zat);
       setStep({ kind: "sent", txid: r.txid });
+      cue("send");
       setAmount("");
     } catch (e) {
       setStep({ kind: "failed", error: e instanceof Error ? e.message : String(e) });
+      cue("error");
     }
   }
 

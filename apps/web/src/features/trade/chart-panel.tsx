@@ -4,7 +4,7 @@ import { type Levels, MarketChart } from "@mitoshi/chart";
 import { INTERVALS, type Interval, type LiveStatus } from "@mitoshi/venues/hyperliquid";
 import { CandlestickChart, LineChart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { cx, LiveDot } from "@/kit";
+import { ChartLoading, cx, LiveDot } from "@/kit";
 import { price } from "../format";
 import { hlLive, hlMarket } from "../hyperliquid/hl";
 
@@ -109,7 +109,7 @@ export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
   return (
     <div className="relative flex h-full min-h-[420px] flex-col">
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3">
-        <div className="flex items-center gap-0.5 overflow-x-auto rounded-full bg-surface-1/80 p-0.5 backdrop-blur">
+        <div className="flex items-center gap-0.5 overflow-x-auto [scrollbar-width:none] rounded-full bg-surface-1/80 p-0.5 backdrop-blur">
           {VIEWS.map((v) => (
             <button
               key={v}
@@ -158,13 +158,7 @@ export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
       </div>
       <div className="relative min-h-0 flex-1">
         <div ref={box} className="absolute inset-0" />
-        {load === "loading" ? (
-          <div
-            role="status"
-            aria-label="Loading candles"
-            className="absolute inset-4 rounded-lg bg-surface-1/40 [animation:mt-pulse_1200ms_var(--ease)_infinite]"
-          />
-        ) : null}
+        {load === "loading" ? <ChartLoading verb="Loading candles, privately" /> : null}
         {load === "error" ? (
           <p className="absolute inset-0 flex items-center justify-center text-down text-sm">
             Could not load {coin} candles. Choose another interval to try again.

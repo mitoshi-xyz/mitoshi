@@ -1,8 +1,9 @@
 "use client";
 
 import { X } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { cx } from "./cx";
+import { cue } from "./feedback";
 
 /**
  * A right drawer on desktop (384 px, or 560 wide) and a bottom sheet on phones, over a scrim. Esc and the scrim close it.
@@ -22,8 +23,11 @@ export function Drawer({
   children: ReactNode;
 }) {
   const [present, setPresent] = useState(open);
+  const was = useRef(open);
   useEffect(() => {
     if (open) setPresent(true);
+    if (open !== was.current) cue(open ? "open" : "close");
+    was.current = open;
   }, [open]);
   useEffect(() => {
     if (!open) return;

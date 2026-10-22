@@ -77,7 +77,7 @@ function Receipt({ e, tip, onClose }: { e: HistoryEntry | null; tip: number | nu
           {zec(Math.abs(e.delta))} <span className="text-[16px]">{UNIT}</span>
         </p>
         <div className="border-cream-hairline border-t border-dashed" />
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[13px]">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-[13px]">
           <dt className="text-cream-ink/60">Status</dt>
           <dd className="text-right">{st.text}</dd>
           {e.time ? (

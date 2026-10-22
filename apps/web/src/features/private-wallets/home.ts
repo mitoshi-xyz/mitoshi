@@ -1,6 +1,6 @@
 "use client";
 
-import { advance, type PrivateWallet, type SwapRecord } from "@mitoshi/engine";
+import { advance, type PrivateWallet, type SwapRecord, type TradeRecord } from "@mitoshi/engine";
 import { ASSETS } from "@mitoshi/rails";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
 import { solAccount } from "../solana/sol";
@@ -23,6 +23,13 @@ export function markTrading(id: string, note: string) {
   const w = walletById(id);
   if (!w || w.status === "trading") return;
   if (w.status === "ready") putWallet(advance(w, "trading", Date.now(), note));
+}
+
+/** Records a trade on its wallet (cost basis and history for the portfolio) and marks it trading. */
+export function recordTrade(id: string, trade: TradeRecord) {
+  markTrading(id, trade.label);
+  const w = walletById(id);
+  if (w) putWallet({ ...w, trades: [...(w.trades ?? []), trade] });
 }
 
 /**

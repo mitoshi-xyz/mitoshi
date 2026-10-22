@@ -9,7 +9,7 @@ import { usePerps } from "../hyperliquid/hooks";
 import { Mark, type Venue, VenueMark } from "../marks/mark";
 import { pmMarket } from "../polymarket/pm";
 import { solMarket } from "../solana/sol";
-import { PLACES } from "./places";
+import { PAGES, PLACES } from "./places";
 
 const SEARCH_DEBOUNCE_MS = 250;
 const PER_GROUP = 6;
@@ -64,15 +64,15 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
 
   const groups = useMemo(() => {
     const needle = query.toLowerCase();
-    const pages: Hit[] = PLACES.filter(
-      (p) => !needle || p.name.toLowerCase().includes(needle) || p.description.toLowerCase().includes(needle),
-    ).map((p) => ({
-      key: `page-${p.id}`,
-      label: p.name,
-      hint: p.description,
-      href: p.href,
-      mark: <p.icon size={18} className="text-ink-2" />,
-    }));
+    const pages: Hit[] = [...PLACES, ...PAGES]
+      .filter((p) => !needle || p.name.toLowerCase().includes(needle) || p.description.toLowerCase().includes(needle))
+      .map((p) => ({
+        key: `page-${p.href}`,
+        label: p.name,
+        hint: p.description,
+        href: p.href,
+        mark: <p.icon size={18} className="text-ink-2" />,
+      }));
     const perpHits: Hit[] = (perps.data ?? [])
       .filter((p) => needle && p.name.toLowerCase().includes(needle))
       .sort((a, b) => b.dayVolumeUsd - a.dayVolumeUsd)

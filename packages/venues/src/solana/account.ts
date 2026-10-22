@@ -31,6 +31,9 @@ export interface SwapResult {
   signature: string;
   inAmount: string;
   outAmount: string;
+  /** Jupiter's USD value of each side at the time of the swap (null if it gave none). */
+  inUsd: number | null;
+  outUsd: number | null;
 }
 
 type Json = Record<string, unknown>;
@@ -100,6 +103,8 @@ export class SolanaAccount {
       signature: String(done.signature),
       inAmount: String(done.inputAmountResult ?? order.inAmount),
       outAmount: String(done.outputAmountResult ?? order.outAmount),
+      inUsd: typeof order.inUsdValue === "number" ? order.inUsdValue : null,
+      outUsd: typeof order.outUsdValue === "number" ? order.outUsdValue : null,
     };
   }
 

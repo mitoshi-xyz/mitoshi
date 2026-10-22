@@ -4,9 +4,9 @@ import type { PrivateWallet } from "@mitoshi/engine";
 import { SOL_MINT, type SolToken } from "@mitoshi/venues/solana";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { cx, TxCta, type TxPhase } from "@/kit";
+import { cue, cx, TxCta, type TxPhase } from "@/kit";
 import { openFund } from "../private-wallets/drawers";
-import { markTrading } from "../private-wallets/home";
+import { recordTrade } from "../private-wallets/home";
 import { BUY_SOL, SELL_SHARES } from "./constants";
 import { useHoldings } from "./hooks";
 import { solAccount, solMarket } from "./sol";
@@ -71,7 +71,17 @@ export function SwapTicket({
       setPhase("sent");
       const res = side === "buy" ? await account.buy(token.mint, units) : await account.sell(token.mint, units);
       setPhase("confirmed");
-      markTrading(wallet.id, `${side === "buy" ? "Bought" : "Sold"} ${token.symbol}`);
+      cue("fill");
+      recordTrade(wallet.id, {
+        at: Date.now(),
+        label: `${side === "buy" ? "Bought" : "Sold"} ${token.symbol}`,
+        asset: token.mint,
+        side,
+        inAmount: res.inAmount,
+        outAmount: res.outAmount,
+        usd: res.inUsd,
+        ref: res.signature,
+      });
       setResult({
         ok: true,
         text: `${side === "buy" ? "Bought" : "Sold"} ${token.symbol} · ${res.signature.slice(0, 10)}…`,
@@ -80,6 +90,7 @@ export function SwapTicket({
       void queries.invalidateQueries({ queryKey: ["solana", "holdings", wallet.id] });
     } catch (e) {
       setPhase("failed");
+      cue("error");
       setResult({ ok: false, text: `${e instanceof Error ? e.message : String(e)}. No money moved.` });
     }
   }

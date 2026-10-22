@@ -54,6 +54,23 @@ export interface SwapRecord {
   signedQuote: unknown;
 }
 
+/** One trade a wallet made, kept so the portfolio knows its cost and its history. */
+export interface TradeRecord {
+  at: number;
+  /** In words: "Long BTC 5×", "Bought BONK". */
+  label: string;
+  /** Hyperliquid: the coin; Solana: the token mint; Polymarket: the outcome token. */
+  asset: string;
+  side: "buy" | "sell";
+  /** Base units in and out (Solana) or coins and USD (Hyperliquid). */
+  inAmount: string;
+  outAmount: string;
+  /** What went in, in USD at the time: the cost basis. */
+  usd: number | null;
+  /** The venue's transaction id or order id. */
+  ref?: string;
+}
+
 export interface TimelineEvent {
   status: WalletStatus;
   at: number;
@@ -74,6 +91,10 @@ export interface PrivateWallet {
   swaps: SwapRecord[];
   /** Funding scheduled for this moment (random, never immediate). */
   fundAt?: number;
+  /** Trades made from this wallet, oldest first. */
+  trades?: TradeRecord[];
+  /** Found again from the recovery words (its funding record was not on this device). */
+  recovered?: boolean;
   error?: string;
 }
 

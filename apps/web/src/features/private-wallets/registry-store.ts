@@ -20,11 +20,18 @@ function emit() {
 }
 
 export function loadRegistry(): Promise<Registry> {
-  loading ??= vaultGet(ZEC_NETWORK, "registry").then((bytes) => {
-    if (bytes) registry = { ...emptyRegistry(), ...(JSON.parse(new TextDecoder().decode(bytes)) as Registry) };
-    emit();
-    return registry;
-  });
+  loading ??= vaultGet(ZEC_NETWORK, "registry").then(
+    (bytes) => {
+      if (bytes) registry = { ...emptyRegistry(), ...(JSON.parse(new TextDecoder().decode(bytes)) as Registry) };
+      emit();
+      return registry;
+    },
+    (e: unknown) => {
+      // A locked vault: try again once it is unlocked.
+      loading = null;
+      throw e;
+    },
+  );
   return loading;
 }
 
@@ -38,6 +45,21 @@ export function mutate(f: (r: Registry) => Registry): Registry {
   const snapshot = new TextEncoder().encode(JSON.stringify(registry));
   saving = saving.then(() => vaultPut(ZEC_NETWORK, "registry", snapshot)).catch(() => undefined);
   return registry;
+}
+
+/**
+ * Brings in wallets from elsewhere (a backup file, a recovery scan): new ones are added, known
+ * ones kept, and each venue's next index moves past every index seen.
+ */
+export function mergeRegistry(incoming: Pick<Registry, "wallets"> & Partial<Registry>) {
+  mutate((r) => {
+    const known = new Set(r.wallets.map((w) => w.address.toLowerCase()));
+    const added = incoming.wallets.filter((w) => !known.has(w.address.toLowerCase()));
+    const wallets = [...r.wallets, ...added].sort((a, b) => b.createdAt - a.createdAt);
+    const nextIndex = { ...r.nextIndex };
+    for (const w of wallets) nextIndex[w.venue] = Math.max(nextIndex[w.venue], w.index + 1);
+    return { ...r, wallets, nextIndex, keepReady: incoming.keepReady ?? r.keepReady };
+  });
 }
 
 /** Replaces one wallet (matched by id). */

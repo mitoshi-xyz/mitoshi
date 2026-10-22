@@ -4,11 +4,11 @@ import type { PrivateWallet } from "@mitoshi/engine";
 import type { AccountState, Perp } from "@mitoshi/venues/hyperliquid";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { cx, Segmented, TxCta, type TxPhase } from "@/kit";
+import { cue, cx, Segmented, TxCta, type TxPhase } from "@/kit";
 import { price, usd } from "../format";
 import { hlAccount } from "../hyperliquid/hl";
 import { openFund } from "../private-wallets/drawers";
-import { markTrading } from "../private-wallets/home";
+import { recordTrade } from "../private-wallets/home";
 import {
   DEFAULT_LEVERAGE,
   EPSILON,
@@ -97,7 +97,19 @@ export function Ticket({ perp, mark, wallet, state }: TicketProps) {
       setStep("Sent privately to Hyperliquid");
       const res = await account.order(order, mark);
       setPhase("confirmed");
-      markTrading(wallet.id, `${isLong ? "Long" : "Short"} ${perp.name} ${leverage}×`);
+      cue(res.kind === "filled" ? "fill" : "tap");
+      const filledPx = res.kind === "filled" ? res.avgPx : Number(limit);
+      const filledSize = res.kind === "filled" ? res.size : size;
+      recordTrade(wallet.id, {
+        at: Date.now(),
+        label: `${isLong ? "Long" : "Short"} ${perp.name} ${leverage}×${res.kind === "resting" ? " (limit)" : ""}`,
+        asset: perp.name,
+        side: isLong ? "buy" : "sell",
+        inAmount: String(filledSize * filledPx),
+        outAmount: String(filledSize),
+        usd: res.kind === "filled" ? (filledSize * filledPx) / leverage : null,
+        ref: String(res.oid),
+      });
       setOutcome(
         res.kind === "filled"
           ? {
@@ -110,6 +122,7 @@ export function Ticket({ perp, mark, wallet, state }: TicketProps) {
       void queries.invalidateQueries({ queryKey: ["hyperliquid", "account", wallet.id] });
     } catch (e) {
       setPhase("failed");
+      cue("error");
       setOutcome({ kind: "failed", text: `${e instanceof Error ? e.message : String(e)}. No money moved.` });
     } finally {
       setStep("");

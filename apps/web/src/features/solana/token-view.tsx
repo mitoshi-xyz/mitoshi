@@ -62,7 +62,7 @@ export function TokenView() {
     return <EmptyState icon={AlertCircle} title="No token chosen" action={{ label: "Open Tokens", href: "/tokens" }} />;
   if (token.isPending) {
     return (
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Skeleton className="h-[520px] rounded-xl" label="Loading the token" />
         <Skeleton className="h-[520px] rounded-xl" />
       </div>
@@ -104,7 +104,7 @@ export function TokenView() {
   }
 
   return (
-    <div className="grid min-h-[calc(100dvh-96px)] lg:grid-cols-[1fr_360px]">
+    <div className="grid min-h-[calc(100dvh-96px)] grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="flex min-h-[520px] flex-col border-hairline lg:border-r">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 pt-4">
           <div className="flex items-center gap-3 rounded-full border border-hairline bg-surface-1/80 py-1.5 pr-4 pl-1.5">
