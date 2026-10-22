@@ -1,0 +1,21 @@
+{
+  "name": "@mitoshi/zwallet",
+  "private": true,
+  "type": "module",
+  "description": "Mitoshi's browser Zcash wallet: the WASI wallet core in a Web Worker, plus a typed client.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./worker": "./src/worker.ts",
+    "./wasm": "./generated/zwallet.wasm"
+  },
+  "scripts": {
+    "build:wasm": "./rust/build.sh",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "0.4.2"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}
