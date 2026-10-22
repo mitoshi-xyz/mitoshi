@@ -15,6 +15,7 @@ import { TokenChart } from "./token-chart";
 const MS_PER_MINUTE = 60_000;
 const MS_PER_SECOND = 1000;
 const SOL_SHOWN_DECIMALS = 4;
+const MINT_HEAD = 4;
 
 function useHashMint(): string {
   const [mint, setMint] = useState("");
@@ -99,7 +100,7 @@ export function TokenView() {
           <h3 className="font-medium">This private wallet</h3>
           <p className="opacity-70">
             {(Number(holdings.data.lamports) / LAMPORTS_PER_SOL).toFixed(SOL_SHOWN_DECIMALS)} SOL
-            {holdings.data.tokens.map((h) => ` · ${h.uiAmount} of ${h.mint.slice(0, 4)}…`).join("")}
+            {holdings.data.tokens.map((h) => ` · ${h.uiAmount} of ${h.mint.slice(0, MINT_HEAD)}…`).join("")}
           </p>
           {wallet.status === "trading" || wallet.status === "ready" ? (
             <button
