@@ -14,19 +14,13 @@ import {
   type Venue,
   walletAddress,
 } from "@mitoshi/engine";
-import { createPrivateFetch } from "@mitoshi/net";
-import {
-  ASSETS,
-  type AssetKey,
-  formatUnits,
-  OneClick,
-  OneClickError,
-  type QuoteResponse,
-  type SwapInput,
-} from "@mitoshi/rails";
-import { RELAY, ZEC_NETWORK } from "@/constants";
+import { ASSETS, type AssetKey, formatUnits, type QuoteResponse } from "@mitoshi/rails";
+import { ZEC_NETWORK } from "@/constants";
 import { deviceSeed, freshAddress, previewSend, refreshWallet, send, walletState } from "../wallet/wallet-store";
 import { currentRegistry, mutate, putWallet, walletById } from "./registry-store";
+import { oneclick, quote, withSwap } from "./swaps";
+
+export { confidentialSwaps } from "./swaps";
 
 /** What each venue's wallet is funded with on arrival. */
 export const VENUE_ASSET: Record<Venue, AssetKey> = {
@@ -35,35 +29,12 @@ export const VENUE_ASSET: Record<Venue, AssetKey> = {
   solana: "sol",
 };
 
-const HTTP_UNAUTHORIZED = 401;
 const TICK_MS = 5_000;
 const POLL_MS = 15_000;
 /** A funding's network fee is checked for real before sending; this reserve is for showing sizes. */
 export const FUNDING_FEE_RESERVE_ZAT = 15_000;
 
 const TERMINAL: SwapStatus[] = ["SUCCESS", "REFUNDED", "FAILED"];
-
-const oneclick = new OneClick(createPrivateFetch(RELAY));
-
-/** Confidential swaps need a NEAR partner key on the gateway; without one, fall back to public. */
-let confidentialAvailable = true;
-
-async function quote(input: SwapInput): Promise<QuoteResponse> {
-  if (confidentialAvailable) {
-    try {
-      return await oneclick.quote({ ...input, confidentiality: "basic" });
-    } catch (e) {
-      if (!(e instanceof OneClickError && e.status === HTTP_UNAUTHORIZED)) throw e;
-      confidentialAvailable = false;
-    }
-  }
-  return oneclick.quote(input);
-}
-
-/** Whether the last quotes could use NEAR's confidential mode (deposit and payout unlinkable on NEAR). */
-export function confidentialSwaps(): boolean {
-  return confidentialAvailable;
-}
 
 export function canFund(): { ok: boolean; why?: string } {
   if (ZEC_NETWORK !== "main") {
@@ -145,16 +116,6 @@ export async function prepareWallet(venue: Venue, sizeZat: number): Promise<Priv
   };
   mutate((r) => ({ ...r, nextIndex: { ...r.nextIndex, [venue]: index + 1 }, wallets: [wallet, ...r.wallets] }));
   return wallet;
-}
-
-function withSwap(w: PrivateWallet, kind: SwapRecord["kind"], patch: Partial<SwapRecord>): PrivateWallet {
-  const i = w.swaps.map((s) => s.kind).lastIndexOf(kind);
-  if (i < 0) return w;
-  const swaps = w.swaps.slice();
-  const current = swaps[i];
-  if (!current) return w;
-  swaps[i] = { ...current, ...patch, updatedAt: Date.now() };
-  return { ...w, swaps };
 }
 
 function fail(id: string, why: unknown) {

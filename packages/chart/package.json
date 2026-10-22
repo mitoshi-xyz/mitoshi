@@ -1,0 +1,18 @@
+{
+  "name": "@mitoshi/chart",
+  "private": true,
+  "type": "module",
+  "description": "The live market chart: candles or a line, an interval menu's data, live pushes and price lines (entry, take profit, stop loss, liquidation).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lightweight-charts": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

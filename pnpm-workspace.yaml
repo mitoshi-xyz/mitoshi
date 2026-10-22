@@ -30,6 +30,7 @@ catalog:
   "@scure/bip32": 2.4.0
   "@nktkas/hyperliquid": 0.33.3
   viem: 2.57.4
+  lightweight-charts: 5.2.1
 
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.11.9"

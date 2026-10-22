@@ -188,11 +188,11 @@ export class HyperliquidAccount {
   }
 
   /**
-   * Empties the account toward 1Click's deposit address: cancels orders, needs every position
-   * closed first, brings perp USDC back to spot when balances are separate, then sends all spot
-   * USDC. Returns what was sent (0 when only dust is left).
+   * Gets the account ready to go home: cancels open orders, requires every position closed, and
+   * (with separate balances) moves perp USDC back to spot. Returns the spot USDC that can be sent,
+   * rounded down to the cent, or 0 when only dust is left.
    */
-  async sendHome(destination: Hex, perps: Perp[]): Promise<{ sent: number }> {
+  async consolidate(perps: Perp[]): Promise<number> {
     let s = await this.state();
     if (s.positions.length > 0) throw new Error("close every position before sending the money home");
     const assetOf = new Map(perps.map((p) => [p.name, p.asset]));
@@ -205,9 +205,11 @@ export class HyperliquidAccount {
       await this.exchange.usdClassTransfer({ amount: usd(s.withdrawable), toPerp: false });
       s = await this.state();
     }
-    if (s.spotUsdc < DUST_USDC) return { sent: 0 };
-    const amount = usd(s.spotUsdc);
-    await this.exchange.spotSend({ destination, token: HL_USDC_TOKEN, amount });
-    return { sent: Number(amount) };
+    return s.spotUsdc < DUST_USDC ? 0 : Number(usd(s.spotUsdc));
+  }
+
+  /** Sends spot USDC to an address on HyperCore (1Click's deposit address for the trip home). */
+  async sendUsdc(destination: Hex, amount: number): Promise<void> {
+    await this.exchange.spotSend({ destination, token: HL_USDC_TOKEN, amount: usd(amount) });
   }
 }
