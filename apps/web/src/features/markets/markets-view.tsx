@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { EventGrid } from "../polymarket/event-grid";
+import { TokensTable } from "../solana/tokens-table";
 import { PerpsTable } from "./perps-table";
 
 const VENUES = [
   { id: "predictions", label: "Predictions", by: "Polymarket" },
   { id: "perps", label: "Perps", by: "Hyperliquid" },
+  { id: "tokens", label: "Tokens", by: "Solana · Jupiter" },
 ] as const;
 
 type View = (typeof VENUES)[number]["id"];
@@ -29,7 +31,7 @@ export function MarketsView() {
           </button>
         ))}
       </div>
-      {view === "predictions" ? <EventGrid /> : <PerpsTable />}
+      {view === "predictions" ? <EventGrid /> : view === "perps" ? <PerpsTable /> : <TokensTable />}
     </div>
   );
 }

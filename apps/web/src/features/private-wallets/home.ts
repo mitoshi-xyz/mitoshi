@@ -3,9 +3,10 @@
 import { advance, type PrivateWallet, type SwapRecord } from "@mitoshi/engine";
 import { ASSETS } from "@mitoshi/rails";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
+import { solAccount } from "../solana/sol";
 import { freshAddress } from "../wallet/wallet-store";
 import { putWallet, walletById } from "./registry-store";
-import { quote, withSwap } from "./swaps";
+import { oneclick, quote, withSwap } from "./swaps";
 
 const CENTS_TO_BASE = 10 ** (ASSETS.hypercoreUsdc.decimals - 2);
 const CENTS = 100;
@@ -72,4 +73,62 @@ export async function sendHyperliquidHome(id: string): Promise<{ sent: number }>
     timeline: [...sent.timeline, { status: "returning", at: Date.now(), note: "Swapping back to ZEC on NEAR" }],
   });
   return { sent: amount };
+}
+
+/**
+ * Sends one Solana wallet's money home: every token is sold back to SOL, then a signed 1Click
+ * quote (SOL to ZEC, to a fresh shielded address; refunds back to the wallet), then one transfer.
+ */
+export async function sendSolanaHome(id: string): Promise<{ sent: number }> {
+  let w = walletById(id);
+  if (w?.venue !== "solana") throw new Error("not a Solana wallet");
+  if (w.status !== "ready" && w.status !== "trading" && w.status !== "failed") {
+    throw new Error(`a ${w.status} wallet cannot be sent home`);
+  }
+  const account = await solAccount(w);
+  for (const t of (await account.holdings()).tokens) await account.sell(t.mint);
+  const lamports = await account.sendable();
+  const now = Date.now();
+  if (lamports === 0n) {
+    w = advance(w, "returning", now, "Only dust is left");
+    putWallet(advance(w, "retired", now, "What is left is less than the trip home would cost"));
+    return { sent: 0 };
+  }
+  const recipient = await freshAddress();
+  const q = await quote({
+    from: "sol",
+    to: "zec",
+    amount: lamports.toString(),
+    recipient,
+    refundTo: w.address,
+    dry: false,
+    appFee: false,
+  });
+  const depositAddress = q.quote.depositAddress;
+  if (!depositAddress) throw new Error("the quote has no deposit address");
+  const swap: SwapRecord = {
+    kind: "return",
+    depositAddress,
+    amountIn: q.quote.amountIn,
+    amountOut: q.quote.amountOut,
+    minAmountOut: q.quote.minAmountOut,
+    refundTo: w.address,
+    recipient,
+    timeEstimateSeconds: q.quote.timeEstimate,
+    deadline: q.quote.deadline ?? q.quoteRequest.deadline,
+    status: "QUOTED",
+    createdAt: now,
+    updatedAt: now,
+    signedQuote: q,
+  };
+  w = advance({ ...w, swaps: [...w.swaps, swap] }, "returning", now, "Sending SOL home");
+  putWallet(w);
+  const signature = await account.sendSol(depositAddress, lamports);
+  const sent: PrivateWallet = walletById(id) ?? w;
+  putWallet({
+    ...withSwap(sent, "return", { status: "KNOWN_DEPOSIT_TX", depositTx: signature }),
+    timeline: [...sent.timeline, { status: "returning", at: Date.now(), note: "Swapping back to ZEC on NEAR" }],
+  });
+  void oneclick.submitDeposit(depositAddress, signature).catch(() => undefined);
+  return { sent: Number(lamports) };
 }

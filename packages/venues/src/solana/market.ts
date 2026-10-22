@@ -32,6 +32,15 @@ export interface SolCandle {
   v: number;
 }
 
+export interface SwapQuote {
+  outAmount: bigint;
+  /** Fraction (0.01 = 1%). */
+  priceImpact: number;
+  route: string[];
+  /** Jupiter's own fee on this swap, in basis points. */
+  feeBps: number;
+}
+
 type Json = Record<string, unknown>;
 const PCT = 100;
 const MS_PER_SECOND = 1000;
@@ -83,6 +92,19 @@ export class SolanaMarket {
   async token(mint: string): Promise<SolToken | null> {
     const [t] = await this.search(mint);
     return t && t.mint === mint ? t : null;
+  }
+
+  /** A preview of a swap (no wallet, nothing signed): what comes out and the price impact. */
+  async quote(inputMint: string, outputMint: string, amount: bigint): Promise<SwapQuote> {
+    const q = new URLSearchParams({ inputMint, outputMint, amount: amount.toString() });
+    const o = await this.get<Json>(`${JUP_API}/ultra/v1/order?${q}`);
+    const plan = Array.isArray(o.routePlan) ? (o.routePlan as Json[]) : [];
+    return {
+      outAmount: BigInt(String(o.outAmount ?? "0")),
+      priceImpact: Math.abs(Number(o.priceImpactPct ?? 0)),
+      route: plan.map((r) => String((r.swapInfo as Json | undefined)?.label ?? "")).filter(Boolean),
+      feeBps: Number(o.feeBps ?? 0),
+    };
   }
 
   /** USD prices by mint. */
