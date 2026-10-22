@@ -20,7 +20,7 @@ export function PerpsTable() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-xl">Perps</h2>
+        <h2 className="font-semibold text-xl">Perpetuals</h2>
         <input
           className="w-40 rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-sm"
           placeholder="Search"

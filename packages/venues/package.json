@@ -5,7 +5,8 @@
   "description": "Venue adapters (Hyperliquid, Polymarket, Solana). Every call goes over OHTTP; each private wallet signs with its own key.",
   "exports": {
     ".": "./src/index.ts",
-    "./hyperliquid": "./src/hyperliquid/index.ts"
+    "./hyperliquid": "./src/hyperliquid/index.ts",
+    "./polymarket": "./src/polymarket/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

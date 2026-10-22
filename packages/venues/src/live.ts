@@ -1,11 +1,12 @@
-/** Public channels the relay's live feed carries (it refuses anything that names a user). */
+/** Public channels the relay's live feeds carry (they refuse anything that names a user). */
 export type LiveSub =
   | { type: "allMids" }
   | { type: "candle"; coin: string; interval: string }
   | { type: "trades"; coin: string }
   | { type: "l2Book"; coin: string }
   | { type: "bbo"; coin: string }
-  | { type: "activeAssetCtx"; coin: string };
+  | { type: "activeAssetCtx"; coin: string }
+  | { type: "market"; assetId: string };
 
 export type LiveStatus = "connecting" | "live" | "reconnecting";
 
@@ -13,15 +14,16 @@ const PING_MS = 25_000;
 const BACKOFF_START_MS = 500;
 const BACKOFF_MAX_MS = 10_000;
 
-/** Same key the relay routes by: type, then coin, then interval. */
+/** Same key the relay routes by: type, then coin (or outcome id), then interval. */
 export function liveKey(s: LiveSub): string {
-  return [s.type, "coin" in s ? s.coin : undefined, "interval" in s ? s.interval : undefined].filter(Boolean).join(":");
+  const id = "coin" in s ? s.coin : "assetId" in s ? s.assetId : undefined;
+  return [s.type, id, "interval" in s ? s.interval : undefined].filter(Boolean).join(":");
 }
 
 type Listener = (data: unknown) => void;
 
 /**
- * One WebSocket to the relay's live feed per page, shared by every chart and table. Subscriptions
+ * One WebSocket to a relay live feed (one per venue) per page, shared by every chart and table. Subscriptions
  * are counted, so two views watching BTC cost one upstream channel; they come back by themselves
  * after a reconnect.
  */

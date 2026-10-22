@@ -1,5 +1,7 @@
 import { DEV_ORIGINS, IMAGE_CACHE_SECONDS, MAX_RELAY_BODY_BYTES, PASS_BACK, RELAY_PREFIX } from "./constants";
 
+import { PROTOCOLS } from "./live";
+
 export { LiveFeed } from "./live";
 
 interface Env {
@@ -10,6 +12,7 @@ interface Env {
 }
 
 const HTTP_NO_CONTENT = 204;
+const HTTP_FORBIDDEN = 403;
 const HTTP_NOT_FOUND = 404;
 const HTTP_METHOD_NOT_ALLOWED = 405;
 const HTTP_TOO_LARGE = 413;
@@ -60,7 +63,8 @@ async function relay(request: Request, env: Env, path: string, search: string): 
     if (v !== null) out.set(h, v);
   }
   if (r.cacheable && res.ok) out.set("cache-control", `public, max-age=${IMAGE_CACHE_SECONDS}`);
-  out.set("cross-origin-resource-policy", "same-origin");
+  // Pictures are public and may be shown from the dev origins too; everything else stays same-origin.
+  out.set("cross-origin-resource-policy", r.cacheable ? "cross-origin" : "same-origin");
   out.set("referrer-policy", "no-referrer");
   cors(request, out);
   return new Response(res.body, { status: res.status, headers: out });
@@ -69,11 +73,14 @@ async function relay(request: Request, env: Env, path: string, search: string): 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === `${RELAY_PREFIX}/live/hyperliquid`) {
+    const feed = url.pathname.startsWith(`${RELAY_PREFIX}/live/`) ? url.pathname.split("/").pop() : undefined;
+    if (feed !== undefined) {
       const origin = request.headers.get("origin");
-      if (origin && origin !== url.origin && !DEV_ORIGINS.has(origin))
-        return new Response("forbidden", { status: 403 });
-      return env.LIVE.get(env.LIVE.idFromName("hyperliquid"), { locationHint: "weur" }).fetch(request);
+      if (origin && origin !== url.origin && !DEV_ORIGINS.has(origin)) {
+        return new Response("forbidden", { status: HTTP_FORBIDDEN });
+      }
+      if (!PROTOCOLS[feed]) return new Response("unknown feed", { status: HTTP_NOT_FOUND });
+      return env.LIVE.get(env.LIVE.idFromName(feed), { locationHint: "weur" }).fetch(request);
     }
     if (url.pathname.startsWith(`${RELAY_PREFIX}/`)) {
       if (request.method === "OPTIONS") {

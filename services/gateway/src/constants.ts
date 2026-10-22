@@ -79,6 +79,18 @@ export const UPSTREAMS: Record<string, Upstream> = {
       predictedFundings: 30,
     },
   },
+  // Polymarket public data (docs.polymarket.com): events, tags and search on Gamma.
+  "gamma-api.polymarket.com": {
+    paths: ["/events", "/tags", "/public-search", "/markets"],
+    methods: ["GET"],
+    cacheSeconds: 30,
+  },
+  // Polymarket CLOB reads: price history and order books (trading routes are added with S4 trading).
+  "clob.polymarket.com": {
+    paths: ["/prices-history", "/book", "/books", "/midpoint", "/price", "/spread"],
+    methods: ["GET"],
+    cacheSeconds: 2,
+  },
   "1click.chaindefuser.com": {
     paths: ["/v0/tokens", "/v0/quote", "/v0/deposit/submit", "/v0/status"],
     methods: GET_POST,

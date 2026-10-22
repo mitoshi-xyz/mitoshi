@@ -1,3 +1,4 @@
+export { LiveFeed, type LiveStatus, type LiveSub, liveKey } from "../live.ts";
 export {
   type AccountState,
   HyperliquidAccount,
@@ -7,5 +8,4 @@ export {
   type Position,
 } from "./account.ts";
 export * from "./constants.ts";
-export { LiveFeed, type LiveStatus, type LiveSub, liveKey } from "./live.ts";
 export { type BookLevel, type Candle, HyperliquidMarket, type Perp } from "./market.ts";
