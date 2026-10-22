@@ -25,7 +25,7 @@ pub fn open(network: Network) -> Result<Db, Error> {
 }
 
 /// Mitoshi keeps exactly one Zcash account per device wallet.
-fn account_id(db: &Db) -> Result<<Db as WalletRead>::AccountId, Error> {
+pub fn account_id(db: &Db) -> Result<<Db as WalletRead>::AccountId, Error> {
     db.get_account_ids()
         .ctx("listing accounts")?
         .first()

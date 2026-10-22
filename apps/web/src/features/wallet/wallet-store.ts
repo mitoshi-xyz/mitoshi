@@ -1,6 +1,14 @@
 "use client";
 
-import { MNEMONIC_STRENGTH_BITS, type Summary, type SyncProgress, WalletClient } from "@mitoshi/zwallet";
+import { BLOCK_SECONDS, planRest, restEndsAt, restKey } from "@mitoshi/engine";
+import {
+  type HistoryEntry,
+  MNEMONIC_STRENGTH_BITS,
+  type Note,
+  type Summary,
+  type SyncProgress,
+  WalletClient,
+} from "@mitoshi/zwallet";
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { useSyncExternalStore } from "react";
@@ -14,9 +22,23 @@ export interface WalletState {
   summary: Summary | null;
   progress: SyncProgress | null;
   error: string | null;
+  notes: Note[];
+  history: HistoryEntry[];
+  /** When the soonest resting value becomes usable (ms since the epoch), if any is resting. */
+  restingUntil: number | null;
 }
 
-let state: WalletState = { phase: "idle", summary: null, progress: null, error: null };
+const INITIAL: WalletState = {
+  phase: "idle",
+  summary: null,
+  progress: null,
+  error: null,
+  notes: [],
+  history: [],
+  restingUntil: null,
+};
+
+let state: WalletState = INITIAL;
 const listeners = new Set<() => void>();
 let client: WalletClient | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -24,6 +46,11 @@ let timer: ReturnType<typeof setInterval> | null = null;
 function set(patch: Partial<WalletState>) {
   state = { ...state, ...patch };
   for (const l of listeners) l();
+}
+
+/** The current wallet state, outside React. */
+export function walletState(): WalletState {
+  return state;
 }
 
 export function useWallet(): WalletState {
@@ -42,10 +69,46 @@ const HEX_CHARS_PER_BYTE = 2;
 const toHex = (bytes: Uint8Array) =>
   Array.from(bytes, (b) => b.toString(HEX_RADIX).padStart(HEX_CHARS_PER_BYTE, "0")).join("");
 
-async function seedHex(): Promise<string> {
+/** The 64-byte BIP 39 seed. It is read from the vault each time and never kept around. */
+export async function deviceSeed(): Promise<Uint8Array> {
   const phrase = await vaultGet(ZEC_NETWORK, "mnemonic");
   if (!phrase) throw new Error("no wallet on this device");
-  return toHex(mnemonicToSeedSync(new TextDecoder().decode(phrase)));
+  return mnemonicToSeedSync(new TextDecoder().decode(phrase));
+}
+
+async function seedHex(): Promise<string> {
+  return toHex(await deviceSeed());
+}
+
+/** The rest key (derived from the seed); kept for the session, it reveals nothing about the seed. */
+let restKeyBytes: Uint8Array | null = null;
+/** Locks applied this session, so a sync only touches notes whose plan changed. */
+const applied = new Map<string, number>();
+const refKey = (n: { txid: string; pool: string; index: number }) => `${n.txid}:${n.pool}:${n.index}`;
+
+/**
+ * The rest rules, applied after every sync: value from a public address is locked in the wallet
+ * store until its rest ends; fully shielded value is free at once.
+ */
+async function applyRest(c: WalletClient, tip: number) {
+  restKeyBytes ??= restKey(await deviceSeed());
+  const notes = await c.notes();
+  const blockSeconds = BLOCK_SECONDS[ZEC_NETWORK];
+  const plan = planRest(notes, tip, restKeyBytes, blockSeconds);
+  let soonest: number | null = null;
+  for (const lock of plan.lock) {
+    const fresh = lock.notes.filter((n) => applied.get(refKey(n)) !== lock.untilHeight);
+    if (fresh.length) await c.lockNotes(fresh, lock.untilHeight);
+    for (const n of lock.notes) applied.set(refKey(n), lock.untilHeight);
+    const ends = restEndsAt(lock.untilHeight, tip, Date.now(), blockSeconds);
+    soonest = soonest === null ? ends : Math.min(soonest, ends);
+  }
+  const released = plan.unlock.filter((n) => applied.has(refKey(n)));
+  if (released.length) {
+    await c.unlockNotes(released);
+    for (const n of released) applied.delete(refKey(n));
+  }
+  return { notes, restingUntil: soonest };
 }
 
 function fail(e: unknown) {
@@ -56,8 +119,15 @@ async function sync() {
   if (!client) return;
   set({ phase: state.summary ? "ready" : "syncing" });
   try {
-    const summary = await client.sync();
-    set({ phase: "ready", summary, progress: null, error: null });
+    const c = client;
+    let summary = await c.sync();
+    let rest: { notes: Note[]; restingUntil: number | null } = { notes: state.notes, restingUntil: state.restingUntil };
+    if (summary.tip !== null) {
+      rest = await applyRest(c, summary.tip);
+      summary = await c.summary();
+    }
+    const history = await c.history();
+    set({ phase: "ready", summary, progress: null, error: null, history, ...rest });
   } catch (e) {
     fail(e);
   }
@@ -127,6 +197,17 @@ export async function freshAddress(): Promise<string> {
   return (await client.freshAddress()).address;
 }
 
+/** The open wallet engine, for the private-wallet jobs. */
+export function walletClient(): WalletClient {
+  if (!client) throw new Error("wallet is not open");
+  return client;
+}
+
+/** Brings the balance up to date now (after a send or a payout). */
+export function refreshWallet(): Promise<void> {
+  return sync();
+}
+
 export async function previewSend(to: string, zat: number) {
   if (!client) throw new Error("wallet is not open");
   return client.propose(to, zat);
@@ -146,5 +227,7 @@ export function stopWallet() {
   timer = null;
   client?.close();
   client = null;
-  set({ phase: "idle", summary: null, progress: null, error: null });
+  restKeyBytes = null;
+  applied.clear();
+  set(INITIAL);
 }

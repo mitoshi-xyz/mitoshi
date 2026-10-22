@@ -50,6 +50,15 @@ export const subtreeRootsArg = (startIndex: number, protocol: number) =>
 /** `RawTransaction { data }` */
 export const rawTransaction = (raw: Uint8Array) => new Uint8Array(bytesField(1, raw));
 
+const HEX_RADIX = 16;
+const hexBytes = (hex: string) => Uint8Array.from(hex.match(/../g) ?? [], (b) => Number.parseInt(b, HEX_RADIX));
+
+const TX_FILTER_HASH_FIELD = 3;
+
+/** `TxFilter { hash }`: the hash is in internal byte order, which is the display hex reversed. */
+export const txFilter = (txidDisplayHex: string) =>
+  new Uint8Array(bytesField(TX_FILTER_HASH_FIELD, hexBytes(txidDisplayHex).reverse()));
+
 function readVarint(buf: Uint8Array, start: number): [bigint, number] {
   let value = 0n;
   let shift = 0n;
@@ -83,6 +92,31 @@ export function blockIdHeight(buf: Uint8Array): number {
     }
   }
   throw new Error("BlockID has no height");
+}
+
+/** Reads `RawTransaction { data = 1, height = 2 }`. Height is 0 in the mempool, 2^64 - 1 off the main chain. */
+export function rawTransactionReply(buf: Uint8Array): { data: Uint8Array; height: bigint } {
+  let data = new Uint8Array();
+  let height = 0n;
+  let i = 0;
+  while (i < buf.length) {
+    const [k, afterKey] = readVarint(buf, i);
+    const field = Number(k >> FIELD_SHIFT);
+    const wire = Number(k & WIRE_MASK);
+    if (wire === WIRE_VARINT) {
+      const [v, next] = readVarint(buf, afterKey);
+      if (field === 2) height = v;
+      i = next;
+    } else if (wire === WIRE_LEN) {
+      const [len, next] = readVarint(buf, afterKey);
+      const end = next + Number(len);
+      if (field === 1) data = buf.slice(next, end);
+      i = end;
+    } else {
+      throw new Error(`unexpected wire type ${wire}`);
+    }
+  }
+  return { data, height };
 }
 
 /** Reads `SendResponse { errorCode = 1, errorMessage = 2 }`. */

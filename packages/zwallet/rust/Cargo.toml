@@ -21,6 +21,7 @@ zcash_protocol = "0.11.0"
 zcash_keys = { version = "0.17.0", features = ["orchard"] }
 zcash_address = "0.14.0"
 zip321 = "0.10.0"
+zip32 = "0.3.0"
 orchard = { version = "0.16", default-features = false, features = ["circuit"] }
 sapling = { package = "sapling-crypto", version = "0.9", default-features = false }
 incrementalmerkletree = "0.9"

@@ -1,0 +1,23 @@
+{
+  "name": "@mitoshi/engine",
+  "private": true,
+  "type": "module",
+  "description": "Mitoshi's wallet engine: standard amounts, rest rules, random timing, the private-wallet registry, key derivation and the leak meter. Pure logic, no network.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'src/**/*.test.ts'"
+  },
+  "dependencies": {
+    "@noble/curves": "catalog:",
+    "@noble/hashes": "catalog:",
+    "@scure/base": "catalog:",
+    "@scure/bip32": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

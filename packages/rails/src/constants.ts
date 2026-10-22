@@ -1,0 +1,44 @@
+/** NEAR Intents 1Click (docs.near-intents.org). Reached only over OHTTP through the gateway. */
+export const ONECLICK_API = "https://1click.chaindefuser.com/v0";
+
+/**
+ * 1Click's quote-signing key, as published in its TypeScript SDK (`ONE_CLICK_MANAGER_PUB_KEY`,
+ * @defuse-protocol/one-click-sdk-typescript 0.1.26). Every quote is checked against it before its
+ * deposit address is used, so neither our relay nor gateway could swap in an address.
+ */
+export const ONECLICK_SIGNING_KEY = "ed25519:reYaWhvwu8Jzo3WUM3zhn6VrhuMEF4eADL17qtRVifc";
+
+/** 1Click asset ids (GET /v0/tokens, 2026-10-22). */
+export const ASSETS = {
+  zec: { id: "nep141:zec.omft.near", decimals: 8, symbol: "ZEC", chain: "zec" },
+  hypercoreUsdc: {
+    id: "1cs_v1:hypercore:hip1:0x6d1e7cde53ba9467b783cb7c530ce054",
+    decimals: 8,
+    symbol: "USDC",
+    chain: "hypercore",
+  },
+  polygonUsdc: {
+    id: "nep245:v2_1.omni.hot.tg:137_qiStmoQJDQPTebaPjgx5VBxZv6L",
+    decimals: 6,
+    symbol: "USDC",
+    chain: "pol",
+  },
+  sol: { id: "nep141:sol.omft.near", decimals: 9, symbol: "SOL", chain: "sol" },
+} as const;
+
+export type AssetKey = keyof typeof ASSETS;
+
+/** Slippage allowed on a swap, in basis points. */
+export const SLIPPAGE_BPS = 100;
+
+/** How long a deposit address stays live. ZEC deposits need confirmations, so allow two hours. */
+export const DEADLINE_MS = 2 * 60 * 60 * 1000;
+
+/** Mitoshi's fee on each funding swap, in basis points (0.2%), paid through 1Click appFees. */
+export const APP_FEE_BPS = 20;
+
+/**
+ * The NEAR account that receives the funding fee. Unset until the owner names one; with no
+ * recipient no app fee is added (and none is shown).
+ */
+export const APP_FEE_RECIPIENT: string | null = null;

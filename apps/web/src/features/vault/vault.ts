@@ -5,7 +5,7 @@ import { VAULT_DB, VAULT_IV_BYTES, VAULT_KEY_BITS } from "@/constants";
  * non-extractable WebCrypto key that never leaves the browser. Nothing in it is ever sent anywhere.
  */
 
-type RecordName = "mnemonic" | "walletdb";
+type RecordName = "mnemonic" | "walletdb" | "registry";
 
 interface StoredRecord {
   id: string;

@@ -11,6 +11,8 @@ export interface Env {
   OHTTP_SEED?: string;
   /** Shared with the relay so the gateway is not an open proxy for anyone else. */
   RELAY_TOKEN?: string;
+  /** NEAR Intents partner key (partners.near-intents.org): lower 1Click fees, confidential swaps. */
+  ONECLICK_API_KEY?: string;
 }
 
 /** `GET /v1/geo`: what Polymarket sees of the gateway's egress. Never echoes the IP. */
@@ -30,7 +32,10 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   if (env.RELAY_TOKEN && request.headers.get("x-mitoshi-relay") !== env.RELAY_TOKEN) {
     return new Response("relay only", { status: HTTP_UNAUTHORIZED });
   }
-  if (head === "ohttp") return ohttp(request, env.OHTTP_SEED);
+  if (head === "ohttp") {
+    const secrets = env.ONECLICK_API_KEY ? { ONECLICK_API_KEY: env.ONECLICK_API_KEY } : {};
+    return ohttp(request, env.OHTTP_SEED, secrets);
+  }
   if (head === "img") return img(request);
   return new Response("not found", { status: HTTP_NOT_FOUND });
 }

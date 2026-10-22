@@ -24,6 +24,37 @@ export interface Summary {
   balance: Balance | null;
 }
 
+/** An unspent note and where its value came from (from a public address or fully shielded). */
+export interface Note {
+  txid: string;
+  pool: "orchard" | "ironwood";
+  index: number;
+  value: number;
+  minedHeight: number | null;
+  change: boolean;
+  origin: "public" | "shielded" | "unknown";
+}
+
+export type NoteRef = Pick<Note, "txid" | "pool" | "index">;
+
+export interface HistoryEntry {
+  txid: string;
+  minedHeight: number | null;
+  expiryHeight: number | null;
+  /** Net change to the balance, in zatoshis (negative for sends, fee included). */
+  delta: number;
+  fee: number | null;
+  /** Block time, seconds since the epoch. */
+  time: number | null;
+  expired: boolean;
+  sentNotes: number;
+  receivedNotes: number;
+  /** A transfer between the wallet's own pools. */
+  internal: boolean;
+  /** Whether the transaction spent transparent inputs (null until the full transaction is known). */
+  fromPublic: boolean | null;
+}
+
 export interface ScanRange {
   start: number;
   end: number;
@@ -58,6 +89,10 @@ export type Request =
   | { id: number; kind: "summary" }
   | { id: number; kind: "freshAddress" }
   | { id: number; kind: "warmProver" }
+  | { id: number; kind: "notes" }
+  | { id: number; kind: "lockNotes"; notes: NoteRef[]; untilHeight: number }
+  | { id: number; kind: "unlockNotes"; notes: NoteRef[] }
+  | { id: number; kind: "history"; limit: number }
   | { id: number; kind: "send"; to: string; zat: number; seedHex: string }
   | { id: number; kind: "propose"; to: string; zat: number };
 

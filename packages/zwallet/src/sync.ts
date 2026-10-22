@@ -2,10 +2,56 @@ import type { PrivateFetch } from "@mitoshi/net";
 import { BIRTHDAY_LOOKBACK_BLOCKS, SCAN_BATCH_BLOCKS, SUBTREE_PROTOCOLS } from "./constants";
 import type { CoreModule } from "./core";
 import { lwdCall } from "./grpc-web";
-import { blockId, blockIdHeight, blockRange, framed, rawTransaction, sendResponse, subtreeRootsArg } from "./proto";
+import {
+  blockId,
+  blockIdHeight,
+  blockRange,
+  framed,
+  rawTransaction,
+  rawTransactionReply,
+  sendResponse,
+  subtreeRootsArg,
+  txFilter,
+} from "./proto";
 import type { ScanRange, SyncProgress } from "./types";
 
 const DONE = new Set(["Scanned", "Ignored"]);
+
+/** gRPC NOT_FOUND, as lightwalletd reports an unknown txid. */
+const NOT_FOUND = /grpc-status:?\s*5\b/;
+
+/** RawTransaction.height for a transaction mined outside the main chain (2^64 - 1). */
+const OFF_MAIN_CHAIN = 0xffff_ffff_ffff_ffffn;
+
+/** Data requests handled per sync, so one bad transaction cannot stall the loop. */
+const MAX_DATA_REQUESTS = 50;
+
+interface DataRequest {
+  kind: "status" | "enhance";
+  txid: string;
+}
+
+/**
+ * Fetches the full transactions the wallet asks for (new notes, our own sends awaiting mining)
+ * and stores them. This is how a note's origin (shielded or public) and a send's confirmation
+ * become known; compact blocks carry neither.
+ */
+export async function enhance(core: CoreModule, lwd: Lwd): Promise<number> {
+  const requests = core.call<DataRequest[]>("dataRequests").slice(0, MAX_DATA_REQUESTS);
+  let stored = 0;
+  for (const r of requests) {
+    const tx = await lwd.transaction(r.txid);
+    if (!tx) {
+      core.call("txStatus", { txid: r.txid, status: "unknown" });
+    } else if (tx.height === OFF_MAIN_CHAIN) {
+      core.call("txStatus", { txid: r.txid, status: "notInMainChain" });
+    } else {
+      core.call("storeTx", { height: Number(tx.height) }, tx.data);
+      stored++;
+    }
+  }
+  return stored;
+}
 
 /** The light server, reached through OHTTP. */
 export class Lwd {
@@ -33,6 +79,17 @@ export class Lwd {
   /** Compact blocks in [start, end). */
   blocks(start: number, end: number): Promise<Uint8Array[]> {
     return lwdCall(this.send, this.base, "GetBlockRange", blockRange(start, end - 1));
+  }
+
+  /** A full transaction and its height, or null when the light server does not know it. */
+  async transaction(txid: string): Promise<{ data: Uint8Array; height: bigint } | null> {
+    try {
+      const [msg] = await lwdCall(this.send, this.base, "GetTransaction", txFilter(txid));
+      return msg ? rawTransactionReply(msg) : null;
+    } catch (e) {
+      if (e instanceof Error && NOT_FOUND.test(e.message)) return null;
+      throw e;
+    }
   }
 
   async broadcast(raw: Uint8Array): Promise<void> {

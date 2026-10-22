@@ -15,7 +15,14 @@ export const LWD_SERVICE = "cash.z.wallet.sdk.rpc.CompactTxStreamer";
  * The only lightwalletd methods the wallet uses. All of them go over OHTTP: even block ranges say
  * something about one wallet (where its scan starts is its birthday).
  */
-export const LWD_METHODS = ["GetLatestBlock", "GetTreeState", "GetSubtreeRoots", "GetBlockRange", "SendTransaction"];
+export const LWD_METHODS = [
+  "GetLatestBlock",
+  "GetTreeState",
+  "GetSubtreeRoots",
+  "GetBlockRange",
+  "GetTransaction",
+  "SendTransaction",
+];
 
 export interface Upstream {
   /** Path prefixes a request may use. */
@@ -25,6 +32,11 @@ export interface Upstream {
   headers?: readonly string[];
   /** Seconds a GET response may be shared between users (public data only). */
   cacheSeconds?: number;
+  /**
+   * A header the gateway adds from one of its own secrets (a partner key the browser never sees).
+   * It is the same for every user, so it ties no two requests to one person.
+   */
+  inject?: { header: string; secret: "ONECLICK_API_KEY" };
 }
 
 const GET_POST = ["GET", "POST"] as const;
@@ -45,7 +57,11 @@ export const UPSTREAMS: Record<string, Upstream> = {
   "zcash-mainnet.chainsafe.dev": LWD,
   "zcash-testnet.chainsafe.dev": LWD,
   // NEAR Intents 1Click (docs.near-intents.org): tokens, quote, deposit submit, status.
-  "1click.chaindefuser.com": { paths: ["/v0/"], methods: GET_POST, headers: ["authorization"] },
+  "1click.chaindefuser.com": {
+    paths: ["/v0/tokens", "/v0/quote", "/v0/deposit/submit", "/v0/status"],
+    methods: GET_POST,
+    inject: { header: "x-api-key", secret: "ONECLICK_API_KEY" },
+  },
 };
 
 /** Request headers that are always dropped, whatever the upstream. */

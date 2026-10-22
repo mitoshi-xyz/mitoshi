@@ -15,6 +15,7 @@ node_modules/
 .pnpm-store/
 .turbo/
 .next/
+.next-main/
 out/
 dist/
 coverage/

@@ -24,6 +24,10 @@ catalog:
   "@tailwindcss/postcss": 4.3.3
   ohttp-ts: 0.6.1
   hpke: 1.1.7
+  "@noble/curves": 2.4.0
+  "@noble/hashes": 2.4.0
+  "@scure/base": 2.4.0
+  "@scure/bip32": 2.4.0
 
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.11.9"

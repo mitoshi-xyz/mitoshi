@@ -1,7 +1,7 @@
 import { AEAD_AES_128_GCM, CipherSuite, KDF_HKDF_SHA256, KEM_DHKEM_X25519_HKDF_SHA256 } from "hpke";
 import { KeyConfig, MediaType, OHTTPServer } from "ohttp-ts";
 import { OHTTP_KEY_ID, OHTTP_MAX_MESSAGE_BYTES, OHTTP_SEED_BYTES } from "./constants";
-import { forward } from "./upstream";
+import { forward, type Secrets } from "./upstream";
 
 /**
  * The OHTTP gateway (RFC 9458). The relay in front of it sees the user's IP but only ciphertext;
@@ -58,7 +58,7 @@ export async function ohttpKeys(seedHex: string | undefined): Promise<Response> 
 }
 
 /** `POST /ohttp`: decrypts one request, calls the upstream it names, encrypts the answer. */
-export async function ohttp(request: Request, seedHex: string | undefined): Promise<Response> {
+export async function ohttp(request: Request, seedHex: string | undefined, secrets: Secrets = {}): Promise<Response> {
   if (request.method !== "POST" || request.headers.get("content-type") !== MediaType.REQUEST) {
     return new Response("expected message/ohttp-req", { status: HTTP_BAD_REQUEST });
   }
@@ -75,6 +75,6 @@ export async function ohttp(request: Request, seedHex: string | undefined): Prom
     // Opaque on purpose (RFC 9458 §5.2): a bad key id or a tampered message look the same.
     return new Response("could not decrypt", { status: HTTP_BAD_REQUEST });
   }
-  const inner = await forward(decapsulated.request);
+  const inner = await forward(decapsulated.request, secrets);
   return decapsulated.context.encapsulateResponse(inner);
 }

@@ -6,6 +6,7 @@
 //! JS owns every network request and hands this module raw lightwalletd protobuf bytes.
 
 mod abi;
+mod notes;
 mod prover;
 mod send;
 mod sync;
@@ -99,6 +100,13 @@ pub(crate) fn dispatch(method: &str, args: &Value, bin: &[u8]) -> Result<Value, 
         "scanBlocks" => with_state(|s| sync::scan_blocks(s, args, bin)),
         "propose" => with_state(|s| send::propose(s, args)),
         "build" => with_state(|s| send::build(s, args)),
+        "notes" => with_state(notes::list),
+        "dataRequests" => with_state(notes::data_requests),
+        "storeTx" => with_state(|s| notes::store_tx(s, args, bin)),
+        "txStatus" => with_state(|s| notes::tx_status(s, args)),
+        "lockNotes" => with_state(|s| notes::lock(s, args)),
+        "unlockNotes" => with_state(|s| notes::unlock(s, args)),
+        "history" => with_state(|s| notes::history(s, args)),
         other => Err(Error::msg(format!("unknown method {other}"))),
     }
 }

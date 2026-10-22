@@ -1,4 +1,4 @@
-import type { Network, Proposal, Request, Response, Summary, SyncProgress } from "./types";
+import type { HistoryEntry, Network, Note, NoteRef, Proposal, Request, Response, Summary, SyncProgress } from "./types";
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
 type Call = DistributiveOmit<Request, "id">;
@@ -66,6 +66,24 @@ export class WalletClient {
 
   freshAddress(): Promise<{ address: string }> {
     return this.request({ kind: "freshAddress" });
+  }
+
+  /** Every unspent note with its origin. */
+  notes(): Promise<Note[]> {
+    return this.request({ kind: "notes" });
+  }
+
+  /** Rests notes: they cannot be spent (and count as locked) until the chain passes `untilHeight`. */
+  lockNotes(notes: NoteRef[], untilHeight: number): Promise<number> {
+    return this.request({ kind: "lockNotes", notes, untilHeight });
+  }
+
+  unlockNotes(notes: NoteRef[]): Promise<number> {
+    return this.request({ kind: "unlockNotes", notes });
+  }
+
+  history(limit = 100): Promise<HistoryEntry[]> {
+    return this.request({ kind: "history", limit });
   }
 
   warmProver(): Promise<{ ms: number }> {

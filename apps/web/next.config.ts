@@ -10,8 +10,10 @@ const config: NextConfig = {
   poweredByHeader: false,
   devIndicators: false,
   images: { unoptimized: true },
-  transpilePackages: ["@mitoshi/zwallet", "@mitoshi/net"],
+  transpilePackages: ["@mitoshi/zwallet", "@mitoshi/net", "@mitoshi/engine", "@mitoshi/rails"],
   output: "export",
+  // A second dev server (mainnet, port 3301) needs its own build folder.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
 };
 
 export default config;

@@ -63,17 +63,22 @@ function filtered(res: Response): Headers {
   return out;
 }
 
+/** Gateway-held secrets an upstream rule may inject. */
+export type Secrets = Partial<Record<NonNullable<Upstream["inject"]>["secret"], string>>;
+
 /**
  * Calls an allowlisted upstream for a decrypted user request. Only the method, URL, body and a
  * fixed set of headers go out; the response comes back with only its status, body and type.
  */
-export async function forward(inner: Request): Promise<Response> {
+export async function forward(inner: Request, secrets: Secrets = {}): Promise<Response> {
   const url = new URL(inner.url);
   const method = inner.method.toUpperCase();
   const rule = ruleFor(url, method);
   if (!rule) return refuse(`not allowed: ${method} ${url.hostname}${url.pathname}`);
 
   const headers = upstreamHeaders(inner.headers, rule);
+  const injected = rule.inject ? secrets[rule.inject.secret] : undefined;
+  if (rule.inject && injected) headers.set(rule.inject.header, injected);
   const shareable = method === "GET" && rule.cacheSeconds !== undefined && !headers.has("authorization");
   const key = url.toString();
   if (shareable) {

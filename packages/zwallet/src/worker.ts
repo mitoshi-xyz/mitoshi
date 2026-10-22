@@ -6,8 +6,8 @@
 import { createPrivateFetch } from "@mitoshi/net";
 import { LWD_UPSTREAM } from "./constants";
 import { CoreModule } from "./core";
-import { createAccount, Lwd, syncToTip } from "./sync";
-import type { Built, Proposal, Request, Response, Summary } from "./types";
+import { createAccount, enhance, Lwd, syncToTip } from "./sync";
+import type { Built, HistoryEntry, Note, Proposal, Request, Response, Summary } from "./types";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -47,9 +47,13 @@ async function handle(req: Request): Promise<unknown> {
     case "sync": {
       const w = ready();
       // One sync at a time; a second request joins the running one.
-      syncing ??= syncToTip(w.core, w.lwd, (progress) => post({ event: "progress", progress }), persist).finally(() => {
-        syncing = null;
-      });
+      syncing ??= syncToTip(w.core, w.lwd, (progress) => post({ event: "progress", progress }), persist)
+        .then(async () => {
+          if ((await enhance(w.core, w.lwd)) > 0) persist();
+        })
+        .finally(() => {
+          syncing = null;
+        });
       await syncing;
       return w.core.call<Summary>("summary");
     }
@@ -60,6 +64,20 @@ async function handle(req: Request): Promise<unknown> {
       persist();
       return reply;
     }
+    case "notes":
+      return ready().core.call<Note[]>("notes");
+    case "lockNotes": {
+      const n = ready().core.call<number>("lockNotes", { notes: req.notes, untilHeight: req.untilHeight });
+      persist();
+      return n;
+    }
+    case "unlockNotes": {
+      const n = ready().core.call<number>("unlockNotes", { notes: req.notes });
+      persist();
+      return n;
+    }
+    case "history":
+      return ready().core.call<HistoryEntry[]>("history", { limit: req.limit });
     case "warmProver":
       return ready().core.call<{ ms: number }>("warmProver");
     case "propose":

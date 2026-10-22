@@ -164,6 +164,18 @@ settings:
 
 catalogs:
   default:
+    '@noble/curves':
+      specifier: 2.4.0
+      version: 2.4.0
+    '@noble/hashes':
+      specifier: 2.4.0
+      version: 2.4.0
+    '@scure/base':
+      specifier: 2.4.0
+      version: 2.4.0
+    '@scure/bip32':
+      specifier: 2.4.0
+      version: 2.4.0
     '@tailwindcss/postcss':
       specifier: 4.3.3
       version: 4.3.3
@@ -217,9 +229,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@mitoshi/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@mitoshi/net':
         specifier: workspace:*
         version: link:../../packages/net
+      '@mitoshi/rails':
+        specifier: workspace:*
+        version: link:../../packages/rails
       '@mitoshi/zwallet':
         specifier: workspace:*
         version: link:../../packages/zwallet
@@ -261,6 +279,28 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  packages/engine:
+    dependencies:
+      '@noble/curves':
+        specifier: 'catalog:'
+        version: 2.4.0
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 2.4.0
+      '@scure/base':
+        specifier: 'catalog:'
+        version: 2.4.0
+      '@scure/bip32':
+        specifier: 'catalog:'
+        version: 2.4.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   packages/net:
     dependencies:
       hpke:
@@ -270,6 +310,28 @@ importers:
         specifier: 'catalog:'
         version: 0.6.1(hpke@1.1.7)
     devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/rails:
+    dependencies:
+      '@mitoshi/net':
+        specifier: workspace:*
+        version: link:../net
+      '@noble/curves':
+        specifier: 'catalog:'
+        version: 2.4.0
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 2.4.0
+      '@scure/base':
+        specifier: 'catalog:'
+        version: 2.4.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -829,6 +891,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@noble/curves@2.4.0':
+    resolution: {integrity: sha512-P4/62zrgfH33CneE3Dn4WhJVA22YUU0eR51wKIan4NVRvwsA0YnPTwWGpNbpuacSujmSFLvyzpyuR30+fbq2Ew==}
+    engines: {node: '>= 20.19.0'}
+
   '@noble/hashes@2.4.0':
     resolution: {integrity: sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==}
     engines: {node: '>= 20.19.0'}
@@ -841,6 +907,12 @@ packages:
 
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
+
+  '@scure/base@2.4.0':
+    resolution: {integrity: sha512-thZ1TuJwFwBblOhgsjDKvvGirBxNp+wSvY/DR6tJBJOTDhdAAcHJ8Vbr2eFnqaxeca4+t0i9KBf+uHYGWwZORg==}
+
+  '@scure/bip32@2.4.0':
+    resolution: {integrity: sha512-i3DS0CptAocyvqE4n3SUkpzeQK4vJMFwWLofTwRiiKo2aWojBOfyMCgfKw9HVpO6fSY5AK86sHS/Uzn8kK9Few==}
 
   '@scure/bip39@2.4.0':
     resolution: {integrity: sha512-82dxFbZUYboyOf0AXiydsQrFQ5Q4h9mX+O2UkE91ROYmsc0BKMGZLwDmy96Jpa2+vrtoxomjUhy1RPIgH/r2nA==}
@@ -1608,6 +1680,10 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.4.2':
     optional: true
 
+  '@noble/curves@2.4.0':
+    dependencies:
+      '@noble/hashes': 2.4.0
+
   '@noble/hashes@2.4.0': {}
 
   '@poppinss/colors@4.1.6':
@@ -1621,6 +1697,14 @@ snapshots:
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.3': {}
+
+  '@scure/base@2.4.0': {}
+
+  '@scure/bip32@2.4.0':
+    dependencies:
+      '@noble/curves': 2.4.0
+      '@noble/hashes': 2.4.0
+      '@scure/base': 2.4.0
 
   '@scure/bip39@2.4.0':
     dependencies:

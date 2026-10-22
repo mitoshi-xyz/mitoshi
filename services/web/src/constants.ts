@@ -1,8 +1,8 @@
 /** Paths under /relay and the gateway route each one goes to. */
 export const RELAY_PREFIX = "/relay";
 
-/** Browser origins (besides this Worker's own) allowed to use the relay: local development only. */
-export const DEV_ORIGINS = new Set(["http://localhost:3300"]);
+/** Browser origins (besides this Worker's own) allowed to use the relay: local development only (3300 testnet, 3301 mainnet). */
+export const DEV_ORIGINS = new Set(["http://localhost:3300", "http://localhost:3301"]);
 
 /** Largest body the relay will pass on (OHTTP messages are capped at 8 MiB by the gateway). */
 export const MAX_RELAY_BODY_BYTES = 8 * 1024 * 1024 + 64 * 1024;
