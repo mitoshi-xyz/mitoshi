@@ -37,6 +37,11 @@ export interface Upstream {
    * It is the same for every user, so it ties no two requests to one person.
    */
   inject?: { header: string; secret: "ONECLICK_API_KEY" };
+  /**
+   * POST bodies whose JSON `type` is public market data, with how many seconds a response may be
+   * shared between users. Anything that names a user is never in this list.
+   */
+  cachePostTypes?: Record<string, number>;
 }
 
 const GET_POST = ["GET", "POST"] as const;
@@ -57,6 +62,23 @@ export const UPSTREAMS: Record<string, Upstream> = {
   "zcash-mainnet.chainsafe.dev": LWD,
   "zcash-testnet.chainsafe.dev": LWD,
   // NEAR Intents 1Click (docs.near-intents.org): tokens, quote, deposit submit, status.
+  // Hyperliquid (hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api): info and signed actions.
+  "api.hyperliquid.xyz": {
+    paths: ["/info", "/exchange"],
+    methods: POST,
+    cachePostTypes: {
+      meta: 60,
+      spotMeta: 60,
+      metaAndAssetCtxs: 2,
+      spotMetaAndAssetCtxs: 2,
+      allMids: 1,
+      l2Book: 1,
+      recentTrades: 2,
+      candleSnapshot: 2,
+      fundingHistory: 60,
+      predictedFundings: 30,
+    },
+  },
   "1click.chaindefuser.com": {
     paths: ["/v0/tokens", "/v0/quote", "/v0/deposit/submit", "/v0/status"],
     methods: GET_POST,

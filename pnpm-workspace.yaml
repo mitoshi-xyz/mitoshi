@@ -28,6 +28,8 @@ catalog:
   "@noble/hashes": 2.4.0
   "@scure/base": 2.4.0
   "@scure/bip32": 2.4.0
+  "@nktkas/hyperliquid": 0.33.3
+  viem: 2.57.4
 
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.11.9"

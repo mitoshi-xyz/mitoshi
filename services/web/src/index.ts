@@ -1,7 +1,10 @@
 import { DEV_ORIGINS, IMAGE_CACHE_SECONDS, MAX_RELAY_BODY_BYTES, PASS_BACK, RELAY_PREFIX } from "./constants";
 
+export { LiveFeed } from "./live";
+
 interface Env {
   ASSETS: Fetcher;
+  LIVE: DurableObjectNamespace;
   GATEWAY_URL: string;
   RELAY_TOKEN?: string;
 }
@@ -66,6 +69,12 @@ async function relay(request: Request, env: Env, path: string, search: string): 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === `${RELAY_PREFIX}/live/hyperliquid`) {
+      const origin = request.headers.get("origin");
+      if (origin && origin !== url.origin && !DEV_ORIGINS.has(origin))
+        return new Response("forbidden", { status: 403 });
+      return env.LIVE.get(env.LIVE.idFromName("hyperliquid"), { locationHint: "weur" }).fetch(request);
+    }
     if (url.pathname.startsWith(`${RELAY_PREFIX}/`)) {
       if (request.method === "OPTIONS") {
         const h = new Headers();

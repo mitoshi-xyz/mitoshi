@@ -34,6 +34,19 @@ function refuse(reason: string, status = HTTP_FORBIDDEN): Response {
   return Response.json({ error: reason }, { status });
 }
 
+/** How long a response may be shared, or undefined when it is about one user. */
+function cacheSeconds(rule: Upstream, method: string, url: URL, body: ArrayBuffer | null): number | undefined {
+  if (method === "GET") return rule.cacheSeconds;
+  if (!rule.cachePostTypes || !body || url.pathname !== "/info") return undefined;
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(body)) as { type?: unknown; user?: unknown };
+    if (typeof parsed.type !== "string" || parsed.user !== undefined) return undefined;
+    return rule.cachePostTypes[parsed.type];
+  } catch {
+    return undefined;
+  }
+}
+
 /** The upstream rule for a URL, or null when the gateway must not call it. */
 export function ruleFor(url: URL, method: string): Upstream | null {
   if (url.protocol !== "https:" || url.port !== "" || url.username !== "" || url.password !== "") return null;
@@ -79,8 +92,10 @@ export async function forward(inner: Request, secrets: Secrets = {}): Promise<Re
   const headers = upstreamHeaders(inner.headers, rule);
   const injected = rule.inject ? secrets[rule.inject.secret] : undefined;
   if (rule.inject && injected) headers.set(rule.inject.header, injected);
-  const shareable = method === "GET" && rule.cacheSeconds !== undefined && !headers.has("authorization");
-  const key = url.toString();
+  const body = method === "GET" ? null : await inner.arrayBuffer();
+  const ttl = cacheSeconds(rule, method, url, body);
+  const shareable = ttl !== undefined && !headers.has("authorization") && !rule.inject;
+  const key = body ? `${url}\n${new TextDecoder().decode(body)}` : url.toString();
   if (shareable) {
     const hit = cache.get(key);
     if (hit && hit.expires > Date.now()) {
@@ -93,22 +108,22 @@ export async function forward(inner: Request, secrets: Secrets = {}): Promise<Re
     res = await fetch(url, {
       method,
       headers,
-      body: method === "GET" ? null : await inner.arrayBuffer(),
+      body,
       redirect: "manual",
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
   } catch (e) {
     return refuse(`upstream unreachable: ${url.hostname} (${e instanceof Error ? e.name : "error"})`, HTTP_BAD_GATEWAY);
   }
-  const body = await res.arrayBuffer();
+  const answer = await res.arrayBuffer();
   const out = filtered(res);
-  if (shareable && res.ok && rule.cacheSeconds !== undefined) {
+  if (shareable && res.ok && ttl !== undefined) {
     remember(key, {
-      expires: Date.now() + rule.cacheSeconds * MS_PER_SECOND,
+      expires: Date.now() + ttl * MS_PER_SECOND,
       status: res.status,
       headers: [...out],
-      body,
+      body: answer,
     });
   }
-  return new Response(body, { status: res.status, headers: out });
+  return new Response(answer, { status: res.status, headers: out });
 }

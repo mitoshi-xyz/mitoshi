@@ -1,0 +1,23 @@
+{
+  "name": "@mitoshi/venues",
+  "private": true,
+  "type": "module",
+  "description": "Venue adapters (Hyperliquid, Polymarket, Solana). Every call goes over OHTTP; each private wallet signs with its own key.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./hyperliquid": "./src/hyperliquid/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'src/**/*.test.ts'"
+  },
+  "dependencies": {
+    "@mitoshi/net": "workspace:*",
+    "@nktkas/hyperliquid": "catalog:",
+    "viem": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}
