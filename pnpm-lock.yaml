@@ -369,6 +369,12 @@ importers:
       '@nktkas/hyperliquid':
         specifier: 'catalog:'
         version: 0.33.3(typescript@6.0.3)
+      '@noble/curves':
+        specifier: 'catalog:'
+        version: 2.4.0
+      '@scure/base':
+        specifier: 'catalog:'
+        version: 2.4.0
       viem:
         specifier: 'catalog:'
         version: 2.57.4(typescript@6.0.3)

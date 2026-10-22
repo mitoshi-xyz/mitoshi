@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./hyperliquid": "./src/hyperliquid/index.ts",
-    "./polymarket": "./src/polymarket/index.ts"
+    "./polymarket": "./src/polymarket/index.ts",
+    "./solana": "./src/solana/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -15,6 +16,8 @@
   "dependencies": {
     "@mitoshi/net": "workspace:*",
     "@nktkas/hyperliquid": "catalog:",
+    "@noble/curves": "catalog:",
+    "@scure/base": "catalog:",
     "viem": "catalog:"
   },
   "devDependencies": {

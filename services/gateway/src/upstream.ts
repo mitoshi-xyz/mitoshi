@@ -36,7 +36,11 @@ function refuse(reason: string, status = HTTP_FORBIDDEN): Response {
 
 /** How long a response may be shared, or undefined when it is about one user. */
 function cacheSeconds(rule: Upstream, method: string, url: URL, body: ArrayBuffer | null): number | undefined {
-  if (method === "GET") return rule.cacheSeconds;
+  if (method === "GET") {
+    if (!rule.cacheGetPaths) return rule.cacheSeconds;
+    const hit = Object.entries(rule.cacheGetPaths).find(([prefix]) => url.pathname.startsWith(prefix));
+    return hit?.[1];
+  }
   if (!rule.cachePostTypes || !body || url.pathname !== "/info") return undefined;
   try {
     const parsed = JSON.parse(new TextDecoder().decode(body)) as { type?: unknown; user?: unknown };
@@ -44,6 +48,17 @@ function cacheSeconds(rule: Upstream, method: string, url: URL, body: ArrayBuffe
     return rule.cachePostTypes[parsed.type];
   } catch {
     return undefined;
+  }
+}
+
+/** Whether a JSON-RPC body (single call) uses only allowed methods. */
+function rpcAllowed(methods: readonly string[], body: ArrayBuffer | null): boolean {
+  if (!body) return false;
+  try {
+    const call = JSON.parse(new TextDecoder().decode(body)) as { method?: unknown };
+    return typeof call.method === "string" && methods.includes(call.method);
+  } catch {
+    return false;
   }
 }
 
@@ -93,6 +108,7 @@ export async function forward(inner: Request, secrets: Secrets = {}): Promise<Re
   const injected = rule.inject ? secrets[rule.inject.secret] : undefined;
   if (rule.inject && injected) headers.set(rule.inject.header, injected);
   const body = method === "GET" ? null : await inner.arrayBuffer();
+  if (rule.rpcMethods && !rpcAllowed(rule.rpcMethods, body)) return refuse("JSON-RPC method not allowed");
   const ttl = cacheSeconds(rule, method, url, body);
   const shareable = ttl !== undefined && !headers.has("authorization") && !rule.inject;
   const key = body ? `${url}\n${new TextDecoder().decode(body)}` : url.toString();

@@ -42,6 +42,10 @@ export interface Upstream {
    * shared between users. Anything that names a user is never in this list.
    */
   cachePostTypes?: Record<string, number>;
+  /** GET path prefixes that may be shared, with seconds (overrides `cacheSeconds`). */
+  cacheGetPaths?: Record<string, number>;
+  /** For JSON-RPC upstreams: the only methods a request may call. */
+  rpcMethods?: readonly string[];
 }
 
 const GET_POST = ["GET", "POST"] as const;
@@ -90,6 +94,20 @@ export const UPSTREAMS: Record<string, Upstream> = {
     paths: ["/prices-history", "/book", "/books", "/midpoint", "/price", "/spread"],
     methods: ["GET"],
     cacheSeconds: 2,
+  },
+  // Jupiter (keyless lite tier): Ultra swaps for each wallet, token lists and prices for everyone.
+  "lite-api.jup.ag": {
+    paths: ["/ultra/v1/order", "/ultra/v1/execute", "/ultra/v1/holdings/", "/tokens/v2/", "/price/v3"],
+    methods: GET_POST,
+    cacheGetPaths: { "/tokens/v2/": 30, "/price/v3": 5 },
+  },
+  // GeckoTerminal: Solana pools and OHLCV candles.
+  "api.geckoterminal.com": { paths: ["/api/v2/networks/solana/"], methods: ["GET"], cacheSeconds: 30 },
+  // Solana RPC, for balances and the one transfer home.
+  "api.mainnet-beta.solana.com": {
+    paths: ["/"],
+    methods: POST,
+    rpcMethods: ["getBalance", "getLatestBlockhash", "sendTransaction", "getSignatureStatuses", "simulateTransaction"],
   },
   "1click.chaindefuser.com": {
     paths: ["/v0/tokens", "/v0/quote", "/v0/deposit/submit", "/v0/status"],
