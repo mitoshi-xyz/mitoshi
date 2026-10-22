@@ -27,3 +27,6 @@ export type CandleInterval = keyof typeof CANDLE_INTERVALS;
 
 export const CANDLE_LIMIT = 300;
 export const TOKEN_LIST_LIMIT = 50;
+
+/** Signatures read per footprint request (the RPC's maximum page). */
+export const SIGNATURES_PAGE = 1_000;

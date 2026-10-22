@@ -103,11 +103,18 @@ export const UPSTREAMS: Record<string, Upstream> = {
   },
   // GeckoTerminal: Solana pools and OHLCV candles.
   "api.geckoterminal.com": { paths: ["/api/v2/networks/solana/"], methods: ["GET"], cacheSeconds: 30 },
-  // Solana RPC, for balances and the one transfer home.
+  // Solana RPC: balances, the one transfer home, and a wallet's public transaction list (the copy-trader's view).
   "api.mainnet-beta.solana.com": {
     paths: ["/"],
     methods: POST,
-    rpcMethods: ["getBalance", "getLatestBlockhash", "sendTransaction", "getSignatureStatuses", "simulateTransaction"],
+    rpcMethods: [
+      "getBalance",
+      "getLatestBlockhash",
+      "sendTransaction",
+      "getSignatureStatuses",
+      "simulateTransaction",
+      "getSignaturesForAddress",
+    ],
   },
   "1click.chaindefuser.com": {
     paths: ["/v0/tokens", "/v0/quote", "/v0/deposit/submit", "/v0/status"],

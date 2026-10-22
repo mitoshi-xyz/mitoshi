@@ -1,3 +1,4 @@
+export type { PublicFootprint } from "../footprint.ts";
 export { LiveFeed, type LiveStatus, type LiveSub, liveKey } from "../live.ts";
 export {
   type AccountState,

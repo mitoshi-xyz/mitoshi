@@ -276,6 +276,23 @@ export function startJobs() {
   setInterval(tick, TICK_MS);
 }
 
+/**
+ * Picks a stopped wallet back up where it stopped. Before anything was sent it waits for a new
+ * random start; after the deposit went out it goes back to following the swap on NEAR.
+ */
+export function retryWallet(id: string) {
+  const w = walletById(id);
+  // A stopped trip home is retried by sending home again (home.ts), not from here.
+  if (w?.status !== "failed" || latestSwap(w, "return")) return;
+  const now = Date.now();
+  const { error: _cleared, ...rest } = w;
+  if (latestSwap(w, "fund")?.depositTx) {
+    putWallet(advance(rest, "funding", now, "Checking the swap on NEAR again"));
+    return;
+  }
+  putWallet({ ...advance(rest, "preparing", now, "Trying again at a new random moment"), fundAt: fundingTime(now) });
+}
+
 export function setKeepReady(venue: Venue, sizeZat: number | null) {
   mutate((r) => ({ ...r, keepReady: { ...r.keepReady, [venue]: sizeZat } }));
 }

@@ -3,9 +3,9 @@
 import type { PrivateWallet } from "@mitoshi/engine";
 import { SOL_MINT, type SolToken } from "@mitoshi/venues/solana";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cx, TxCta, type TxPhase } from "@/kit";
+import { openFund } from "../private-wallets/drawers";
 import { markTrading } from "../private-wallets/home";
 import { BUY_SOL, SELL_SHARES } from "./constants";
 import { useHoldings } from "./hooks";
@@ -39,7 +39,6 @@ export function SwapTicket({
   wallet: PrivateWallet | undefined;
   waiting: string;
 }) {
-  const router = useRouter();
   const queries = useQueryClient();
   const holdings = useHoldings(wallet);
   const [side, setSide] = useState<"buy" | "sell">("buy");
@@ -165,7 +164,7 @@ export function SwapTicket({
         phase={phase === "confirmed" || phase === "failed" ? "idle" : phase}
         label={`${side === "buy" ? "Buy" : "Sell"} ${token.symbol}`}
         onClick={() => void swap()}
-        {...(!wallet ? { fix: { label: "Fund a Solana wallet first", onClick: () => router.push("/wallets") } } : {})}
+        {...(!wallet ? { fix: { label: "Fund a Solana wallet first", onClick: () => openFund("solana") } } : {})}
       />
       {!wallet ? <p className="text-center text-[12px] text-ink-2">{waiting}</p> : null}
       {result ? (

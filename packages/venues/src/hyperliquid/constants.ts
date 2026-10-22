@@ -31,3 +31,6 @@ export type Interval = keyof typeof INTERVALS;
 
 /** How many candles a chart loads at first. */
 export const CANDLES_PER_VIEW = 300;
+
+/** The most rows Hyperliquid's info endpoint returns for a user's fills or ledger in one answer. */
+export const INFO_PAGE = 2_000;

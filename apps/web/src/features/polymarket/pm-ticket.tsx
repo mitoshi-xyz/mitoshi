@@ -3,11 +3,11 @@
 import { latestSwap, readyWallet } from "@mitoshi/engine";
 import type { Book, PmMarket } from "@mitoshi/venues/polymarket";
 import { KeyRound, Sparkles } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 import { CountdownRing, cx, Segmented } from "@/kit";
 import { usd } from "../format";
 import { VenueMark } from "../marks/mark";
+import { openFund } from "../private-wallets/drawers";
 import { useRegistry } from "../private-wallets/registry-store";
 import { TICKET_AMOUNTS as AMOUNTS } from "./constants";
 
@@ -149,9 +149,10 @@ export function PmTicket({ market, outcome, onOutcome, book }: PmTicketProps) {
           </span>
         </div>
       ) : (
-        <Link
-          href="/wallets"
-          className="flex items-center gap-3 rounded-lg border border-dashed border-strong p-3 transition-colors hover:border-accent hover:bg-accent-wash"
+        <button
+          type="button"
+          onClick={() => openFund("polymarket")}
+          className="flex w-full items-center gap-3 text-left rounded-lg border border-dashed border-strong p-3 transition-colors hover:border-accent hover:bg-accent-wash"
         >
           <VenueMark venue="polymarket" size={30} />
           <span className="flex flex-col leading-tight">
@@ -160,7 +161,7 @@ export function PmTicket({ market, outcome, onOutcome, book }: PmTicketProps) {
             </span>
             <span className="text-[12px] text-ink-2">A brand-new account from your shielded ZEC, in ~8 min.</span>
           </span>
-        </Link>
+        </button>
       )}
     </div>
   );

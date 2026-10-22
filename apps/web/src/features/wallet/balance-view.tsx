@@ -156,7 +156,7 @@ export function BalanceView({ state }: { state: WalletState }) {
             <ArrowUpFromLine size={17} /> Withdraw
           </button>
           <Link
-            href="/wallets"
+            href="/wallets#new"
             className="inline-flex h-12 items-center gap-2 rounded-md border border-cream/20 px-5 font-semibold text-[15px] hover:bg-cream/10"
           >
             <Sparkles size={17} /> Fund a private wallet

@@ -1,6 +1,7 @@
 import type { PrivateFetch } from "@mitoshi/net";
 import { InfoClient } from "@nktkas/hyperliquid";
-import { CANDLES_PER_VIEW, INTERVALS, type Interval } from "./constants.ts";
+import type { PublicFootprint } from "../footprint.ts";
+import { CANDLES_PER_VIEW, INFO_PAGE, INTERVALS, type Interval } from "./constants.ts";
 import { OhttpTransport } from "./transport.ts";
 
 /** One perpetual market, with today's numbers. */
@@ -100,5 +101,23 @@ export class HyperliquidMarket {
   async mids(): Promise<Record<string, number>> {
     const m = await this.info.allMids();
     return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, Number(v)]));
+  }
+
+  /** What the public sees of one account: its filled orders, ledger moves and open positions. */
+  async footprint(user: `0x${string}`): Promise<PublicFootprint> {
+    const [fills, ledger, state] = await Promise.all([
+      this.info.userFills({ user, aggregateByTime: true }),
+      this.info.userNonFundingLedgerUpdates({ user, startTime: 0 }),
+      this.info.clearinghouseState({ user }),
+    ]);
+    const times = [...fills.map((f) => f.time), ...ledger.map((l) => l.time)];
+    return {
+      activity: new Set(fills.map((f) => f.oid)).size,
+      activityCapped: fills.length >= INFO_PAGE,
+      transfers: ledger.length,
+      transfersCapped: ledger.length >= INFO_PAGE,
+      openPositions: state.assetPositions.filter((p) => Number(p.position.szi) !== 0).length,
+      firstSeen: times.length ? Math.min(...times) : null,
+    };
   }
 }

@@ -4,11 +4,11 @@ import { latestSwap, readyWallet } from "@mitoshi/engine";
 import { LAMPORTS_PER_SOL } from "@mitoshi/venues/solana";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, BadgeCheck, ShieldCheck, Sparkles } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChangeChip, CountdownRing, EmptyState, RollingNumber, Skeleton, Wait } from "@/kit";
 import { compactUsd } from "../format";
 import { Mark, VenueMark } from "../marks/mark";
+import { openFund } from "../private-wallets/drawers";
 import { sendSolanaHome } from "../private-wallets/home";
 import { useRegistry } from "../private-wallets/registry-store";
 import { MASK, useHideAmounts } from "../shell/prefs";
@@ -174,9 +174,10 @@ export function TokenView() {
             <span className="text-[13px]">{waiting}</span>
           </div>
         ) : (
-          <Link
-            href="/wallets"
-            className="flex items-center gap-3 rounded-lg border border-dashed border-strong p-3 transition-colors hover:border-accent hover:bg-accent-wash"
+          <button
+            type="button"
+            onClick={() => openFund("solana")}
+            className="flex w-full items-center gap-3 text-left rounded-lg border border-dashed border-strong p-3 transition-colors hover:border-accent hover:bg-accent-wash"
           >
             <span className="flex size-9 items-center justify-center rounded-full bg-accent text-accent-ink">
               <Sparkles size={17} />
@@ -185,7 +186,7 @@ export function TokenView() {
               <span className="font-medium text-sm">Fund a Solana wallet</span>
               <span className="text-[12px] text-ink-2">Brand-new, funded in SOL from your shielded ZEC.</span>
             </span>
-          </Link>
+          </button>
         )}
         <SwapTicket token={t} wallet={wallet} waiting={waiting} />
         {wallet && (wallet.status === "trading" || wallet.status === "ready") ? (

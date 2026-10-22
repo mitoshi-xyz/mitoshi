@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
+import { WalletDrawers } from "../private-wallets/drawers";
 import { startJobs } from "../private-wallets/jobs";
 import { loadRegistry } from "../private-wallets/registry-store";
 import { bootWallet } from "../wallet/wallet-store";
@@ -76,6 +77,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         <Dock onMore={() => setMore(true)} />
         <More open={more} onClose={() => setMore(false)} />
         <Palette open={palette} onClose={() => setPalette(false)} />
+        <WalletDrawers />
       </div>
     </QueryClientProvider>
   );

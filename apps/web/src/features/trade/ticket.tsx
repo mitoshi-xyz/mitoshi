@@ -3,11 +3,11 @@
 import type { PrivateWallet } from "@mitoshi/engine";
 import type { AccountState, Perp } from "@mitoshi/venues/hyperliquid";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cx, Segmented, TxCta, type TxPhase } from "@/kit";
 import { price, usd } from "../format";
 import { hlAccount } from "../hyperliquid/hl";
+import { openFund } from "../private-wallets/drawers";
 import { markTrading } from "../private-wallets/home";
 import {
   DEFAULT_LEVERAGE,
@@ -40,7 +40,6 @@ export interface TicketProps {
 
 /** Long or short from a private wallet, with leverage, TP/SL and a readout before you send. */
 export function Ticket({ perp, mark, wallet, state }: TicketProps) {
-  const router = useRouter();
   const queries = useQueryClient();
   const [side, setSide] = useState<"long" | "short">("long");
   const [margin, setMargin] = useState("");
@@ -265,7 +264,7 @@ export function Ticket({ perp, mark, wallet, state }: TicketProps) {
         phase={phase === "confirmed" || phase === "failed" ? "idle" : phase}
         label={kind === "limit" ? `Place ${side} limit` : `${isLong ? "Long" : "Short"} ${perp.name} · ${leverage}×`}
         onClick={() => void place()}
-        {...(!wallet ? { fix: { label: "Fund a private wallet first", onClick: () => router.push("/wallets") } } : {})}
+        {...(!wallet ? { fix: { label: "Fund a private wallet first", onClick: () => openFund("hyperliquid") } } : {})}
       />
       {step ? <p className="text-center text-[12px] text-ink-2">{step}…</p> : null}
       {problem && marginUsd > 0 ? <p className="text-center text-[12px] text-warning">{problem}</p> : null}

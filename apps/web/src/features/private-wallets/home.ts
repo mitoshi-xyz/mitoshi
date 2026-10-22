@@ -11,6 +11,13 @@ import { oneclick, quote, withSwap } from "./swaps";
 const CENTS_TO_BASE = 10 ** (ASSETS.hypercoreUsdc.decimals - 2);
 const CENTS = 100;
 
+/** Sends a wallet's money home, whichever venue it is on. */
+export function sendHome(w: PrivateWallet): Promise<{ sent: number }> {
+  if (w.venue === "hyperliquid") return sendHyperliquidHome(w.id);
+  if (w.venue === "solana") return sendSolanaHome(w.id);
+  return Promise.reject(new Error("Polymarket wallets come home through the Polymarket bridge, with trading"));
+}
+
 /** A wallet has placed its first order: it is trading now. */
 export function markTrading(id: string, note: string) {
   const w = walletById(id);

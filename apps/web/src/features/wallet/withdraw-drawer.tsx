@@ -6,6 +6,7 @@ import { ClipboardPaste, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
 import { cx, Drawer, SlideToConfirm, TxSteps, Wait } from "@/kit";
+import { LeakMeter } from "../privacy/leak-meter";
 import { useRegistry } from "../private-wallets/registry-store";
 import { previewSend, send, useWallet } from "./wallet-store";
 
@@ -179,33 +180,7 @@ export function WithdrawDrawer({ open, onClose }: { open: boolean; onClose: () =
             <dt className="text-ink-2">Arrives</dt>
             <dd className="num text-right">{zat > 0 ? `${zec(zat)} ${UNIT}` : "–"}</dd>
           </dl>
-          {leak ? (
-            <div
-              className={cx(
-                "flex flex-col gap-1 rounded-lg border p-3 text-[13px]",
-                leak.level === "green"
-                  ? "border-up/30 bg-up-wash"
-                  : leak.level === "amber"
-                    ? "border-warning/30 bg-warning/10"
-                    : "border-down/30 bg-down-wash",
-              )}
-            >
-              <span
-                className={cx(
-                  "font-semibold",
-                  leak.level === "green" ? "text-up" : leak.level === "amber" ? "text-warning" : "text-down",
-                )}
-              >
-                Leak meter ·{" "}
-                {leak.level === "green" ? "clear" : leak.level === "amber" ? "careful" : "this would link you"}
-              </span>
-              {leak.reasons.map((r) => (
-                <span key={r.text} className="text-ink-2">
-                  {r.text}
-                </span>
-              ))}
-            </div>
-          ) : null}
+          {leak ? <LeakMeter report={leak} /> : null}
           {feeError ? <p className="text-[12px] text-down">{feeError}</p> : null}
           {tooMuch && zat > 0 ? (
             <p className="text-[12px] text-warning">

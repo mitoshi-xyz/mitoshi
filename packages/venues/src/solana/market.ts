@@ -1,10 +1,13 @@
 import type { PrivateFetch } from "@mitoshi/net";
+import type { PublicFootprint } from "../footprint.ts";
 import {
   CANDLE_INTERVALS,
   CANDLE_LIMIT,
   type CandleInterval,
   GECKO_API,
   JUP_API,
+  SIGNATURES_PAGE,
+  SOLANA_RPC,
   TOKEN_LIST_LIMIT,
 } from "./constants.ts";
 
@@ -138,5 +141,30 @@ export class SolanaMarket {
     return (res.data?.attributes?.ohlcv_list ?? [])
       .map(([t = 0, o = 0, h = 0, l = 0, c = 0, v = 0]) => ({ t: t * MS_PER_SECOND, o, h, l, c, v }))
       .sort((a, b) => a.t - b.t);
+  }
+
+  /** What the public sees of one address: its transactions, newest first, and when it first appeared. */
+  async footprint(address: string): Promise<PublicFootprint> {
+    const res = await this.send(SOLANA_RPC, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getSignaturesForAddress",
+        params: [address, { limit: SIGNATURES_PAGE, commitment: "confirmed" }],
+      }),
+    });
+    const body = (await res.json()) as { result?: { blockTime: number | null }[]; error?: { message?: string } };
+    if (!res.ok || body.error || !body.result) throw new Error(`Solana RPC: ${body.error?.message ?? res.status}`);
+    const times = body.result.map((s) => s.blockTime).filter((t): t is number => t !== null);
+    return {
+      activity: body.result.length,
+      activityCapped: body.result.length >= SIGNATURES_PAGE,
+      transfers: null,
+      transfersCapped: false,
+      openPositions: null,
+      firstSeen: times.length ? Math.min(...times) * MS_PER_SECOND : null,
+    };
   }
 }

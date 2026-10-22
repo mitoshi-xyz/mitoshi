@@ -35,11 +35,14 @@ export function checkFunding(c: FundingCheck): LeakReport {
       text: `${zec(c.amountZat)} is not a standard size, so the public hop would stand out`,
     });
   } else {
-    reasons.push({ level: "green", text: `${zec(c.amountZat)} is a standard size shared by many swaps` });
+    reasons.push({ level: "green", text: `${zec(c.amountZat)} is a standard size, shared by many swaps` });
   }
   if (c.amountZat + c.feeZat > c.spendableZat) {
-    const why = c.restingZat > 0 ? ` (${zec(c.restingZat)} is still resting after arriving from a public address)` : "";
-    reasons.push({ level: "red", text: `not enough rested balance${why}` });
+    const why = c.restingZat > 0 ? `; ${zec(c.restingZat)} is still resting after arriving from a public address` : "";
+    reasons.push({
+      level: "red",
+      text: `Only ${zec(c.spendableZat)} is ready to spend, and this needs ${zec(c.amountZat + c.feeZat)} with the fee${why}`,
+    });
   }
   return report(reasons);
 }
@@ -68,17 +71,17 @@ export function checkWithdrawal(c: WithdrawalCheck): LeakReport {
   for (const p of recent) {
     const diff = Math.abs(p.zat - c.amountZat);
     if (diff === 0) {
-      reasons.push({ level: "red", text: `exactly matches ${zec(p.zat)} that came home from a private wallet` });
+      reasons.push({ level: "red", text: `Exactly matches ${zec(p.zat)} that came home from a private wallet` });
     } else if (diff <= p.zat * NEAR_MATCH_FRACTION) {
-      reasons.push({ level: "amber", text: `close to ${zec(p.zat)} that came home from a private wallet` });
+      reasons.push({ level: "amber", text: `Close to ${zec(p.zat)} that came home from a private wallet` });
     }
     if (c.now - p.at <= TIMING_WINDOW_MS) {
-      reasons.push({ level: "amber", text: "soon after a payout: waiting a few hours breaks the timing link" });
+      reasons.push({ level: "amber", text: "Soon after a payout: waiting a few hours breaks the timing link" });
     }
   }
   if (!isCanonical(c.amountZat)) {
-    reasons.push({ level: "amber", text: "a round, standard amount blends in better on a public address" });
+    reasons.push({ level: "amber", text: "A round, standard amount blends in better on a public address" });
   }
-  if (reasons.length === 0) reasons.push({ level: "green", text: "no recent payout matches this amount or time" });
+  if (reasons.length === 0) reasons.push({ level: "green", text: "No recent payout matches this amount or time" });
   return report(reasons);
 }

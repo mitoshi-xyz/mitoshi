@@ -3,11 +3,11 @@
 import { latestSwap, type PrivateWallet } from "@mitoshi/engine";
 import type { AccountState } from "@mitoshi/venues/hyperliquid";
 import { ShieldCheck, Sparkles } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CountdownRing, cx, Skeleton } from "@/kit";
 import { usd } from "../format";
 import { VenueMark } from "../marks/mark";
+import { openFund } from "../private-wallets/drawers";
 import { MASK, useHideAmounts } from "../shell/prefs";
 
 const MS_PER_SECOND = 1000;
@@ -97,9 +97,10 @@ export function WalletCard({
   }
 
   return (
-    <Link
-      href="/wallets"
-      className="flex items-center gap-3 rounded-lg border border-dashed border-strong p-3 transition-colors hover:border-accent hover:bg-accent-wash"
+    <button
+      type="button"
+      onClick={() => openFund("hyperliquid")}
+      className="flex w-full items-center gap-3 text-left rounded-lg border border-dashed border-strong p-3 transition-colors hover:border-accent hover:bg-accent-wash"
     >
       <span className="flex size-9 items-center justify-center rounded-full bg-accent text-accent-ink">
         <Sparkles size={17} />
@@ -110,6 +111,6 @@ export function WalletCard({
           A brand-new Hyperliquid account from your shielded ZEC, in ~8 min.
         </span>
       </span>
-    </Link>
+    </button>
   );
 }
