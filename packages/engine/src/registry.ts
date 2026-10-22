@@ -45,6 +45,8 @@ export interface SwapRecord {
   depositTx?: string;
   /** What actually arrived, once settled. */
   settledOut?: string;
+  /** The transaction that delivered it (for a trip home, the ZEC payout's txid). */
+  settledTx?: string;
   refundedAmount?: string;
   createdAt: number;
   updatedAt: number;

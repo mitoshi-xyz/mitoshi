@@ -5,7 +5,11 @@ import { VAULT_DB, VAULT_IV_BYTES, VAULT_KEY_BITS } from "@/constants";
  * non-extractable WebCrypto key that never leaves the browser. Nothing in it is ever sent anywhere.
  */
 
-type RecordName = "mnemonic" | "walletdb" | "registry";
+/**
+ * `pending` marks a wallet whose words are saved but whose account is not made yet ("new" or
+ * "restore"; empty once made), so a tab closed mid-way finishes the job on its next open.
+ */
+type RecordName = "mnemonic" | "walletdb" | "registry" | "pending";
 
 interface StoredRecord {
   id: string;

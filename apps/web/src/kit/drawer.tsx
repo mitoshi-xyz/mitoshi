@@ -1,11 +1,12 @@
 "use client";
 
 import { X } from "lucide-react";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { cx } from "./cx";
 
 /**
  * A right drawer on desktop (384 px, or 560 wide) and a bottom sheet on phones, over a scrim. Esc and the scrim close it.
+ * Its contents mount when it opens and unmount once it has slid away, so a closed drawer runs no timers or queries.
  */
 export function Drawer({
   open,
@@ -20,6 +21,10 @@ export function Drawer({
   wide?: boolean;
   children: ReactNode;
 }) {
+  const [present, setPresent] = useState(open);
+  useEffect(() => {
+    if (open) setPresent(true);
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -39,6 +44,9 @@ export function Drawer({
         )}
       />
       <section
+        onTransitionEnd={(e) => {
+          if (e.target === e.currentTarget && !open) setPresent(false);
+        }}
         role="dialog"
         aria-modal="true"
         className={cx(
@@ -62,7 +70,7 @@ export function Drawer({
             <X size={18} />
           </button>
         </header>
-        {children}
+        {open || present ? children : null}
       </section>
     </div>
   );

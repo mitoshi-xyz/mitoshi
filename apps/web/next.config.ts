@@ -9,6 +9,8 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   devIndicators: false,
+  // Dev only: lets a fresh origin (empty IndexedDB) load the app, to see first-run screens without touching the dev wallet.
+  allowedDevOrigins: ["127.0.0.1"],
   images: { unoptimized: true },
   transpilePackages: [
     "@mitoshi/zwallet",

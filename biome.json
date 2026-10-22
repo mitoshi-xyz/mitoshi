@@ -55,7 +55,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/constants/**", "**/constants.ts"],
+      "includes": ["**/constants/**", "**/constants.ts", "**/*-art.tsx"],
       "linter": {
         "rules": {
           "style": {

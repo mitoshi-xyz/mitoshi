@@ -1,0 +1,273 @@
+/* The first-run story (features/welcome): the scene's picture, its headline and sentence, the dots, and the actions.
+   The pictures are SVG drawn in the product's own marks and coloured from the tokens; each scene's keyframes restart on
+   mount. Under reduced motion everything is still. */
+.wl {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto auto;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 480px;
+  min-height: min(720px, calc(100dvh - 180px));
+  margin: 0 auto;
+  touch-action: pan-y;
+}
+.wl-stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 0;
+  cursor: grab;
+}
+.wl-art {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  overflow: visible;
+}
+
+.wl-words {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+  max-width: 420px;
+  min-height: 112px;
+  align-content: start;
+}
+.wl-title {
+  font: 700 clamp(26px, 5.6vw, 34px) / 1.12 var(--font-heading);
+  letter-spacing: -0.02em;
+}
+.wl-body {
+  font: 400 16px / 1.45 var(--font-sans);
+  color: var(--ink-2);
+}
+
+.wl-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin: 14px 0 10px;
+}
+.wl-dot-btn {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+}
+.wl-dot-btn::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--strong);
+  transition:
+    width var(--dur-state) var(--ease-drawer),
+    background var(--dur-state);
+}
+.wl-dot-btn[aria-current="step"]::before {
+  width: 22px;
+  background: var(--accent);
+}
+
+/* The pictures. */
+.wl-orbit {
+  fill: none;
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 7;
+}
+.wl-money {
+  fill: #141210;
+}
+.wl-cream {
+  fill: var(--cream);
+}
+.wl-cap {
+  font: 500 12px var(--font-sans);
+  fill: color-mix(in oklab, var(--cream) 62%, transparent);
+}
+.wl-stamp-glyph {
+  font: 700 64px var(--font-stamp);
+  fill: color-mix(in oklab, var(--cream) 7%, transparent);
+  text-anchor: middle;
+}
+.wl-accent {
+  fill: var(--accent);
+}
+.wl-on-accent {
+  fill: var(--accent-ink);
+}
+.wl-on-accent-line {
+  fill: none;
+  stroke: var(--accent-ink);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.wl-card {
+  fill: var(--surface-2);
+  stroke: var(--hairline);
+}
+.wl-hair {
+  fill: var(--hairline);
+}
+.wl-disc {
+  fill: var(--surface-2);
+  stroke: var(--hairline);
+}
+.wl-disc-home {
+  stroke: var(--up);
+  stroke-width: 2;
+}
+.wl-mono {
+  font: 500 12px var(--font-mono);
+  letter-spacing: 0.04em;
+  fill: var(--ink);
+}
+.wl-muted {
+  fill: var(--ink-2);
+}
+.wl-up {
+  fill: var(--up);
+}
+.wl-ok {
+  fill: var(--up);
+}
+.wl-center {
+  text-anchor: middle;
+}
+.wl-end {
+  text-anchor: end;
+}
+.wl-line {
+  fill: none;
+  stroke: var(--up);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.wl-trail {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 2 9;
+}
+.wl-stamp-box {
+  fill: var(--stage);
+  stroke: var(--up);
+  stroke-width: 2.5;
+}
+.wl-stamp-text {
+  font: 700 15px var(--font-mono);
+  letter-spacing: 0.12em;
+  fill: var(--up);
+  text-anchor: middle;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wl-title,
+  .wl-body {
+    animation: wl-in 420ms var(--ease-drawer) both;
+  }
+  .wl-body {
+    animation-delay: 60ms;
+  }
+  .wl-rise {
+    animation: wl-in 480ms var(--ease-drawer) 80ms both;
+  }
+  .wl-spin {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: wl-spin 24s linear infinite;
+  }
+  .wl-blink {
+    animation: wl-blink 2400ms ease-in-out 900ms infinite;
+  }
+  .wl-pop {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: wl-pop 380ms var(--ease-bounce) 700ms both;
+  }
+  .wl-deal {
+    animation: wl-deal 560ms var(--ease-drawer) both;
+  }
+  .wl-draw {
+    stroke-dashoffset: 0;
+    animation: wl-draw 1400ms var(--ease-drawer) 120ms both;
+  }
+  .wl-line.wl-draw {
+    stroke-dasharray: 560;
+  }
+  .wl-receipt {
+    animation: wl-in 420ms var(--ease-drawer) 1500ms both;
+  }
+  .wl-stamp {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: wl-stamp 520ms cubic-bezier(0.2, 1.4, 0.4, 1) 900ms both;
+  }
+}
+@keyframes wl-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes wl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes wl-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes wl-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes wl-deal {
+  from {
+    opacity: 0;
+    translate: 0 40px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes wl-draw {
+  from {
+    stroke-dashoffset: 560;
+    opacity: 0.2;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@keyframes wl-stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-14deg) scale(1.6);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+}

@@ -213,6 +213,9 @@ async function poll(id: string) {
   let next = withSwap(w, kind, {
     status: st.status,
     ...(st.swapDetails.amountOut ? { settledOut: st.swapDetails.amountOut } : {}),
+    ...(st.swapDetails.destinationChainTxHashes[0]
+      ? { settledTx: st.swapDetails.destinationChainTxHashes[0].hash }
+      : {}),
     ...(st.swapDetails.refundedAmount ? { refundedAmount: st.swapDetails.refundedAmount } : {}),
   });
   if (kind === "fund") {

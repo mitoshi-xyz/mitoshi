@@ -2,6 +2,7 @@
 
 import { BLOCK_SECONDS, planRest, restEndsAt, restKey } from "@mitoshi/engine";
 import {
+  type EngineLoad,
   type HistoryEntry,
   MNEMONIC_STRENGTH_BITS,
   type Note,
@@ -17,25 +18,43 @@ import { vaultGet, vaultPut } from "../vault/vault";
 
 export type WalletPhase = "idle" | "loading" | "empty" | "creating" | "syncing" | "ready" | "error";
 
+/** What creating a wallet is doing right now: saving the words, then making the account. */
+export type CreatingStep = "vault" | "account";
+
 export interface WalletState {
   phase: WalletPhase;
+  /** The engine download while it runs (null before it starts and once it is open). */
+  engine: EngineLoad | null;
+  creatingStep: CreatingStep | null;
   summary: Summary | null;
   progress: SyncProgress | null;
+  /** The engine failed to open or create: nothing else works until a reload. */
   error: string | null;
+  /** The last sync failed (network, light server); the wallet still works and the next sync retries. */
+  syncError: string | null;
+  /** When the last sync finished cleanly (ms since the epoch). */
+  syncedAt: number | null;
   notes: Note[];
   history: HistoryEntry[];
   /** When the soonest resting value becomes usable (ms since the epoch), if any is resting. */
   restingUntil: number | null;
+  /** When that value arrived (ms since the epoch), so its rest can be shown as a share done. */
+  restingFrom: number | null;
 }
 
 const INITIAL: WalletState = {
   phase: "idle",
+  engine: null,
+  creatingStep: null,
   summary: null,
   progress: null,
   error: null,
+  syncError: null,
+  syncedAt: null,
   notes: [],
   history: [],
   restingUntil: null,
+  restingFrom: null,
 };
 
 let state: WalletState = INITIAL;
@@ -64,6 +83,7 @@ export function useWallet(): WalletState {
   );
 }
 
+const MS_PER_SECOND = 1000;
 const HEX_RADIX = 16;
 const HEX_CHARS_PER_BYTE = 2;
 const toHex = (bytes: Uint8Array) =>
@@ -95,20 +115,25 @@ async function applyRest(c: WalletClient, tip: number) {
   const notes = await c.notes();
   const blockSeconds = BLOCK_SECONDS[ZEC_NETWORK];
   const plan = planRest(notes, tip, restKeyBytes, blockSeconds);
-  let soonest: number | null = null;
+  const mined = new Map(notes.map((n) => [refKey(n), n.minedHeight ?? tip]));
+  const now = Date.now();
+  let soonest: { until: number; from: number } | null = null;
   for (const lock of plan.lock) {
     const fresh = lock.notes.filter((n) => applied.get(refKey(n)) !== lock.untilHeight);
     if (fresh.length) await c.lockNotes(fresh, lock.untilHeight);
     for (const n of lock.notes) applied.set(refKey(n), lock.untilHeight);
-    const ends = restEndsAt(lock.untilHeight, tip, Date.now(), blockSeconds);
-    soonest = soonest === null ? ends : Math.min(soonest, ends);
+    const until = restEndsAt(lock.untilHeight, tip, now, blockSeconds);
+    if (soonest === null || until < soonest.until) {
+      const arrived = Math.min(...lock.notes.map((n) => mined.get(refKey(n)) ?? tip));
+      soonest = { until, from: now - (tip - arrived) * blockSeconds * MS_PER_SECOND };
+    }
   }
   const released = plan.unlock.filter((n) => applied.has(refKey(n)));
   if (released.length) {
     await c.unlockNotes(released);
     for (const n of released) applied.delete(refKey(n));
   }
-  return { notes, restingUntil: soonest };
+  return { notes, restingUntil: soonest?.until ?? null, restingFrom: soonest?.from ?? null };
 }
 
 function fail(e: unknown) {
@@ -121,15 +146,20 @@ async function sync() {
   try {
     const c = client;
     let summary = await c.sync();
-    let rest: { notes: Note[]; restingUntil: number | null } = { notes: state.notes, restingUntil: state.restingUntil };
+    let rest: Pick<WalletState, "notes" | "restingUntil" | "restingFrom"> = {
+      notes: state.notes,
+      restingUntil: state.restingUntil,
+      restingFrom: state.restingFrom,
+    };
     if (summary.tip !== null) {
       rest = await applyRest(c, summary.tip);
       summary = await c.summary();
     }
     const history = await c.history();
-    set({ phase: "ready", summary, progress: null, error: null, history, ...rest });
+    set({ phase: "ready", summary, progress: null, syncError: null, syncedAt: Date.now(), history, ...rest });
   } catch (e) {
-    fail(e);
+    // A failed sync is not a broken wallet: keep what we know and let the next round retry.
+    set({ progress: null, syncError: e instanceof Error ? e.message : String(e) });
   }
 }
 
@@ -145,13 +175,20 @@ export async function bootWallet() {
   try {
     client = new WalletClient({
       onProgress: (progress) => set({ progress }),
+      onLoad: (engine) => set({ engine }),
       onPersist: (bytes) => void vaultPut(ZEC_NETWORK, "walletdb", bytes),
     });
     const saved = await vaultGet(ZEC_NETWORK, "walletdb");
     await client.open(ZEC_NETWORK, RELAY, saved ?? undefined);
-    const hasPhrase = (await vaultGet(ZEC_NETWORK, "mnemonic")) !== null;
-    if (!hasPhrase) {
+    set({ engine: null });
+    const phrase = await vaultGet(ZEC_NETWORK, "mnemonic");
+    if (!phrase) {
       set({ phase: "empty" });
+      return;
+    }
+    const pending = new TextDecoder().decode((await vaultGet(ZEC_NETWORK, "pending")) ?? new Uint8Array());
+    if (pending === "new" || pending === "restore") {
+      await makeAccount(new TextDecoder().decode(phrase), pending === "restore");
       return;
     }
     // Show what this device already knows straight away; the sync then brings it to the tip.
@@ -180,11 +217,30 @@ export function isValidPhrase(phrase: string): boolean {
 export async function createWallet(phrase: string, restore: boolean) {
   if (!client) return;
   const normalized = phrase.trim().toLowerCase().split(/\s+/).join(" ");
-  set({ phase: "creating", error: null });
+  set({ phase: "creating", creatingStep: "vault", error: null });
   try {
-    await vaultPut(ZEC_NETWORK, "mnemonic", new TextEncoder().encode(normalized));
-    const seed = toHex(mnemonicToSeedSync(normalized));
-    await client.create(seed, restore ? IRONWOOD_ACTIVATION[ZEC_NETWORK] : undefined);
+    // The words first: whatever happens next, they are what recovers the money.
+    const encode = (t: string) => new TextEncoder().encode(t);
+    await vaultPut(ZEC_NETWORK, "pending", encode(restore ? "restore" : "new"));
+    await vaultPut(ZEC_NETWORK, "mnemonic", encode(normalized));
+  } catch (e) {
+    fail(e);
+    return;
+  }
+  await makeAccount(normalized, restore);
+}
+
+/** Makes the shielded account from saved words, then starts syncing. Safe to resume. */
+async function makeAccount(phrase: string, restore: boolean) {
+  if (!client) return;
+  set({ phase: "creating", creatingStep: "account", error: null });
+  try {
+    // A resumed run may find the account already made (only clearing the marker was lost).
+    const made = (await client.summary().catch(() => null))?.birthday != null;
+    if (!made)
+      await client.create(toHex(mnemonicToSeedSync(phrase)), restore ? IRONWOOD_ACTIVATION[ZEC_NETWORK] : undefined);
+    await vaultPut(ZEC_NETWORK, "pending", new Uint8Array());
+    set({ creatingStep: null });
     startSyncing();
     void client.warmProver();
   } catch (e) {
