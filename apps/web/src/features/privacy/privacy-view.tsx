@@ -162,7 +162,7 @@ export function PrivacyView() {
           ))}
         </ul>
         <p className="text-[12px] text-muted">
-          NEAR's confidential mode, which also hides who is on each side of a swap from NEAR's public explorer, is{" "}
+          NEAR's confidential mode, in which a swap's deposit and payout can't be matched to each other, is{" "}
           {confidentialSwaps() ? "on for your swaps" : "off: it needs a NEAR partner key on the gateway"}.
         </p>
       </section>

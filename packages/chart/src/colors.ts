@@ -15,8 +15,8 @@ export interface Colors {
   stamp: string;
 }
 
-export function readColors(): Colors {
-  const css = getComputedStyle(document.documentElement);
+export function readColors(root: Element = document.documentElement): Colors {
+  const css = getComputedStyle(root);
   const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
   const body = getComputedStyle(document.body);
   return {

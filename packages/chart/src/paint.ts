@@ -1,4 +1,5 @@
 import type { Colors } from "./colors";
+import { WATERMARK_SIZE } from "./constants";
 import type { Levels } from "./types";
 
 /** Drawing primitives the chart engine composes (each draws on a context already scaled to CSS pixels). */
@@ -40,8 +41,8 @@ export function paintWatermark(
   text: string,
   width: number,
   height: number,
-  size: number,
 ) {
+  const size = Math.min(width, height) * WATERMARK_SIZE;
   ctx.save();
   ctx.globalAlpha = WATERMARK_ALPHA;
   ctx.fillStyle = colors.ink;

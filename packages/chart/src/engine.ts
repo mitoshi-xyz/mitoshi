@@ -37,7 +37,6 @@ import {
   TIME_H,
   TIME_LABEL_EVERY_PX,
   VOLUME_SHARE,
-  WATERMARK_SIZE,
   ZOOM_STEP,
 } from "./constants";
 import { attachPointer, watchBox } from "./input";
@@ -52,6 +51,7 @@ export class MarketChart {
   private readonly ctx: CanvasRenderingContext2D;
   private mode: ChartMode;
   private colors: Colors;
+  private readonly colorRoot: Element | undefined;
   private readonly watermark: string;
   private format: (p: number) => string;
   private formatTime: (ms: number) => string;
@@ -96,7 +96,8 @@ export class MarketChart {
     const ctx = this.canvas.getContext("2d");
     if (!ctx) throw new Error("no 2D canvas");
     this.ctx = ctx;
-    this.colors = readColors();
+    this.colorRoot = options.colorsFrom;
+    this.colors = readColors(this.colorRoot);
     this.listen();
     this.resize();
     this.loop();
@@ -173,7 +174,7 @@ export class MarketChart {
           this.visible = v;
         },
         onRepaint: (themeChanged) => {
-          if (themeChanged) this.colors = readColors();
+          if (themeChanged) this.colors = readColors(this.colorRoot);
           this.dirty = true;
         },
       }),
@@ -288,7 +289,7 @@ export class MarketChart {
     ctx.clearRect(0, 0, this.w, this.h);
     this.fitAxis();
     this.drawDots();
-    this.drawWatermark();
+    paintWatermark(ctx, this.colors, this.watermark, this.plotW(), this.h);
     if (this.mode === "live") this.drawLive();
     else this.drawHistory();
   }
@@ -296,11 +297,6 @@ export class MarketChart {
   private drawDots() {
     const drift = (this.mode === "live" ? this.frame * DOT_DRIFT_PX_PER_FRAME : 0) % DOT_SPACING;
     paintDots(this.ctx, this.colors, this.plotW(), this.h, DOT_SPACING, drift);
-  }
-
-  private drawWatermark() {
-    const size = Math.min(this.plotW(), this.h) * WATERMARK_SIZE;
-    paintWatermark(this.ctx, this.colors, this.watermark, this.plotW(), this.h, size);
   }
 
   private drawAxis(lo: number, hi: number, yOf: (p: number) => number) {

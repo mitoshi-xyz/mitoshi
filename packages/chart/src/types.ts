@@ -27,4 +27,6 @@ export interface ChartOptions {
   format?: (price: number) => string;
   /** How a time is written under candles. */
   formatTime?: (ms: number) => string;
+  /** Where the colour tokens are read from (default: the document): a page section with its own palette. */
+  colorsFrom?: Element;
 }
