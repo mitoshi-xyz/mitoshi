@@ -1,5 +1,5 @@
 import type { PrivateFetch } from "@mitoshi/net";
-import { BIRTHDAY_LOOKBACK_BLOCKS, SCAN_BATCH_BLOCKS, SUBTREE_PROTOCOLS } from "./constants";
+import { BIRTHDAY_LOOKBACK_BLOCKS, MAX_REORG_REWINDS, SCAN_BATCH_BLOCKS, SUBTREE_PROTOCOLS } from "./constants";
 import type { CoreModule } from "./core";
 import { lwdCall } from "./grpc-web";
 import {
@@ -16,6 +16,8 @@ import {
 import type { ScanRange, SyncProgress } from "./types";
 
 const DONE = new Set(["Scanned", "Ignored"]);
+
+type ScanResult = { received: number } | { reorg: { at: number; rewoundTo: number } };
 
 /** gRPC NOT_FOUND, as lightwalletd reports an unknown txid. */
 const NOT_FOUND = /grpc-status:?\s*5\b/;
@@ -111,7 +113,8 @@ export async function createAccount(core: CoreModule, lwd: Lwd, seedHex: string,
 
 /**
  * Brings the wallet to the chain tip: tip → subtree roots → scan the suggested ranges in
- * batches. Calls `persist` after every batch so a closed tab loses at most one batch.
+ * batches. Calls `persist` after every batch so a closed tab loses at most one batch. A chain
+ * reorg makes the core rewind a few blocks; the loop then simply asks for fresh ranges.
  */
 export async function syncToTip(
   core: CoreModule,
@@ -119,24 +122,43 @@ export async function syncToTip(
   onProgress: (p: SyncProgress) => void,
   persist: () => void,
 ): Promise<void> {
-  const tip = await lwd.tip();
-  core.call("updateTip", { height: tip });
   for (const { name, id } of SUBTREE_PROTOCOLS) {
     const roots = await lwd.subtreeRoots(id);
     core.call("putSubtreeRoots", { protocol: name, startIndex: 0 }, framed(roots));
   }
   persist();
   let received = 0;
+  // A rewind invalidates the wallet's view of the tip (it now ends at the rewind height), so each
+  // round starts by telling the core where the chain is, as zcash_client_backend's own sync does.
+  for (let rewinds = 0; ; rewinds++) {
+    const tip = await lwd.tip();
+    core.call("updateTip", { height: tip });
+    const reorg = await scanRanges(core, lwd, (scannedTo, remainingBlocks, got) => {
+      received += got;
+      persist();
+      onProgress({ tip, scannedTo, remainingBlocks, received });
+    });
+    if (!reorg) return;
+    persist();
+    if (rewinds >= MAX_REORG_REWINDS) throw new Error(`the chain keeps reorganising near block ${reorg.at}`);
+  }
+}
+
+/** Scans the suggested ranges in batches until none are left, or until a reorg forces a rewind. */
+async function scanRanges(
+  core: CoreModule,
+  lwd: Lwd,
+  onBatch: (scannedTo: number, remainingBlocks: number, received: number) => void,
+): Promise<{ at: number; rewoundTo: number } | null> {
   for (;;) {
     const todo = core.call<ScanRange[]>("scanRanges").filter((r) => !DONE.has(r.priority));
     const first = todo[0];
-    if (!first) break;
+    if (!first) return null;
     const remaining = todo.reduce((n, r) => n + (r.end - r.start), 0);
     const end = Math.min(first.start + SCAN_BATCH_BLOCKS, first.end);
     const [prior, blocks] = await Promise.all([lwd.treeState(first.start - 1), lwd.blocks(first.start, end)]);
-    const res = core.call<{ received: number }>("scanBlocks", { fromHeight: first.start }, framed([prior, ...blocks]));
-    received += res.received;
-    persist();
-    onProgress({ tip, scannedTo: end, remainingBlocks: Math.max(0, remaining - (end - first.start)), received });
+    const res = core.call<ScanResult>("scanBlocks", { fromHeight: first.start }, framed([prior, ...blocks]));
+    if ("reorg" in res) return res.reorg;
+    onBatch(end, Math.max(0, remaining - (end - first.start)), res.received);
   }
 }

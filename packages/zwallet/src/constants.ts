@@ -13,6 +13,9 @@ export const LWD_UPSTREAM = {
 /** Blocks fetched and scanned per batch. Small enough to keep the UI's progress smooth. */
 export const SCAN_BATCH_BLOCKS = 100;
 
+/** Chain reorgs the sync loop rewinds through before it gives up (each one rewinds 10 blocks). */
+export const MAX_REORG_REWINDS = 5;
+
 /** A new wallet's birthday is this many blocks below the tip, so it never misses its first deposit. */
 export const BIRTHDAY_LOOKBACK_BLOCKS = 20;
 
@@ -32,3 +35,6 @@ export const MNEMONIC_STRENGTH_BITS = 256;
 
 /** Zatoshis per ZEC. */
 export const ZAT_PER_ZEC = 100_000_000;
+
+/** The worker reports the engine download at most once per this many bytes (256 KiB). */
+export const LOAD_REPORT_BYTES = 262_144;

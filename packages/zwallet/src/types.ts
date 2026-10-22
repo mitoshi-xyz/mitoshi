@@ -81,6 +81,12 @@ export interface SyncProgress {
   received: number;
 }
 
+/** How much of the wallet engine has downloaded; `total` is null when the server compresses it. */
+export interface EngineLoad {
+  loaded: number;
+  total: number | null;
+}
+
 /** Messages from the main thread to the wallet worker. */
 export type Request =
   | { id: number; kind: "open"; network: Network; relay: string; wasmUrl: string; saved?: Uint8Array }
@@ -101,4 +107,5 @@ export type Response =
   | { id: number; ok: unknown }
   | { id: number; error: string }
   | { event: "progress"; progress: SyncProgress }
+  | { event: "load"; load: EngineLoad }
   | { event: "persist"; bytes: Uint8Array };

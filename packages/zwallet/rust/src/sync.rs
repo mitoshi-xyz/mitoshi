@@ -15,12 +15,15 @@ use zcash_client_backend::{
         compact_formats::CompactBlock,
         service::{SubtreeRoot, TreeState},
     },
-    scanning::{ScanningKeys, SpendIdentifiers, scan_block},
+    scanning::{ScanBlockError, ScanningKeys, SpendIdentifiers, scan_block},
 };
 use zcash_primitives::merkle_tree::HashSer;
 use zcash_protocol::consensus::BlockHeight;
 
 use crate::{Ctx, Error, State, abi::frames};
+
+/// How far below a broken link to rewind: the depth `zcash_client_backend::sync` uses.
+const REORG_REWIND_BLOCKS: u32 = 10;
 
 fn height_arg(args: &Value, key: &str) -> Result<BlockHeight, Error> {
     args.get(key)
@@ -98,6 +101,11 @@ pub fn put_subtree_roots(state: &mut State, args: &Value, bin: &[u8]) -> Result<
 /// This is `scan_cached_blocks` without its batch runners: those hand trial decryption to a
 /// rayon pool, and WASI has no threads (the pool never runs, and the scan spins forever).
 /// `scan_block` decrypts inline, block by block, with the same keys and spend identifiers.
+///
+/// A chain reorg shows up as a continuity error (a block whose parent is not the block we stored).
+/// Then nothing from the batch is stored, the wallet is truncated a few blocks below the break (as
+/// `zcash_client_backend::sync` does), and `{reorg: {at, rewoundTo}}` is returned so the caller
+/// asks for fresh scan ranges and carries on.
 pub fn scan_blocks(state: &mut State, args: &Value, bin: &[u8]) -> Result<Value, Error> {
     let from = height_arg(args, "fromHeight")?;
     let messages = frames(bin)?;
@@ -119,8 +127,19 @@ pub fn scan_blocks(state: &mut State, args: &Value, bin: &[u8]) -> Result<Value,
     for message in rest {
         let block = CompactBlock::decode(*message).ctx("decoding a compact block")?;
         end = block.height() + 1;
-        let block = scan_block::<_, _, _, Infallible>(&network, block, &keys, &spend_ids, prior_meta.as_ref())
-            .map_err(|e| Error::msg(format!("scanning block: {e:?}")))?;
+        let block = match scan_block::<_, _, _, Infallible>(&network, block, &keys, &spend_ids, prior_meta.as_ref()) {
+            Ok(block) => block,
+            Err(ScanBlockError::Scan(e)) if e.is_continuity_error() => {
+                let rewound = state
+                    .db
+                    .truncate_to_height(e.at_height().saturating_sub(REORG_REWIND_BLOCKS))
+                    .ctx("rewinding after a chain reorg")?;
+                return Ok(json!({
+                    "reorg": { "at": u32::from(e.at_height()), "rewoundTo": u32::from(rewound) },
+                }));
+            }
+            Err(e) => return Err(Error::msg(format!("scanning block: {e:?}"))),
+        };
         for tx in block.transactions() {
             received += tx.sapling_outputs().len() + tx.orchard_outputs().len() + tx.ironwood_outputs().len();
             spent += tx.sapling_spends().len() + tx.orchard_spends().len() + tx.ironwood_spends().len();

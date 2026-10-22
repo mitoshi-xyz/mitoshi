@@ -4,7 +4,7 @@
  * Every reply carries the request id; `progress` and `persist` are unsolicited events.
  */
 import { createPrivateFetch } from "@mitoshi/net";
-import { LWD_UPSTREAM } from "./constants";
+import { LOAD_REPORT_BYTES, LWD_UPSTREAM } from "./constants";
 import { CoreModule } from "./core";
 import { createAccount, enhance, Lwd, syncToTip } from "./sync";
 import type { Built, HistoryEntry, Note, Proposal, Request, Response, Summary } from "./types";
@@ -28,12 +28,41 @@ function ready(): { core: CoreModule; lwd: Lwd } {
   return { core, lwd };
 }
 
+/**
+ * Fetches and compiles the wallet core, compiling while it streams in and reporting bytes as they
+ * arrive. A compressed response has no usable length (it counts compressed bytes), so total is null.
+ */
+async function loadEngine(url: string): Promise<WebAssembly.Module> {
+  const res = await fetch(url);
+  if (!res.ok || !res.body) throw new Error(`the wallet engine did not download (HTTP ${res.status})`);
+  const length = Number(res.headers.get("content-length"));
+  const total = res.headers.get("content-encoding") || !length ? null : length;
+  let loaded = 0;
+  let reported = 0;
+  const counted = res.body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, out) {
+        loaded += chunk.byteLength;
+        if (loaded - reported >= LOAD_REPORT_BYTES) {
+          reported = loaded;
+          post({ event: "load", load: { loaded, total } });
+        }
+        out.enqueue(chunk);
+      },
+      flush() {
+        post({ event: "load", load: { loaded, total: loaded } });
+      },
+    }),
+  );
+  return WebAssembly.compileStreaming(new Response(counted, { headers: { "content-type": "application/wasm" } }));
+}
+
 const hexToBytes = (hex: string) => Uint8Array.from(hex.match(/../g) ?? [], (b) => Number.parseInt(b, 16));
 
 async function handle(req: Request): Promise<unknown> {
   switch (req.kind) {
     case "open": {
-      const wasm = await WebAssembly.compileStreaming(fetch(req.wasmUrl));
+      const wasm = await loadEngine(req.wasmUrl);
       core = await CoreModule.load(wasm, req.saved);
       lwd = new Lwd(LWD_UPSTREAM[req.network], createPrivateFetch(req.relay));
       return core.call("init", { network: req.network });

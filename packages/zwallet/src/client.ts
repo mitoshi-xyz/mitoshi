@@ -1,10 +1,23 @@
-import type { HistoryEntry, Network, Note, NoteRef, Proposal, Request, Response, Summary, SyncProgress } from "./types";
+import type {
+  EngineLoad,
+  HistoryEntry,
+  Network,
+  Note,
+  NoteRef,
+  Proposal,
+  Request,
+  Response,
+  Summary,
+  SyncProgress,
+} from "./types";
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
 type Call = DistributiveOmit<Request, "id">;
 
 export interface WalletEvents {
   onProgress?: (p: SyncProgress) => void;
+  /** The engine download, while it runs. */
+  onLoad?: (l: EngineLoad) => void;
   /** The wallet file changed: encrypt and store these bytes. */
   onPersist?: (bytes: Uint8Array) => void;
 }
@@ -17,15 +30,34 @@ export class WalletClient {
   private readonly worker: Worker;
   private nextId = 1;
   private readonly pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
+  /** Set once the worker has replied at all; an error before that means it never started. */
+  private started = false;
+  private dead: Error | null = null;
 
   constructor(private readonly events: WalletEvents = {}) {
     this.worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module", name: "mitoshi-wallet" });
     this.worker.onmessage = (e: MessageEvent<Response>) => this.receive(e.data);
+    // Without these a worker that fails to load (or throws outside a request) leaves every caller waiting forever.
+    this.worker.onerror = (e) => {
+      e.preventDefault();
+      this.fail(
+        new Error(`the wallet engine ${this.started ? "crashed" : "could not start"}: ${e.message || "no details"}`),
+      );
+    };
+    this.worker.onmessageerror = () => this.fail(new Error("the wallet engine sent a reply that could not be read"));
+  }
+
+  private fail(err: Error) {
+    if (!this.started) this.dead = err;
+    for (const w of this.pending.values()) w.reject(err);
+    this.pending.clear();
   }
 
   private receive(msg: Response) {
+    this.started = true;
     if ("event" in msg) {
       if (msg.event === "progress") this.events.onProgress?.(msg.progress);
+      else if (msg.event === "load") this.events.onLoad?.(msg.load);
       else this.events.onPersist?.(msg.bytes);
       return;
     }
@@ -37,6 +69,7 @@ export class WalletClient {
   }
 
   private request<T>(call: Call): Promise<T> {
+    if (this.dead) return Promise.reject(this.dead);
     const id = this.nextId++;
     return new Promise<T>((resolve, reject) => {
       this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject });
