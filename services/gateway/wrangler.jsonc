@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mitoshi-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // Run near Polymarket's servers (eu-west-2) from a region its API does not restrict (eu-west-1).
+  "placement": { "region": "aws:eu-west-1" },
+  // No request logs: the gateway never keeps who asked for what.
+  "observability": { "enabled": false }
+}
