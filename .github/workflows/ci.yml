@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   js:
-    name: Lint, typecheck and build
+    name: Lint, typecheck, test and build
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -30,5 +30,7 @@ jobs:
         run: pnpm lint
       - name: Typecheck
         run: pnpm typecheck
+      - name: Unit tests (engine, rails)
+        run: pnpm test
       - name: Build
         run: pnpm build
