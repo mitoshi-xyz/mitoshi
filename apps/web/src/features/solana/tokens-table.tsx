@@ -1,15 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import { SearchX } from "lucide-react";
 import { useEffect, useState } from "react";
-import { compactUsd, pct, price, upDown } from "../format";
+import { EmptyState, Skeleton } from "@/kit";
+import { VenueMark } from "../marks/mark";
 import { usePrices, useTokens } from "./hooks";
-import { solImage } from "./sol";
+import { TokenHeader, TokenRow } from "./token-row";
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SKELETON_ROWS = 10;
 
-/** Solana tokens: trending now, or a search; prices refresh every few seconds. */
+/** Tokens: Solana's trending tokens (or a search), live prices every few seconds. */
 export function TokensTable() {
   const [typed, setTyped] = useState("");
   const [search, setSearch] = useState("");
@@ -21,70 +22,39 @@ export function TokensTable() {
   const prices = usePrices((tokens.data ?? []).map((t) => t.mint));
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-xl">Solana tokens</h2>
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="flex items-center gap-3 type-headline-lg">
+            Tokens <VenueMark venue="solana" size={26} /> <VenueMark venue="jupiter" size={26} />
+          </h1>
+          <p className="text-ink-2">Trending on Solana, routed by Jupiter. Each buy from its own new wallet.</p>
+        </div>
         <input
-          className="w-48 rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-sm"
-          placeholder="Search name or mint"
+          className="h-10 w-full rounded-full border border-hairline bg-surface-1 px-4 text-sm outline-none placeholder:text-muted focus:border-strong sm:w-64"
+          placeholder="Search a name or mint"
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
         />
       </div>
       {tokens.isError ? (
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-red-400">Could not load tokens: {tokens.error.message}</span>
-          <button type="button" className="underline" onClick={() => void tokens.refetch()}>
-            Retry
-          </button>
+        <EmptyState
+          icon={SearchX}
+          title="Jupiter did not answer"
+          body={tokens.error.message}
+          action={{ label: "Try again", onClick: () => void tokens.refetch() }}
+        />
+      ) : (
+        <div className="flex flex-col">
+          <TokenHeader />
+          {tokens.isPending
+            ? Array.from({ length: SKELETON_ROWS }, (_, i) => <Skeleton key={`s-${i}`} className="my-1 h-12" />)
+            : (tokens.data ?? []).map((t) => <TokenRow key={t.mint} t={t} live={prices.data?.[t.mint]} />)}
         </div>
+      )}
+      {!tokens.isPending && tokens.data?.length === 0 ? (
+        <EmptyState icon={SearchX} title={`No token matches “${search}”`} />
       ) : null}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-left text-xs opacity-60">
-            <tr>
-              <th className="py-2 font-normal">Token</th>
-              <th className="py-2 text-right font-normal">Price</th>
-              <th className="py-2 text-right font-normal">24h</th>
-              <th className="hidden py-2 text-right font-normal sm:table-cell">Market cap</th>
-              <th className="hidden py-2 text-right font-normal sm:table-cell">Liquidity</th>
-              <th className="py-2 text-right font-normal">Volume</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tokens.isPending
-              ? Array.from({ length: SKELETON_ROWS }, (_, i) => (
-                  <tr key={`s-${i}`} className="animate-pulse">
-                    <td colSpan={6} className="py-2">
-                      <div className="h-5 rounded bg-white/5" />
-                    </td>
-                  </tr>
-                ))
-              : (tokens.data ?? []).map((t) => {
-                  const icon = solImage(t.icon);
-                  return (
-                    <tr key={t.mint} className="border-white/5 border-t hover:bg-white/5">
-                      <td className="py-2">
-                        <Link href={`/token#${t.mint}`} className="flex items-center gap-2">
-                          {icon ? <img src={icon} alt="" className="size-5 rounded-full" loading="lazy" /> : null}
-                          <span className="font-medium">{t.symbol}</span>
-                          {t.verified ? <span className="text-emerald-400 text-xs">verified</span> : null}
-                        </Link>
-                      </td>
-                      <td className="py-2 text-right font-mono">{price(prices.data?.[t.mint] ?? t.usdPrice)}</td>
-                      <td className={`py-2 text-right font-mono ${upDown(t.change24h)}`}>{pct(t.change24h)}</td>
-                      <td className="hidden py-2 text-right font-mono sm:table-cell">{compactUsd(t.mcap)}</td>
-                      <td className="hidden py-2 text-right font-mono sm:table-cell">{compactUsd(t.liquidity)}</td>
-                      <td className="py-2 text-right font-mono">{compactUsd(t.volume24h)}</td>
-                    </tr>
-                  );
-                })}
-          </tbody>
-        </table>
-        {!tokens.isPending && tokens.data?.length === 0 ? (
-          <p className="py-6 text-center text-sm opacity-60">No token matches “{search}”.</p>
-        ) : null}
-      </div>
     </section>
   );
 }

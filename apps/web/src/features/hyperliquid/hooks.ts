@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { hlAccount, hlLive, hlMarket } from "./hl";
 
 const PERPS_STALE_MS = 30_000;
+const SPARK_STALE_MS = 300_000;
+const SPARK_POINTS = 24;
 const ACCOUNT_REFRESH_MS = 5_000;
 const MIDS_FLUSH_MS = 1_000;
 
@@ -86,4 +88,13 @@ export function useAccountState(w: PrivateWallet | undefined) {
 
 export function perpByName(perps: Perp[] | undefined, name: string): Perp | undefined {
   return perps?.find((p) => p.name === name);
+}
+
+/** The last 24 hours as hourly closes, for a row's sparkline. */
+export function useSparkline(coin: string) {
+  return useQuery({
+    queryKey: ["hyperliquid", "spark", coin],
+    queryFn: async () => (await hlMarket.candles(coin, "1h", Date.now(), SPARK_POINTS)).map((c) => c.c),
+    staleTime: SPARK_STALE_MS,
+  });
 }

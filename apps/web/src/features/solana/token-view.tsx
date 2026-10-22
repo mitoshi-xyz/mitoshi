@@ -3,19 +3,24 @@
 import { latestSwap, readyWallet } from "@mitoshi/engine";
 import { LAMPORTS_PER_SOL } from "@mitoshi/venues/solana";
 import { useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, BadgeCheck, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { compactUsd, pct, price, upDown } from "../format";
+import { ChangeChip, CountdownRing, EmptyState, RollingNumber, Skeleton, Wait } from "@/kit";
+import { compactUsd } from "../format";
+import { Mark, VenueMark } from "../marks/mark";
 import { sendSolanaHome } from "../private-wallets/home";
 import { useRegistry } from "../private-wallets/registry-store";
+import { MASK, useHideAmounts } from "../shell/prefs";
 import { useHoldings, usePrices, useToken } from "./hooks";
-import { solImage } from "./sol";
 import { SwapTicket } from "./swap-ticket";
 import { TokenChart } from "./token-chart";
 
-const MS_PER_MINUTE = 60_000;
 const MS_PER_SECOND = 1000;
+const MS_PER_MINUTE = 60_000;
 const SOL_SHOWN_DECIMALS = 4;
-const MINT_HEAD = 4;
+const PRICE_SIG = 6;
+const ADDRESS_HEAD = 6;
 
 function useHashMint(): string {
   const [mint, setMint] = useState("");
@@ -28,93 +33,174 @@ function useHashMint(): string {
   return mint;
 }
 
-/** One Solana token: chart, live price, swap ticket, and the private wallet's holdings. */
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="flex flex-col leading-tight">
+      <span className="text-[11px] text-muted">{label}</span>
+      <span className="num text-[13px]">{value}</span>
+    </span>
+  );
+}
+
+/** One Solana token: chart and live price, the swap ticket, and the private wallet that holds it. */
 export function TokenView() {
   const mint = useHashMint();
   const token = useToken(mint);
   const prices = usePrices(mint ? [mint] : []);
   const registry = useRegistry();
   const queries = useQueryClient();
-  const solWallets = registry.wallets.filter((w) => w.venue === "solana");
-  const trading = solWallets.find((w) => w.status === "trading");
+  const [hidden] = useHideAmounts();
+  const sol = registry.wallets.filter((w) => w.venue === "solana");
+  const trading = sol.find((w) => w.status === "trading");
   const wallet = trading ?? readyWallet(registry, "solana");
   const holdings = useHoldings(wallet);
+  const pending = sol.find((w) => w.status === "preparing" || w.status === "funding");
+  const fundSwap = pending ? latestSwap(pending, "fund") : undefined;
   const [home, setHome] = useState<{ busy: boolean; text: string | null }>({ busy: false, text: null });
 
-  const pending = solWallets.find((w) => w.status === "preparing" || w.status === "funding");
-  const fundSwap = pending ? latestSwap(pending, "fund") : undefined;
-  const waiting = !pending
-    ? "No Solana private wallet is ready. Prepare one first."
-    : fundSwap
-      ? `A private wallet is funding: about ${Math.max(1, Math.round((fundSwap.createdAt + fundSwap.timeEstimateSeconds * MS_PER_SECOND - Date.now()) / MS_PER_MINUTE))} min left.`
-      : "A private wallet is preparing: funding starts within ~3 min.";
-
-  if (!mint) return <p className="opacity-70">Pick a token on the Markets screen.</p>;
-  if (token.isPending)
-    return <div role="status" aria-label="Loading the token" className="h-96 animate-pulse rounded-xl bg-white/5" />;
+  if (!mint)
+    return <EmptyState icon={AlertCircle} title="No token chosen" action={{ label: "Open Tokens", href: "/tokens" }} />;
+  if (token.isPending) {
+    return (
+      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <Skeleton className="h-[520px] rounded-xl" label="Loading the token" />
+        <Skeleton className="h-[520px] rounded-xl" />
+      </div>
+    );
+  }
   if (token.isError || !token.data) {
     return (
-      <p className="text-sm opacity-70">
-        {token.isError ? `Could not load this token: ${token.error.message}` : "Unknown token."}
-      </p>
+      <EmptyState
+        icon={AlertCircle}
+        title="Could not find this token"
+        body={token.isError ? token.error.message : "Jupiter does not list this mint."}
+        action={{ label: "Back to Tokens", href: "/tokens" }}
+      />
     );
   }
   const t = token.data;
   const live = prices.data?.[mint] ?? t.usdPrice;
-  const icon = solImage(t.icon);
+  const lamports = holdings.data ? Number(holdings.data.lamports) / LAMPORTS_PER_SOL : 0;
+  const held = holdings.data?.tokens.find((h) => h.mint === mint);
+  const waiting = !pending
+    ? "No Solana private wallet is ready yet."
+    : fundSwap
+      ? `Funding: about ${Math.max(1, Math.round((fundSwap.createdAt + fundSwap.timeEstimateSeconds * MS_PER_SECOND - Date.now()) / MS_PER_MINUTE))} min left.`
+      : "Preparing: funding starts within ~3 min.";
 
   async function goHome() {
     if (!wallet) return;
-    setHome({ busy: true, text: "Selling to SOL and sending home…" });
+    setHome({ busy: true, text: null });
     try {
       const r = await sendSolanaHome(wallet.id);
       setHome({
         busy: false,
-        text: r.sent > 0 ? "On its way home: swapping to ZEC on NEAR" : "Only dust was left; the wallet is retired",
+        text: r.sent > 0 ? "On its way home: swapping to ZEC on NEAR." : "Only dust was left; the wallet is retired.",
       });
       void queries.invalidateQueries({ queryKey: ["solana", "holdings", wallet.id] });
     } catch (e) {
-      setHome({ busy: false, text: e instanceof Error ? e.message : String(e) });
+      setHome({ busy: false, text: `${e instanceof Error ? e.message : String(e)}. Your money is where it was.` });
     }
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <div className="flex items-center gap-3">
-          {icon ? <img src={icon} alt="" className="size-9 rounded-full" /> : null}
-          <h2 className="font-semibold text-2xl">{t.symbol}</h2>
-          <span className="text-sm opacity-60">{t.name}</span>
+    <div className="grid min-h-[calc(100dvh-96px)] lg:grid-cols-[1fr_360px]">
+      <section className="flex min-h-[520px] flex-col border-hairline lg:border-r">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 pt-4">
+          <div className="flex items-center gap-3 rounded-full border border-hairline bg-surface-1/80 py-1.5 pr-4 pl-1.5">
+            <Mark symbol={t.symbol} src={t.icon} size={34} />
+            <span className="flex flex-col leading-tight">
+              <span className="flex items-center gap-1 font-semibold text-sm">
+                {t.symbol}
+                {t.verified ? <BadgeCheck size={14} className="text-info" aria-label="Verified" /> : null}
+                <span className="font-normal text-muted">{t.name}</span>
+              </span>
+              <RollingNumber
+                value={live}
+                format={{ maximumSignificantDigits: PRICE_SIG, style: "currency", currency: "USD" }}
+                className="font-semibold text-[15px]"
+              />
+            </span>
+            <ChangeChip change={t.change24h} />
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <Stat label="Market cap" value={compactUsd(t.mcap)} />
+            <Stat label="Liquidity" value={compactUsd(t.liquidity)} />
+            <Stat label="24h volume" value={compactUsd(t.volume24h)} />
+          </div>
+          <span className="ml-auto flex items-center gap-1.5 text-[12px] text-muted">
+            <VenueMark venue="solana" size={16} /> <VenueMark venue="jupiter" size={16} /> routed by Jupiter
+          </span>
         </div>
-        <span className="font-mono text-xl">{price(live)}</span>
-        <span className={`font-mono text-sm ${upDown(t.change24h)}`}>{pct(t.change24h)} 24h</span>
-        <span className="text-sm opacity-70">Mcap {compactUsd(t.mcap)}</span>
-        <span className="text-sm opacity-70">Liquidity {compactUsd(t.liquidity)}</span>
-      </header>
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <TokenChart mint={mint} livePrice={live} />
+        <div className="min-h-0 flex-1">
+          <TokenChart mint={mint} livePrice={live} />
+        </div>
+      </section>
+
+      <aside className="flex flex-col gap-4 p-4">
+        {wallet ? (
+          <div className="flex items-center gap-3 rounded-lg border border-hairline bg-surface-1 p-3">
+            <span className="relative">
+              <VenueMark venue="solana" size={34} />
+              <ShieldCheck size={14} className="absolute -right-1 -bottom-1 rounded-full bg-bg text-up" />
+            </span>
+            <span className="flex flex-1 flex-col leading-tight">
+              <span className="text-[12px] text-muted">
+                Private wallet · <span className="font-mono">{wallet.address.slice(0, ADDRESS_HEAD)}…</span>
+              </span>
+              <span className="num font-semibold text-[16px]">
+                {hidden ? MASK : `${lamports.toFixed(SOL_SHOWN_DECIMALS)} SOL`}
+                {held && !hidden ? (
+                  <span className="font-normal text-[13px] text-ink-2">
+                    {" "}
+                    · {held.uiAmount} {t.symbol}
+                  </span>
+                ) : null}
+              </span>
+            </span>
+          </div>
+        ) : pending ? (
+          <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent-wash p-3">
+            <CountdownRing
+              fraction={
+                fundSwap
+                  ? 1 -
+                    Math.max(0, fundSwap.createdAt + fundSwap.timeEstimateSeconds * MS_PER_SECOND - Date.now()) /
+                      (fundSwap.timeEstimateSeconds * MS_PER_SECOND)
+                  : 0
+              }
+              size={32}
+            />
+            <span className="text-[13px]">{waiting}</span>
+          </div>
+        ) : (
+          <Link
+            href="/wallets"
+            className="flex items-center gap-3 rounded-lg border border-dashed border-strong p-3 transition-colors hover:border-accent hover:bg-accent-wash"
+          >
+            <span className="flex size-9 items-center justify-center rounded-full bg-accent text-accent-ink">
+              <Sparkles size={17} />
+            </span>
+            <span className="flex flex-col leading-tight">
+              <span className="font-medium text-sm">Fund a Solana wallet</span>
+              <span className="text-[12px] text-ink-2">Brand-new, funded in SOL from your shielded ZEC.</span>
+            </span>
+          </Link>
+        )}
         <SwapTicket token={t} wallet={wallet} waiting={waiting} />
-      </div>
-      {wallet && holdings.data ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-white/10 p-4 text-sm">
-          <h3 className="font-medium">This private wallet</h3>
-          <p className="opacity-70">
-            {(Number(holdings.data.lamports) / LAMPORTS_PER_SOL).toFixed(SOL_SHOWN_DECIMALS)} SOL
-            {holdings.data.tokens.map((h) => ` · ${h.uiAmount} of ${h.mint.slice(0, MINT_HEAD)}…`).join("")}
-          </p>
-          {wallet.status === "trading" || wallet.status === "ready" ? (
-            <button
-              type="button"
-              disabled={home.busy}
-              onClick={() => void goHome()}
-              className="self-start rounded-lg border border-white/20 px-3 py-1 text-xs disabled:opacity-40"
-            >
-              Sell everything and send the money home
-            </button>
-          ) : null}
-          {home.text ? <p className="text-xs opacity-80">{home.text}</p> : null}
-        </div>
-      ) : null}
-    </section>
+        {wallet && (wallet.status === "trading" || wallet.status === "ready") ? (
+          <button
+            type="button"
+            disabled={home.busy}
+            onClick={() => void goHome()}
+            className="h-10 rounded-full border border-strong font-medium text-[13px] hover:bg-surface-2 disabled:opacity-40"
+          >
+            Sell everything and send it home
+          </button>
+        ) : null}
+        {home.busy ? <Wait verb="Selling to SOL and swapping home" /> : null}
+        {home.text ? <p className="text-[13px] text-ink-2">{home.text}</p> : null}
+      </aside>
+    </div>
   );
 }

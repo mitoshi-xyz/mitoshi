@@ -238,13 +238,15 @@ export class MarketChart {
     this.raf = requestAnimationFrame(this.loop);
     if (!this.visible || document.hidden) return;
     this.frame++;
+    // Clear the flag first: drawing may set it again (an easing range that has not settled yet).
+    const wasDirty = this.dirty;
+    this.dirty = false;
     if (this.mode === "live") {
       this.stepLive();
       this.draw();
-    } else if (this.dirty) {
+    } else if (wasDirty) {
       this.draw();
     }
-    this.dirty = false;
   };
 
   private plotW() {

@@ -64,14 +64,14 @@ export function ProbabilityChart({
   }, [lastTrade]);
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-white/10 p-3">
-      <div className="flex gap-1 text-sm">
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-0.5 self-start rounded-full bg-surface-2 p-0.5 text-xs">
         {(Object.keys(HISTORY) as HistoryRange[]).map((r) => (
           <button
             key={r}
             type="button"
             onClick={() => setRange(r)}
-            className={`rounded px-2 py-0.5 ${range === r ? "bg-white/15" : "opacity-60 hover:opacity-100"}`}
+            className={`h-7 rounded-full px-3 font-medium ${range === r ? "bg-ink text-bg" : "text-ink-2 hover:text-ink"}`}
           >
             {RANGE_LABELS[r]}
           </button>
@@ -83,11 +83,11 @@ export function ProbabilityChart({
           <div
             role="status"
             aria-label="Loading the chart"
-            className="absolute inset-0 animate-pulse rounded bg-white/5"
+            className="absolute inset-0 rounded-lg bg-surface-2/50 [animation:mt-pulse_1200ms_var(--ease)_infinite]"
           />
         ) : null}
         {load === "error" ? (
-          <p className="absolute inset-0 flex items-center justify-center text-red-400 text-sm">
+          <p className="absolute inset-0 flex items-center justify-center text-down text-sm">
             Could not load the history. Pick another range to retry.
           </p>
         ) : null}

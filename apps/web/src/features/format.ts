@@ -46,4 +46,4 @@ export function funding(hourly: number): string {
   return pct(hourly, FUNDING_DECIMALS);
 }
 
-export const upDown = (v: number) => (v > 0 ? "text-emerald-400" : v < 0 ? "text-red-400" : "opacity-70");
+export const upDown = (v: number) => (v > 0 ? "text-up" : v < 0 ? "text-down" : "text-ink-2");

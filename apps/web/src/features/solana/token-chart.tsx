@@ -58,49 +58,49 @@ export function TokenChart({ mint, livePrice }: { mint: string; livePrice: numbe
   }, [livePrice]);
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-white/10 p-3">
+    <div className="flex h-full flex-col gap-2 p-4">
       <div className="flex items-center justify-between gap-2 text-sm">
-        <div className="flex gap-1">
+        <div className="flex gap-0.5 rounded-full bg-surface-1 p-0.5">
           {(Object.keys(CANDLE_INTERVALS) as CandleInterval[]).map((i) => (
             <button
               key={i}
               type="button"
               onClick={() => setIntervalName(i)}
-              className={`rounded px-2 py-0.5 ${interval === i ? "bg-white/15" : "opacity-60 hover:opacity-100"}`}
+              className={`h-7 rounded-full px-2.5 font-medium text-xs ${interval === i ? "bg-ink text-bg" : "text-ink-2 hover:text-ink"}`}
             >
               {i}
             </button>
           ))}
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-0.5 rounded-full bg-surface-1 p-0.5">
           {(["candles", "line"] as const).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => setMode(m)}
-              className={`rounded px-2 py-0.5 capitalize ${mode === m ? "bg-white/15" : "opacity-60 hover:opacity-100"}`}
+              className={`h-7 rounded-full px-2.5 font-medium text-xs capitalize ${mode === m ? "bg-ink text-bg" : "text-ink-2 hover:text-ink"}`}
             >
               {m}
             </button>
           ))}
         </div>
       </div>
-      <div className="relative h-[380px]">
+      <div className="relative min-h-[380px] flex-1">
         <div ref={box} className="absolute inset-0" />
         {load === "loading" ? (
           <div
             role="status"
             aria-label="Loading the chart"
-            className="absolute inset-0 animate-pulse rounded bg-white/5"
+            className="absolute inset-0 rounded-lg bg-surface-1/50 [animation:mt-pulse_1200ms_var(--ease)_infinite]"
           />
         ) : null}
         {load === "empty" ? (
-          <p className="absolute inset-0 flex items-center justify-center text-sm opacity-60">
+          <p className="absolute inset-0 flex items-center justify-center text-ink-2 text-sm">
             No trading history for this token yet.
           </p>
         ) : null}
         {load === "error" ? (
-          <p className="absolute inset-0 flex items-center justify-center text-red-400 text-sm">
+          <p className="absolute inset-0 flex items-center justify-center text-down text-sm">
             Could not load candles. Pick another interval to retry.
           </p>
         ) : null}

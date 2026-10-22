@@ -22,6 +22,7 @@ export function RollingNumber({
   return (
     <NumberFlow
       value={Number.isFinite(value) ? value : 0}
+      locales="en-US"
       {...(format ? { format } : {})}
       {...(prefix ? { prefix } : {})}
       {...(suffix ? { suffix } : {})}

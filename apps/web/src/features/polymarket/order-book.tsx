@@ -1,43 +1,52 @@
 "use client";
 
 import type { Book } from "@mitoshi/venues/polymarket";
+import { BookOpen } from "lucide-react";
+import { EmptyState, Skeleton } from "@/kit";
 
-const LEVELS = 6;
+const LEVELS = 7;
 const CENTS = 100;
 const cents = (p: number) => `${(p * CENTS).toFixed(1)}¢`;
 const shares = (s: number) => s.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
-/** The top of an outcome's book: asks above, bids below, the spread between. */
+/** The top of an outcome's book: asks above, bids below, the spread between, depth as bars. */
 export function OrderBook({ book }: { book: Book | null }) {
-  if (!book)
-    return (
-      <div role="status" aria-label="Loading the order book" className="h-64 animate-pulse rounded-xl bg-white/5" />
-    );
+  if (!book) return <Skeleton className="h-72 rounded-xl" label="Loading the order book" />;
   const asks = book.asks.slice(0, LEVELS).reverse();
   const bids = book.bids.slice(0, LEVELS);
+  if (asks.length === 0 && bids.length === 0) {
+    return (
+      <EmptyState
+        icon={BookOpen}
+        title="No orders on the book yet"
+        body="Prices appear here as soon as anyone quotes."
+      />
+    );
+  }
   const spread = book.asks[0] && book.bids[0] ? book.asks[0].price - book.bids[0].price : null;
   const max = Math.max(1, ...asks.map((l) => l.size), ...bids.map((l) => l.size));
   const row = (l: { price: number; size: number }, side: "ask" | "bid") => (
-    <li key={`${side}-${l.price}`} className="relative flex justify-between px-2 py-0.5 font-mono text-xs">
+    <li key={`${side}-${l.price}`} className="relative grid grid-cols-3 px-3 py-1 font-mono text-[12px]">
       <span
-        className={`absolute inset-y-0 right-0 ${side === "ask" ? "bg-red-500/10" : "bg-emerald-500/10"}`}
+        className={`absolute inset-y-0.5 right-0 rounded-sm ${side === "ask" ? "bg-down-wash" : "bg-up-wash"}`}
         style={{ width: `${(l.size / max) * CENTS}%` }}
       />
-      <span className={`relative ${side === "ask" ? "text-red-400" : "text-emerald-400"}`}>{cents(l.price)}</span>
-      <span className="relative opacity-80">{shares(l.size)}</span>
+      <span className={`relative ${side === "ask" ? "text-down" : "text-up"}`}>{cents(l.price)}</span>
+      <span className="relative text-right text-ink-2">{shares(l.size)}</span>
+      <span className="relative text-right text-muted">${shares(l.size * l.price)}</span>
     </li>
   );
   return (
-    <div className="flex flex-col gap-1 rounded-xl border border-white/10 p-3">
-      <div className="flex justify-between px-2 text-xs opacity-50">
+    <div className="flex flex-col gap-1 rounded-xl border border-hairline bg-surface-1 py-3">
+      <div className="grid grid-cols-3 px-3 pb-1 type-label text-muted">
         <span>Price</span>
-        <span>Shares</span>
+        <span className="text-right">Shares</span>
+        <span className="text-right">Total</span>
       </div>
-      {asks.length === 0 && bids.length === 0 ? (
-        <p className="py-4 text-center text-xs opacity-60">No orders yet.</p>
-      ) : null}
       <ul>{asks.map((l) => row(l, "ask"))}</ul>
-      <p className="px-2 py-1 text-center text-xs opacity-60">{spread === null ? "–" : `Spread ${cents(spread)}`}</p>
+      <p className="border-hairline border-y px-3 py-1.5 text-center text-[12px] text-ink-2">
+        {spread === null ? "–" : `Spread ${cents(spread)}`}
+      </p>
       <ul>{bids.map((l) => row(l, "bid"))}</ul>
     </div>
   );
