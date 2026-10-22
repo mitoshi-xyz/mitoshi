@@ -49,6 +49,22 @@ export interface Upstream {
 }
 
 const GET_POST = ["GET", "POST"] as const;
+/** A private wallet's own CLOB authentication (L1 attestation and L2 HMAC headers). */
+const POLY_AUTH_HEADERS = [
+  "poly_address",
+  "poly_signature",
+  "poly_timestamp",
+  "poly_nonce",
+  "poly_api_key",
+  "poly_passphrase",
+];
+/** Builder headers for the relayer, as the gateway's builder signer returns them. */
+const POLY_BUILDER_HEADERS = [
+  "poly_builder_api_key",
+  "poly_builder_passphrase",
+  "poly_builder_signature",
+  "poly_builder_timestamp",
+];
 const POST = ["POST"] as const;
 /** Interim light servers: ChainSafe's public gRPC-web proxies. They only ever see the gateway. */
 const LWD: Upstream = {
@@ -90,10 +106,82 @@ export const UPSTREAMS: Record<string, Upstream> = {
     cacheSeconds: 30,
   },
   // Polymarket CLOB reads: price history and order books (trading routes are added with S4 trading).
+  // Polymarket CLOB (docs.polymarket.com/trading): public reads, plus each private wallet's own
+  // authentication (L1 signature → L2 key) and orders, signed in the browser with that wallet's key.
   "clob.polymarket.com": {
-    paths: ["/prices-history", "/book", "/books", "/midpoint", "/price", "/spread"],
+    paths: [
+      "/prices-history",
+      "/book",
+      "/books",
+      "/midpoint",
+      "/price",
+      "/spread",
+      "/tick-size",
+      "/neg-risk",
+      "/fee-rate",
+      "/last-trade-price",
+      "/markets/",
+      "/time",
+      "/auth/api-key",
+      "/auth/derive-api-key",
+      "/order",
+      "/orders",
+      "/data/orders",
+      "/data/trades",
+      "/cancel-all",
+      "/cancel-market-orders",
+      "/balance-allowance",
+    ],
+    methods: ["GET", "POST", "DELETE"],
+    headers: POLY_AUTH_HEADERS,
+    cacheGetPaths: {
+      "/prices-history": 2,
+      "/book": 2,
+      "/midpoint": 2,
+      "/price": 2,
+      "/spread": 2,
+      "/last-trade-price": 2,
+      "/tick-size": 60,
+      "/neg-risk": 60,
+      "/fee-rate": 60,
+    },
+  },
+  // Polymarket's relayer: gasless Deposit Wallet creation and batches, with builder headers from
+  // the gateway's own signer (builder.ts).
+  "relayer-v2.polymarket.com": {
+    paths: ["/submit", "/deployed", "/v1/account/transactions/params", "/v1/account/transactions/"],
+    methods: GET_POST,
+    headers: POLY_BUILDER_HEADERS,
+  },
+  // Polymarket's data API: one wallet's positions, activity and value (never cached).
+  "data-api.polymarket.com": {
+    paths: ["/v2/positions", "/v2/activity", "/v2/value", "/v2/trades", "/positions", "/activity", "/value"],
     methods: ["GET"],
-    cacheSeconds: 2,
+  },
+  // Polymarket's bridge: the funding address of a Deposit Wallet, and the trip home (pUSD → USDC).
+  "bridge.polymarket.com": {
+    paths: ["/deposit", "/withdraw", "/quote", "/status/", "/supported-assets"],
+    methods: GET_POST,
+  },
+  // Polygon reads for the Polymarket SDK (balances, approvals, wallet code). No sends: every
+  // Polymarket transaction is gasless through the relayer.
+  "polygon.drpc.org": {
+    paths: ["/"],
+    methods: POST,
+    rpcMethods: [
+      "eth_chainId",
+      "eth_blockNumber",
+      "eth_call",
+      "eth_getCode",
+      "eth_getBalance",
+      "eth_getTransactionCount",
+      "eth_getTransactionReceipt",
+      "eth_getTransactionByHash",
+      "eth_estimateGas",
+      "eth_gasPrice",
+      "eth_maxPriorityFeePerGas",
+      "eth_getBlockByNumber",
+    ],
   },
   // Jupiter (keyless lite tier): Ultra swaps for each wallet, token lists and prices for everyone.
   "lite-api.jup.ag": {
@@ -157,3 +245,16 @@ export const PUBLIC_CACHE_ENTRIES = 500;
 export const UPSTREAM_TIMEOUT_MS = 30_000;
 
 export const MS_PER_SECOND = 1000;
+
+/** Remote Builder Signing: the OHTTP target the browser SDK asks for builder headers (builder.ts). */
+export const BUILDER_SIGN_HOST = "builder.mitoshi.internal";
+/** Relayer requests the builder signer will sign: Deposit Wallet creation, batches, nonces, status. */
+export const BUILDER_RELAYER_PATHS = [
+  "/submit",
+  "/deployed",
+  "/v1/account/transactions/params",
+  "/v1/account/transactions",
+];
+export const BUILDER_SUBMIT_TYPES = ["WALLET-CREATE", "WALLET"];
+/** Polymarket's Deposit Wallet factory (docs.polymarket.com/resources/contracts). */
+export const DEPOSIT_WALLET_FACTORY = "0x00000000000Fb5C9ADea0298D729A0CB3823Cc07";

@@ -120,8 +120,20 @@ export function Positions({
       <ul className="flex flex-col">
         {rows.map((r) => {
           const t = r.kind === "token" ? tokens[r.asset] : null;
-          const symbol = r.kind === "perp" ? r.asset : (t?.symbol ?? `${r.asset.slice(0, MINT_HEAD)}…`);
-          const href = r.kind === "perp" ? `/trade#${r.asset}` : `/token#${r.asset}`;
+          const symbol =
+            r.kind === "perp"
+              ? r.asset
+              : r.kind === "outcome"
+                ? (r.label ?? "Outcome")
+                : (t?.symbol ?? `${r.asset.slice(0, MINT_HEAD)}…`);
+          const href =
+            r.kind === "perp"
+              ? `/trade#${r.asset}`
+              : r.kind === "outcome"
+                ? r.eventId
+                  ? `/event#${r.eventId}`
+                  : "/predict"
+                : `/token#${r.asset}`;
           return (
             <li
               key={r.key}
@@ -129,7 +141,11 @@ export function Positions({
             >
               <span className="col-span-2 flex items-center gap-3 md:col-span-1">
                 <span className="relative">
-                  <Mark symbol={symbol} src={t?.icon ?? null} size={30} />
+                  {r.kind === "outcome" ? (
+                    <VenueMark venue="polymarket" size={30} />
+                  ) : (
+                    <Mark symbol={symbol} src={t?.icon ?? null} size={30} />
+                  )}
                   <VenueMark
                     venue={r.w.venue}
                     size={14}
@@ -180,7 +196,7 @@ export function Positions({
                     href={href}
                     className="inline-flex h-8 items-center rounded-full border border-strong px-3 font-medium text-[12px] hover:bg-surface-2"
                   >
-                    Sell
+                    {r.redeemable ? "Redeem" : "Sell"}
                   </Link>
                 )}
               </span>

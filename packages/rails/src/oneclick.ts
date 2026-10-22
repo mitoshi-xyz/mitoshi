@@ -39,13 +39,19 @@ export interface SwapInput {
   /** Charge Mitoshi's funding fee (fundings only). */
   appFee: boolean;
   confidentiality?: Confidentiality;
+  /**
+   * Accept whatever amount actually arrives (FLEX_INPUT; "the quote is not a cap"). For deposits
+   * whose exact size the sender doesn't control, like Polymarket's bridge paying out after a pool
+   * swap. Not available in confidential mode.
+   */
+  flexible?: boolean;
   now?: number;
 }
 
 export function quoteRequest(input: SwapInput): QuoteRequest {
   const req: QuoteRequest = {
     dry: input.dry,
-    swapType: "EXACT_INPUT",
+    swapType: input.flexible ? "FLEX_INPUT" : "EXACT_INPUT",
     slippageTolerance: SLIPPAGE_BPS,
     originAsset: ASSETS[input.from].id,
     depositType: "ORIGIN_CHAIN",
@@ -58,7 +64,9 @@ export function quoteRequest(input: SwapInput): QuoteRequest {
     deadline: new Date((input.now ?? Date.now()) + DEADLINE_MS).toISOString(),
   };
   if (input.appFee && APP_FEE_RECIPIENT) req.appFees = [{ recipient: APP_FEE_RECIPIENT, fee: APP_FEE_BPS }];
-  if (input.confidentiality && input.confidentiality !== "public") req.confidentiality = input.confidentiality;
+  if (input.confidentiality && input.confidentiality !== "public" && !input.flexible) {
+    req.confidentiality = input.confidentiality;
+  }
   return req;
 }
 

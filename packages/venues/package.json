@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./hyperliquid": "./src/hyperliquid/index.ts",
     "./polymarket": "./src/polymarket/index.ts",
-    "./solana": "./src/solana/index.ts"
+    "./solana": "./src/solana/index.ts",
+    "./polymarket/trading": "./src/polymarket/trading.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -17,6 +18,7 @@
     "@mitoshi/net": "workspace:*",
     "@nktkas/hyperliquid": "catalog:",
     "@noble/curves": "catalog:",
+    "@polymarket/client": "0.12.0",
     "@scure/base": "catalog:",
     "viem": "catalog:"
   },

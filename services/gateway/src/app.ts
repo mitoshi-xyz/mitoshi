@@ -13,6 +13,10 @@ export interface Env {
   RELAY_TOKEN?: string;
   /** NEAR Intents partner key (partners.near-intents.org): lower 1Click fees, confidential swaps. */
   ONECLICK_API_KEY?: string;
+  /** Polymarket Builder API credentials (polymarket.com → Settings → Builders), for gasless Deposit Wallets. */
+  POLYMARKET_BUILDER_API_KEY?: string;
+  POLYMARKET_BUILDER_SECRET?: string;
+  POLYMARKET_BUILDER_PASSPHRASE?: string;
 }
 
 /** `GET /v1/geo`: what Polymarket sees of the gateway's egress. Never echoes the IP. */
@@ -34,7 +38,15 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   }
   if (head === "ohttp") {
     const secrets = env.ONECLICK_API_KEY ? { ONECLICK_API_KEY: env.ONECLICK_API_KEY } : {};
-    return ohttp(request, env.OHTTP_SEED, secrets);
+    const builder =
+      env.POLYMARKET_BUILDER_API_KEY && env.POLYMARKET_BUILDER_SECRET && env.POLYMARKET_BUILDER_PASSPHRASE
+        ? {
+            key: env.POLYMARKET_BUILDER_API_KEY,
+            secret: env.POLYMARKET_BUILDER_SECRET,
+            passphrase: env.POLYMARKET_BUILDER_PASSPHRASE,
+          }
+        : null;
+    return ohttp(request, env.OHTTP_SEED, secrets, builder);
   }
   if (head === "img") return img(request);
   return new Response("not found", { status: HTTP_NOT_FOUND });

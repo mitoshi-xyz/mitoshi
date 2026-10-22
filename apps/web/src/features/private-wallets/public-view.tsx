@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { cx, Drawer, Skeleton } from "@/kit";
 import { hlMarket } from "../hyperliquid/hl";
 import { VenueMark } from "../marks/mark";
+import { pmMarket } from "../polymarket/pm";
 import { solMarket } from "../solana/sol";
 import { useRegistry } from "./registry-store";
 import { VENUES } from "./venues";
@@ -19,10 +20,13 @@ const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.
 function useFootprint(w: PrivateWallet) {
   return useQuery({
     queryKey: ["footprint", w.venue, w.address],
-    enabled: w.venue !== "polymarket",
     staleTime: FOOTPRINT_STALE_MS,
     queryFn: () =>
-      w.venue === "hyperliquid" ? hlMarket.footprint(w.address as `0x${string}`) : solMarket.footprint(w.address),
+      w.venue === "hyperliquid"
+        ? hlMarket.footprint(w.address as `0x${string}`)
+        : w.venue === "polymarket"
+          ? pmMarket.footprint(w.address)
+          : solMarket.footprint(w.address),
   });
 }
 
@@ -125,7 +129,7 @@ function PublicBody({ w }: { w: PrivateWallet }) {
             {copied ? <Check size={15} /> : <Copy size={15} />}
           </button>
         </div>
-        {footprint.isPending && w.venue !== "polymarket" ? (
+        {footprint.isPending ? (
           <div className="flex flex-col gap-2 pt-3">
             <Skeleton className="h-5" label={`Reading ${venue.name}'s public record`} />
             <Skeleton className="h-5" />

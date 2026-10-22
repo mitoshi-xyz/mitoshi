@@ -1,13 +1,37 @@
 import type { PrivateFetch } from "@mitoshi/net";
+import type { PublicFootprint } from "../footprint.ts";
 import {
+  ACTIVITY_PAGE,
+  ADDRESS_WORD_CHARS,
+  BALANCE_OF,
   type Category,
   CLOB_API,
+  DATA_API,
   DEFAULT_MIN_SHARES,
   GAMMA_API,
   HISTORY,
   type HistoryRange,
   PAGE_SIZE,
+  POLYGON_RPC,
+  POSITIONS_PAGE,
+  PUSD,
+  PUSD_DECIMALS,
 } from "./constants.ts";
+
+/** One open position: an outcome's shares, what they are worth now and what they cost. */
+export interface PmPosition {
+  assetId: string;
+  conditionId: string | null;
+  size: number;
+  price: number;
+  valueUsd: number;
+  costUsd: number;
+  redeemable: boolean;
+  outcome: string | null;
+  title: string | null;
+  /** The event it belongs to (for a link back to it). */
+  eventId: string | null;
+}
 
 export interface Outcome {
   label: string;
@@ -77,6 +101,7 @@ type Json = Record<string, unknown>;
 
 /** Tick size when a market does not report one. */
 const TICK_FALLBACK = 0.01;
+const MS_PER_SECOND = 1000;
 
 const num = (v: unknown): number => (v === null || v === undefined || v === "" ? 0 : Number(v));
 const maybe = (v: unknown): number | null => (v === null || v === undefined || v === "" ? null : Number(v));
@@ -199,5 +224,54 @@ export class PolymarketMarket {
       tickSize: num(b.tick_size) || TICK_FALLBACK,
       minShares: num(b.min_order_size) || DEFAULT_MIN_SHARES,
     };
+  }
+
+  /** One wallet's open positions, from Polymarket's public data (no account needed, nothing deployed). */
+  async positions(wallet: string): Promise<PmPosition[]> {
+    const q = new URLSearchParams({ user: wallet, sizeThreshold: "0", limit: String(POSITIONS_PAGE) });
+    const rows = await this.get<Json[]>(`${DATA_API}/positions?${q}`);
+    return rows.map((r) => ({
+      assetId: String(r.asset),
+      conditionId: typeof r.conditionId === "string" ? r.conditionId : null,
+      size: num(r.size),
+      price: num(r.curPrice),
+      valueUsd: num(r.currentValue),
+      costUsd: num(r.initialValue),
+      redeemable: Boolean(r.redeemable),
+      outcome: typeof r.outcome === "string" ? r.outcome : null,
+      title: typeof r.title === "string" ? r.title : null,
+      eventId: r.eventId === undefined || r.eventId === null ? null : String(r.eventId),
+    }));
+  }
+
+  /** What anyone can see of a wallet on Polymarket: its activity, open positions, and when it first acted. */
+  async footprint(wallet: string): Promise<PublicFootprint> {
+    const q = new URLSearchParams({ user: wallet, limit: String(ACTIVITY_PAGE) });
+    const [activity, positions] = await Promise.all([
+      this.get<Json[]>(`${DATA_API}/activity?${q}`),
+      this.positions(wallet),
+    ]);
+    const times = activity.map((a) => num(a.timestamp)).filter((t) => t > 0);
+    return {
+      activity: activity.length,
+      activityCapped: activity.length >= ACTIVITY_PAGE,
+      transfers: null,
+      transfersCapped: false,
+      openPositions: positions.filter((p) => p.size > 0).length,
+      firstSeen: times.length ? Math.min(...times) * MS_PER_SECOND : null,
+    };
+  }
+
+  /** The wallet's pUSD (its cash on Polymarket), read from Polygon. */
+  async pusd(wallet: string): Promise<number> {
+    const data = `${BALANCE_OF}${wallet.slice(2).toLowerCase().padStart(ADDRESS_WORD_CHARS, "0")}`;
+    const res = await this.send(POLYGON_RPC, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: PUSD, data }, "latest"] }),
+    });
+    const body = (await res.json()) as { result?: string; error?: { message?: string } };
+    if (!res.ok || !body.result) throw new Error(`Polygon RPC: ${body.error?.message ?? res.status}`);
+    return Number(BigInt(body.result)) / 10 ** PUSD_DECIMALS;
   }
 }

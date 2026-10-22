@@ -48,6 +48,23 @@ describe("quote requests", () => {
     assert.equal(r.appFees, undefined, "no fee without a named recipient");
     assert.equal(r.confidentiality, undefined);
   });
+
+  it("takes whatever arrives for a flexible trip home, never in confidential mode", () => {
+    const r = quoteRequest({
+      from: "polygonUsdc",
+      to: "zec",
+      amount: "9990000",
+      recipient: "u1home",
+      refundTo: "0xwallet",
+      dry: false,
+      appFee: false,
+      flexible: true,
+      confidentiality: "basic",
+      now: 0,
+    });
+    assert.equal(r.swapType, "FLEX_INPUT");
+    assert.equal(r.confidentiality, undefined, "1Click has no confidential mode for FLEX_INPUT");
+  });
 });
 
 describe("helpers", () => {

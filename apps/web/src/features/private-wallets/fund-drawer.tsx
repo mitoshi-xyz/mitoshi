@@ -88,7 +88,7 @@ export function FundDrawer({
   open,
   onClose,
   onPublic,
-  venue: initialVenue = "hyperliquid",
+  venue: initialVenue = "polymarket",
 }: {
   open: boolean;
   onClose: () => void;
@@ -228,9 +228,9 @@ export function FundDrawer({
                 <span className="type-label text-muted">A brand-new wallet gets</span>
                 <span className="flex items-baseline gap-2">
                   <span className="num font-semibold text-[32px] leading-none">
-                    ≈ {Number(p.out).toFixed(OUT_DIGITS)}
+                    ≈ {Number(p.credited?.out ?? p.out).toFixed(OUT_DIGITS)}
                   </span>
-                  <span className="font-semibold text-[16px] text-ink-2">{p.symbol}</span>
+                  <span className="font-semibold text-[16px] text-ink-2">{p.credited?.symbol ?? p.symbol}</span>
                 </span>
                 <span className="num text-[13px] text-ink-2">
                   ≈ ${Number(p.usd).toFixed(USD_DIGITS)} · ready in {inMinutes(p.seconds * MS_PER_SECOND)} after it
@@ -245,8 +245,20 @@ export function FundDrawer({
                   <dd className="num text-right">
                     {APP_FEE_RECIPIENT ? `${APP_FEE_BPS / BPS_PER_PERCENT}%, included` : "none"}
                   </dd>
+                  {p.credited ? (
+                    <>
+                      <dt className="text-ink-2">Polymarket bridge</dt>
+                      <dd className="num text-right">
+                        {Number(p.out).toFixed(OUT_DIGITS)} {p.symbol} → pUSD · ${p.credited.feeUsd.toFixed(USD_DIGITS)}{" "}
+                        fee
+                      </dd>
+                    </>
+                  ) : null}
                   <dt className="text-ink-2">Route</dt>
-                  <dd className="text-right">NEAR Intents{confidentialSwaps() ? " · confidential" : ""}</dd>
+                  <dd className="text-right">
+                    NEAR Intents{p.via ? ` via ${p.via}` : ""}
+                    {confidentialSwaps() ? " · confidential" : ""}
+                  </dd>
                 </dl>
               </>
             )}

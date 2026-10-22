@@ -2,6 +2,7 @@
 
 import { latestSwap, type PrivateWallet, type SwapRecord, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { ASSETS, formatUnits } from "@mitoshi/rails";
+import { BRIDGE_SOURCES } from "@mitoshi/venues/polymarket";
 import { CountdownRing, type TxStep, Wait } from "@/kit";
 import { VENUE_ASSET } from "./jobs";
 import { VENUES } from "./venues";
@@ -42,6 +43,13 @@ function SwapEta({ swap, now, words }: { swap: SwapRecord; now: number; words: s
     </span>
   );
 }
+
+const BRIDGE_WORDS: Record<string, string> = {
+  DEPOSIT_DETECTED: "Polymarket's bridge has the USDC",
+  PROCESSING: "Turning USDC into pUSD",
+  ORIGIN_TX_CONFIRMED: "Turning USDC into pUSD",
+  SUBMITTED: "Crediting the wallet",
+};
 
 const SWAP_WORDS: Partial<Record<SwapRecord["status"], string>> = {
   KNOWN_DEPOSIT_TX: "NEAR has the deposit",
@@ -124,6 +132,27 @@ export function fundingSteps(w: PrivateWallet, now: number): TxStep[] {
         ? `${zec(Number(swap.refundedAmount))} ZEC, resting 2–6 h like any public arrival`
         : "Resting 2–6 h like any public arrival",
     });
+    return steps;
+  }
+  if (w.venue === "polymarket") {
+    // NEAR delivers USDC to the wallet's bridge address; Polymarket's bridge turns it into pUSD.
+    const bridged = swap?.bridge?.status === "COMPLETED";
+    const ready = w.status !== "funding" && w.status !== "preparing" && !failed;
+    steps.push(
+      {
+        label: `Arrived on ${BRIDGE_SOURCES[(swap?.asset ?? "polygonUsdc") as keyof typeof BRIDGE_SOURCES]?.name ?? "Polygon"} as USDC`,
+        state: settled ? "done" : "pending",
+        ...(settled && swap?.settledOut ? { detail: venueAmount(w, swap.settledOut) } : {}),
+      },
+      {
+        label: "Credited on Polymarket as pUSD",
+        state: bridged || ready ? "done" : settled ? (failed ? "failed" : "active") : "pending",
+        ...(settled && !bridged && !ready
+          ? { detail: <Wait verb={BRIDGE_WORDS[swap?.bridge?.status ?? ""] ?? "Waiting for Polymarket's bridge"} /> }
+          : {}),
+      },
+      { label: "Ready to trade", state: ready ? "done" : "pending" },
+    );
     return steps;
   }
   steps.push(

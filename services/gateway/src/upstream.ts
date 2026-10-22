@@ -10,6 +10,7 @@ import {
 } from "./constants";
 
 const HTTP_FORBIDDEN = 403;
+const ANONYMOUS_HEADERS = ["user-agent", "content-type", "accept", "x-grpc-web"];
 const HTTP_BAD_GATEWAY = 502;
 
 interface Cached {
@@ -110,7 +111,9 @@ export async function forward(inner: Request, secrets: Secrets = {}): Promise<Re
   const body = method === "GET" ? null : await inner.arrayBuffer();
   if (rule.rpcMethods && !rpcAllowed(rule.rpcMethods, body)) return refuse("JSON-RPC method not allowed");
   const ttl = cacheSeconds(rule, method, url, body);
-  const shareable = ttl !== undefined && !headers.has("authorization") && !rule.inject;
+  // Anything carrying a credential or a signature is about one wallet: never shared.
+  const personal = [...headers.keys()].some((h) => !ANONYMOUS_HEADERS.includes(h));
+  const shareable = ttl !== undefined && !personal && !rule.inject;
   const key = body ? `${url}\n${new TextDecoder().decode(body)}` : url.toString();
   if (shareable) {
     const hit = cache.get(key);

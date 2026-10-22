@@ -2,7 +2,10 @@
 
 import { advance, type PrivateWallet, type SwapRecord, type TradeRecord } from "@mitoshi/engine";
 import { ASSETS } from "@mitoshi/rails";
+import { PUSD_DECIMALS } from "@mitoshi/venues/polymarket";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
+import { pmBridge, pmMarket } from "../polymarket/pm";
+import { pmAccount } from "../polymarket/pm-account";
 import { solAccount } from "../solana/sol";
 import { freshAddress } from "../wallet/wallet-store";
 import { putWallet, walletById } from "./registry-store";
@@ -15,7 +18,106 @@ const CENTS = 100;
 export function sendHome(w: PrivateWallet): Promise<{ sent: number }> {
   if (w.venue === "hyperliquid") return sendHyperliquidHome(w.id);
   if (w.venue === "solana") return sendSolanaHome(w.id);
-  return Promise.reject(new Error("Polymarket wallets come home through the Polymarket bridge, with trading"));
+  return sendPolymarketHome(w.id);
+}
+
+const PUSD_UNITS = 10 ** PUSD_DECIMALS;
+/** Under a dollar of pUSD stays: less than the trip home costs. */
+const PUSD_DUST = 1;
+const SETTLE_POLL_MS = 3_000;
+const SETTLE_TRIES = 20;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Waits until a wallet holds no shares (sells and redemptions have settled on chain). */
+async function settled(wallet: string): Promise<void> {
+  for (let i = 0; i < SETTLE_TRIES; i++) {
+    const open = (await pmMarket.positions(wallet)).filter((p) => p.size > 0 && !p.redeemable);
+    if (open.length === 0) return;
+    await sleep(SETTLE_POLL_MS);
+  }
+  throw new Error("some shares did not sell; try again in a moment");
+}
+
+/**
+ * Sends one Polymarket wallet's money home: cancel its orders, redeem resolved shares, sell the
+ * rest at market, then a signed 1Click quote (Polygon USDC to ZEC, any amount, to a fresh shielded
+ * address), a bridge withdrawal address that pays that quote's deposit address, and one gasless
+ * pUSD transfer to it. Refunds go back to the Deposit Wallet.
+ */
+export async function sendPolymarketHome(id: string): Promise<{ sent: number }> {
+  let w = walletById(id);
+  if (w?.venue !== "polymarket") throw new Error("not a Polymarket wallet");
+  if (w.status !== "ready" && w.status !== "trading" && w.status !== "failed") {
+    throw new Error(`a ${w.status} wallet cannot be sent home`);
+  }
+  const account = await pmAccount(w);
+  if (!w.prepared) {
+    await account.prepare();
+    w = { ...(walletById(id) ?? w), prepared: true };
+    putWallet(w);
+  }
+  for (const o of await account.openOrders()) await account.cancel(o.id);
+  for (const p of await pmMarket.positions(w.address)) {
+    if (p.size <= 0) continue;
+    if (p.redeemable && p.conditionId) await account.redeem(p.conditionId);
+    else await account.sell(p.assetId, String(p.size));
+  }
+  await settled(w.address);
+  const cash = await pmMarket.pusd(w.address);
+  const now = Date.now();
+  if (cash < PUSD_DUST) {
+    w = advance(walletById(id) ?? w, "returning", now, "Only dust is left");
+    putWallet(advance(w, "retired", now, "Under 1 pUSD stays: less than the trip home would cost"));
+    return { sent: 0 };
+  }
+  const amount = BigInt(Math.floor(cash * PUSD_UNITS));
+  const recipient = await freshAddress();
+  const out = await pmBridge.quote("out", amount.toString(), w.address);
+  const q = await quote({
+    from: "polygonUsdc",
+    to: "zec",
+    amount: out.out,
+    recipient,
+    refundTo: w.address,
+    dry: false,
+    appFee: false,
+    flexible: true,
+  });
+  const depositAddress = q.quote.depositAddress;
+  if (!depositAddress) throw new Error("the quote has no deposit address");
+  const withdrawal = await pmBridge.withdrawalAddress(w.address, depositAddress);
+  const swap: SwapRecord = {
+    kind: "return",
+    depositAddress,
+    amountIn: q.quote.amountIn,
+    amountOut: q.quote.amountOut,
+    minAmountOut: q.quote.minAmountOut,
+    refundTo: w.address,
+    recipient,
+    timeEstimateSeconds: q.quote.timeEstimate + out.seconds,
+    deadline: q.quote.deadline ?? q.quoteRequest.deadline,
+    status: "QUOTED",
+    createdAt: now,
+    updatedAt: now,
+    signedQuote: q,
+  };
+  w = advance(
+    { ...(walletById(id) ?? w), swaps: [...w.swaps, swap] },
+    "returning",
+    now,
+    `Sending ${cash.toFixed(2)} pUSD home`,
+  );
+  putWallet(w);
+  await account.sendPusd(withdrawal, amount);
+  const sent: PrivateWallet = walletById(id) ?? w;
+  putWallet({
+    ...withSwap(sent, "return", { status: "KNOWN_DEPOSIT_TX", depositTx: `bridge:${withdrawal}` }),
+    timeline: [
+      ...sent.timeline,
+      { status: "returning", at: Date.now(), note: "Through Polymarket's bridge, then NEAR, back to ZEC" },
+    ],
+  });
+  return { sent: cash };
 }
 
 /** A wallet has placed its first order: it is trading now. */

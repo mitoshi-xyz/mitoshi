@@ -23,6 +23,19 @@ export const ASSETS = {
     symbol: "USDC",
     chain: "pol",
   },
+  // Polymarket's bridge takes USDC from any of these at a wallet's EVM bridge address (USDC → pUSD).
+  arbitrumUsdc: {
+    id: "nep141:arb-0xaf88d065e77c8cc2239327c5edb3a432268e5831.omft.near",
+    decimals: 6,
+    symbol: "USDC",
+    chain: "arb",
+  },
+  baseUsdc: {
+    id: "nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near",
+    decimals: 6,
+    symbol: "USDC",
+    chain: "base",
+  },
   sol: { id: "nep141:sol.omft.near", decimals: 9, symbol: "SOL", chain: "sol" },
 } as const;
 

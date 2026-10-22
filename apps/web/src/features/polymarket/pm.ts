@@ -1,11 +1,14 @@
 "use client";
 
 import { createPrivateFetch, proxiedImage } from "@mitoshi/net";
-import { LiveFeed, PolymarketMarket } from "@mitoshi/venues/polymarket";
+import { LiveFeed, PolymarketBridge, PolymarketMarket } from "@mitoshi/venues/polymarket";
 import { RELAY } from "@/constants";
 
 /** Public Polymarket data, over OHTTP. */
 export const pmMarket = new PolymarketMarket(createPrivateFetch(RELAY));
+
+/** Polymarket's bridge (fundings in, trips home out), over OHTTP. */
+export const pmBridge = new PolymarketBridge(createPrivateFetch(RELAY));
 
 let feed: LiveFeed | null = null;
 

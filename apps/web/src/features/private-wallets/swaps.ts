@@ -15,7 +15,7 @@ let confidentialAvailable = true;
 
 /** A signed quote, in NEAR's confidential mode when the gateway is allowed to use it. */
 export async function quote(input: SwapInput): Promise<QuoteResponse> {
-  if (confidentialAvailable) {
+  if (confidentialAvailable && !input.flexible) {
     try {
       return await oneclick.quote({ ...input, confidentiality: "basic" });
     } catch (e) {

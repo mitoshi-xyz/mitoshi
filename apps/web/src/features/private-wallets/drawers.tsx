@@ -24,7 +24,7 @@ function set(next: DrawerState) {
   for (const l of listeners) l();
 }
 
-export function openFund(venue: Venue = "hyperliquid") {
+export function openFund(venue: Venue = "polymarket") {
   set({ ...state, fund: venue });
 }
 
@@ -43,7 +43,7 @@ function useDrawers(): DrawerState {
   );
 }
 
-let lastVenue: Venue = "hyperliquid";
+let lastVenue: Venue = "polymarket";
 
 export function WalletDrawers() {
   const s = useDrawers();

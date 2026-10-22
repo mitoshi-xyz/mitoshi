@@ -39,18 +39,18 @@ export const VENUES: Record<Venue, VenueInfo> = {
   polymarket: {
     id: "polymarket",
     name: "Polymarket",
-    gets: "USDC on Polygon",
+    gets: "pUSD on Polymarket",
     trade: { href: "/predict", label: "Trade predictions" },
     explorers: (a) => [
       { label: "Polymarket profile", href: `https://polymarket.com/profile/${a}` },
       { label: "Polygonscan", href: `https://polygonscan.com/address/${a}` },
     ],
-    // Funding lands on a Deposit Wallet through the Polymarket bridge, which comes with trading (S4).
-    live: false,
+    // Funding lands on the wallet's Deposit Wallet through Polymarket's bridge (USDC → pUSD).
+    live: true,
   },
 };
 
-export const VENUE_ORDER: Venue[] = ["hyperliquid", "solana", "polymarket"];
+export const VENUE_ORDER: Venue[] = ["polymarket", "hyperliquid", "solana"];
 
 export type Tone = "muted" | "accent" | "up" | "warning" | "down";
 

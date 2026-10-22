@@ -2,10 +2,12 @@
 
 import { latestSwap, type PrivateWallet, type SwapRecord } from "@mitoshi/engine";
 import type { QuoteResponse } from "@mitoshi/rails";
+import type { PmPosition } from "@mitoshi/venues/polymarket";
 import { SOL_MINT } from "@mitoshi/venues/solana";
 import { useQueries } from "@tanstack/react-query";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
 import { useLiveMids } from "../hyperliquid/hooks";
+import { pmMarket } from "../polymarket/pm";
 import { solAccount, solMarket } from "../solana/sol";
 
 /** Wallets with money on a venue right now. */
@@ -26,7 +28,13 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export interface PositionRow {
   key: string;
   w: PrivateWallet;
-  kind: "perp" | "token";
+  kind: "perp" | "token" | "outcome";
+  /** Polymarket: the outcome and market, in words. */
+  label?: string;
+  /** Polymarket: resolved in this outcome's favour, waiting to be redeemed. */
+  redeemable?: boolean;
+  /** Polymarket: the event it belongs to. */
+  eventId?: string | null;
   /** Hyperliquid coin, or Solana mint. */
   asset: string;
   side: "long" | "short" | null;
@@ -77,10 +85,16 @@ function swapsBook(w: PrivateWallet) {
 }
 
 type VenueRead =
+  | { venue: "polymarket"; positions: PmPosition[]; cash: number }
   | { venue: "hyperliquid"; state: Awaited<ReturnType<Awaited<ReturnType<typeof hlAccount>>["state"]>>; day: number }
   | { venue: "solana"; lamports: bigint; tokens: { mint: string; uiAmount: number }[]; prices: Record<string, number> };
 
 async function readVenue(w: PrivateWallet): Promise<VenueRead> {
+  if (w.venue === "polymarket") {
+    // Public data only: opening the account would deploy the wallet just to read it.
+    const [positions, cash] = await Promise.all([pmMarket.positions(w.address), pmMarket.pusd(w.address)]);
+    return { venue: "polymarket", positions, cash };
+  }
   if (w.venue === "hyperliquid") {
     const account = await hlAccount(w);
     const [state, day] = await Promise.all([account.state(), hlMarket.dayPnl(account.address)]);
@@ -111,7 +125,7 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
   const results = useQueries({
     queries: wallets.map((w) => ({
       queryKey: ["portfolio", w.id],
-      enabled: ON_VENUE.has(w.status) && w.venue !== "polymarket",
+      enabled: ON_VENUE.has(w.status),
       refetchInterval: () => POLL_MIN_MS + jitter(POLL_SPREAD_MS),
       queryFn: async () => {
         await sleep(jitter(FIRST_DELAY_MAX_MS));
@@ -125,7 +139,7 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
     const base = swapsBook(w);
     const book: WalletBook = {
       w,
-      loading: ON_VENUE.has(w.status) && w.venue !== "polymarket" && Boolean(r?.isPending),
+      loading: ON_VENUE.has(w.status) && Boolean(r?.isPending),
       error: r?.error ? r.error.message : null,
       valueUsd: 0,
       cashUsd: 0,
@@ -135,6 +149,30 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
     };
     const d = r?.data;
     if (!d) return book;
+    if (d.venue === "polymarket") {
+      book.cashUsd = d.cash;
+      book.positions = d.positions
+        .filter((p) => p.size > 0)
+        .map((p) => ({
+          key: `${w.id}:${p.assetId}`,
+          w,
+          kind: "outcome",
+          asset: p.assetId,
+          label: `${p.outcome ?? "Outcome"} · ${p.title ?? ""}`,
+          side: null,
+          leverage: null,
+          size: p.size,
+          valueUsd: p.valueUsd,
+          entryPx: p.size > 0 ? p.costUsd / p.size : null,
+          markPx: p.price,
+          pnlUsd: p.valueUsd - p.costUsd,
+          liquidationPx: null,
+          redeemable: p.redeemable,
+          eventId: p.eventId,
+        }));
+      book.valueUsd = book.cashUsd + book.positions.reduce((n, p) => n + p.valueUsd, 0);
+      return book;
+    }
     if (d.venue === "hyperliquid") {
       const s = d.state;
       book.positions = s.positions.map((p) => {

@@ -122,7 +122,13 @@ export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number
           </p>
           {busy ? (
             <Wait
-              verb={w.venue === "hyperliquid" ? "Closing positions and gathering USDC" : "Selling tokens back to SOL"}
+              verb={
+                w.venue === "hyperliquid"
+                  ? "Closing positions and gathering USDC"
+                  : w.venue === "polymarket"
+                    ? "Selling shares and sending pUSD home"
+                    : "Selling tokens back to SOL"
+              }
             />
           ) : (
             <div className="flex gap-2">

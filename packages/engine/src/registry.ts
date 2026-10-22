@@ -41,6 +41,8 @@ export interface SwapRecord {
   /** When 1Click refunds if the deposit has not arrived. */
   deadline: string;
   status: SwapStatus;
+  /** Which 1Click asset it delivers (a funding may take one of several routes, e.g. USDC on Arbitrum). */
+  asset?: string;
   /** The deposit transaction (ZEC txid for fundings, venue tx or action for returns). */
   depositTx?: string;
   /** What actually arrived, once settled. */
@@ -48,6 +50,11 @@ export interface SwapRecord {
   /** The transaction that delivered it (for a trip home, the ZEC payout's txid). */
   settledTx?: string;
   refundedAmount?: string;
+  /**
+   * Polymarket only: the bridge leg after NEAR delivers (USDC at the wallet's bridge address
+   * becomes pUSD in the wallet). The funding is done when this is COMPLETED.
+   */
+  bridge?: { status: string; txHash?: string };
   createdAt: number;
   updatedAt: number;
   /** The full signed quote, kept to settle any dispute with 1Click. */
@@ -95,6 +102,8 @@ export interface PrivateWallet {
   trades?: TradeRecord[];
   /** Found again from the recovery words (its funding record was not on this device). */
   recovered?: boolean;
+  /** The venue account is set up for trading (Polymarket: Deposit Wallet deployed and approvals given). */
+  prepared?: boolean;
   error?: string;
 }
 

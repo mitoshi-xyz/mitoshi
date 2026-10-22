@@ -5,96 +5,44 @@ import {
   checkFunding,
   fundingTime,
   isCanonical,
-  type LeakReport,
   latestSwap,
   liveWallets,
   type PrivateWallet,
   type SwapRecord,
   type SwapStatus,
   type Venue,
-  walletAddress,
 } from "@mitoshi/engine";
-import { ASSETS, type AssetKey, formatUnits, type QuoteResponse } from "@mitoshi/rails";
-import { ZEC_NETWORK } from "@/constants";
+import { ASSETS, formatUnits } from "@mitoshi/rails";
 import { toast } from "@/kit";
+import { pmBridge } from "../polymarket/pm";
 import { deviceSeed, freshAddress, previewSend, refreshWallet, send, walletState } from "../wallet/wallet-store";
+import {
+  balances,
+  canFund,
+  FUNDING_FEE_RESERVE_ZAT,
+  fundingRecipient,
+  routedQuote,
+  VENUE_ASSET,
+  venueAddress,
+} from "./funding";
 import { currentRegistry, mutate, putWallet, walletById } from "./registry-store";
-import { oneclick, quote, withSwap } from "./swaps";
+import { oneclick, withSwap } from "./swaps";
 import { VENUES } from "./venues";
 
+export {
+  balances,
+  canFund,
+  FUNDING_FEE_RESERVE_ZAT,
+  type FundingPreview,
+  previewFunding,
+  VENUE_ASSET,
+  venueAddress,
+} from "./funding";
 export { confidentialSwaps } from "./swaps";
-
-/** What each venue's wallet is funded with on arrival. */
-export const VENUE_ASSET: Record<Venue, AssetKey> = {
-  polymarket: "polygonUsdc",
-  hyperliquid: "hypercoreUsdc",
-  solana: "sol",
-};
 
 const TICK_MS = 5_000;
 const POLL_MS = 15_000;
-/** A funding's network fee is checked for real before sending; this reserve is for showing sizes. */
-export const FUNDING_FEE_RESERVE_ZAT = 15_000;
-
 const TERMINAL: SwapStatus[] = ["SUCCESS", "REFUNDED", "FAILED"];
-
-export function canFund(): { ok: boolean; why?: string } {
-  if (ZEC_NETWORK !== "main") {
-    return { ok: false, why: "Private wallets are funded through NEAR Intents, which only takes mainnet ZEC." };
-  }
-  return { ok: true };
-}
-
-/** What the rested, spendable balance allows. */
-export function balances() {
-  const b = walletState().summary?.balance;
-  return {
-    spendable: b ? b.ironwood.spendable + b.orchard.spendable : 0,
-    resting: b ? b.ironwood.locked + b.orchard.locked : 0,
-  };
-}
-
-export interface FundingPreview {
-  out: string;
-  symbol: string;
-  usd: string;
-  seconds: number;
-  quote: QuoteResponse;
-  leak: LeakReport;
-}
-
-/** A dry quote for funding a new wallet of `sizeZat` on `venue` (nothing moves). */
-export async function previewFunding(venue: Venue, sizeZat: number): Promise<FundingPreview> {
-  const allowed = canFund();
-  if (!allowed.ok) throw new Error(allowed.why);
-  const seed = await deviceSeed();
-  const recipient = walletAddress(seed, venue, currentRegistry().nextIndex[venue]);
-  const refundTo = await freshAddress();
-  const q = await quote({
-    from: "zec",
-    to: VENUE_ASSET[venue],
-    amount: String(sizeZat),
-    recipient,
-    refundTo,
-    dry: true,
-    appFee: true,
-  });
-  const asset = ASSETS[VENUE_ASSET[venue]];
-  const { spendable, resting } = balances();
-  return {
-    out: formatUnits(q.quote.amountOut, asset.decimals),
-    symbol: asset.symbol,
-    usd: q.quote.amountOutUsd,
-    seconds: q.quote.timeEstimate,
-    quote: q,
-    leak: checkFunding({
-      amountZat: sizeZat,
-      feeZat: FUNDING_FEE_RESERVE_ZAT,
-      spendableZat: spendable,
-      restingZat: resting,
-    }),
-  };
-}
 
 /** Adds a wallet that will fund itself at a random moment in the next few minutes. */
 export async function prepareWallet(venue: Venue, sizeZat: number): Promise<PrivateWallet> {
@@ -108,7 +56,7 @@ export async function prepareWallet(venue: Venue, sizeZat: number): Promise<Priv
     id: crypto.randomUUID(),
     venue,
     index,
-    address: walletAddress(seed, venue, index),
+    address: venueAddress(seed, venue, index),
     sizeZat,
     status: "preparing",
     createdAt: now,
@@ -143,11 +91,11 @@ async function fund(id: string) {
   putWallet(w);
   try {
     const refundTo = await freshAddress();
-    const q = await quote({
+    const recipient = await fundingRecipient(w);
+    const { q, to } = await routedQuote(w.venue, {
       from: "zec",
-      to: VENUE_ASSET[w.venue],
       amount: String(w.sizeZat),
-      recipient: w.address,
+      recipient,
       refundTo,
       dry: false,
       appFee: true,
@@ -172,10 +120,11 @@ async function fund(id: string) {
       amountOut: q.quote.amountOut,
       minAmountOut: q.quote.minAmountOut,
       refundTo,
-      recipient: w.address,
+      recipient,
       timeEstimateSeconds: q.quote.timeEstimate,
       deadline: q.quote.deadline ?? q.quoteRequest.deadline,
       status: "QUOTED",
+      asset: to,
       createdAt: now,
       updatedAt: now,
       signedQuote: q,
@@ -198,6 +147,45 @@ const arrivedNote = (w: PrivateWallet, settled: string | undefined) => {
   const asset = ASSETS[VENUE_ASSET[w.venue]];
   return settled ? `Arrived: ${formatUnits(settled, asset.decimals)} ${asset.symbol}` : "Arrived";
 };
+
+function announceReady(w: PrivateWallet, body: string) {
+  const venue = VENUES[w.venue];
+  toast({
+    tone: "up",
+    title: `Your ${venue.name} wallet is ready`,
+    body,
+    action: { label: venue.trade.label, href: venue.trade.href },
+  });
+}
+
+const BRIDGE_DONE = "COMPLETED";
+const BRIDGE_FAILED = "FAILED";
+
+/**
+ * Polymarket's last funding leg: the USDC NEAR delivered to the wallet's bridge address becomes
+ * pUSD in the Deposit Wallet. The wallet is ready once the bridge says COMPLETED.
+ */
+async function credit(id: string) {
+  const w = walletById(id);
+  const swap = w ? latestSwap(w, "fund") : undefined;
+  if (!w || !swap || w.status !== "funding" || swap.status !== "SUCCESS") return;
+  if (swap.bridge && Date.now() - swap.updatedAt < POLL_MS) return;
+  const t = await pmBridge.latest(swap.recipient).catch(() => null);
+  const now = Date.now();
+  let next = withSwap(w, "fund", t ? { bridge: { status: t.status, ...(t.txHash ? { txHash: t.txHash } : {}) } } : {});
+  if (t?.status === BRIDGE_DONE) {
+    next = advance(next, "ready", now, "Credited on Polymarket as pUSD");
+    announceReady(w, "Credited on Polymarket as pUSD");
+  } else if (t?.status === BRIDGE_FAILED) {
+    next = advance(next, "failed", now, "Polymarket's bridge could not credit the funding");
+    toast({
+      tone: "down",
+      title: "A Polymarket funding is stuck at the bridge",
+      action: { label: "See it", href: "/wallets" },
+    });
+  }
+  putWallet(next);
+}
 
 /** Follows a swap on 1Click and moves the wallet along when it settles. */
 async function poll(id: string) {
@@ -222,14 +210,15 @@ async function poll(id: string) {
   });
   const venue = VENUES[w.venue];
   if (kind === "fund") {
-    if (st.status === "SUCCESS") {
+    // On Polymarket, NEAR's delivery is only the USDC at the bridge: the bridge leg finishes it.
+    if (st.status === "SUCCESS" && w.venue === "polymarket") {
+      next = {
+        ...next,
+        timeline: [...next.timeline, { status: "funding", at: now, note: arrivedNote(w, st.swapDetails.amountOut) }],
+      };
+    } else if (st.status === "SUCCESS") {
       next = advance(next, "ready", now, arrivedNote(w, st.swapDetails.amountOut));
-      toast({
-        tone: "up",
-        title: `Your ${venue.name} wallet is ready`,
-        body: arrivedNote(w, st.swapDetails.amountOut),
-        action: { label: venue.trade.label, href: venue.trade.href },
-      });
+      announceReady(w, arrivedNote(w, st.swapDetails.amountOut));
     }
     if (st.status === "REFUNDED") {
       next = advance(next, "refunded", now, "NEAR refunded the swap; the ZEC is back in your balance (resting)");
@@ -293,6 +282,7 @@ function tick() {
   for (const w of currentRegistry().wallets) {
     if (w.status === "preparing" && (w.fundAt ?? 0) <= now) once(w.id, fund);
     if (w.status === "funding" || w.status === "returning") once(w.id, poll);
+    if (w.status === "funding" && w.venue === "polymarket") once(`${w.id}:bridge`, () => credit(w.id));
   }
   if (canFund().ok) keepReady();
 }
