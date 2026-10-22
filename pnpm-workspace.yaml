@@ -30,7 +30,6 @@ catalog:
   "@scure/bip32": 2.4.0
   "@nktkas/hyperliquid": 0.33.3
   viem: 2.57.4
-  lightweight-charts: 5.2.1
   lucide-react: 1.52.0
   "@number-flow/react": 0.6.2
   motion: 14.0.0

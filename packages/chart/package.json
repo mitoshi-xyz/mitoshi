@@ -2,16 +2,14 @@
   "name": "@mitoshi/chart",
   "private": true,
   "type": "module",
-  "description": "The live market chart: candles or a line, an interval menu's data, live pushes and price lines (entry, take profit, stop loss, liquidation).",
+  "description": "Mitoshi's canvas chart engine: a 60 Hz live line, a history line and candles, with position levels.",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "lightweight-charts": "catalog:"
-  },
+  "dependencies": {},
   "devDependencies": {
     "typescript": "catalog:"
   }

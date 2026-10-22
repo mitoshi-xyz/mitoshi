@@ -31,7 +31,7 @@ export function ProbabilityChart({
 
   useEffect(() => {
     if (!box.current) return;
-    const c = new MarketChart(box.current, "line");
+    const c = new MarketChart(box.current, { mode: "line", format: (v) => `${v.toFixed(1)}%`, watermark: "見通し" });
     chart.current = c;
     return () => {
       c.dispose();
@@ -60,7 +60,7 @@ export function ProbabilityChart({
   useEffect(() => {
     if (!lastTrade) return;
     const v = lastTrade.price * PCT;
-    chart.current?.push({ t: lastTrade.at, o: v, h: v, l: v, c: v });
+    chart.current?.pushBar({ t: lastTrade.at, o: v, h: v, l: v, c: v });
   }, [lastTrade]);
 
   return (

@@ -18,7 +18,7 @@ export function TokenChart({ mint, livePrice }: { mint: string; livePrice: numbe
 
   useEffect(() => {
     if (!box.current) return;
-    const c = new MarketChart(box.current, "candles");
+    const c = new MarketChart(box.current, { mode: "candles" });
     chart.current = c;
     return () => {
       c.dispose();
@@ -54,7 +54,7 @@ export function TokenChart({ mint, livePrice }: { mint: string; livePrice: numbe
     if (!bar || livePrice === undefined || !Number.isFinite(livePrice)) return;
     const next = { ...bar, c: livePrice, h: Math.max(bar.h, livePrice), l: Math.min(bar.l, livePrice) };
     last.current = next;
-    chart.current?.push(next);
+    chart.current?.pushBar(next);
   }, [livePrice]);
 
   return (

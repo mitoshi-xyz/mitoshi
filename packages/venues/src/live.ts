@@ -59,7 +59,9 @@ export class LiveFeed {
       this.backoff = BACKOFF_START_MS;
       this.setStatus("live");
       for (const { sub } of this.subs.values()) ws.send(JSON.stringify({ op: "sub", sub }));
-      this.ping = setInterval(() => ws.send("ping"), PING_MS);
+      this.ping = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) ws.send("ping");
+      }, PING_MS);
     };
     ws.onmessage = (e: MessageEvent<string>) => {
       if (e.data === "pong") return;

@@ -1,60 +1,63 @@
 "use client";
 
 import type { Levels } from "@mitoshi/chart";
-import { latestSwap, readyWallet } from "@mitoshi/engine";
-import { useEffect, useMemo, useState } from "react";
-import { compactUsd, funding, pct, price, upDown } from "../format";
+import { readyWallet } from "@mitoshi/engine";
+import { useEffect, useState } from "react";
+import { cx, Segmented, Skeleton } from "@/kit";
+import { compactUsd, funding } from "../format";
 import { perpByName, useAccountState, useLiveCtx, useLiveMids, usePerps } from "../hyperliquid/hooks";
 import { useRegistry } from "../private-wallets/registry-store";
 import { ChartPanel } from "./chart-panel";
+import { AssetChip, MarketPicker } from "./market-picker";
 import { Positions } from "./positions";
 import { Ticket } from "./ticket";
+import { WalletCard } from "./wallet-card";
 
 const DEFAULT_COIN = "BTC";
-const MS_PER_MINUTE = 60_000;
-const MS_PER_SECOND = 1000;
 
-function useHashCoin(): string {
-  const read = () => decodeURIComponent(window.location.hash.slice(1)) || DEFAULT_COIN;
+function useHashCoin(): [string, (c: string) => void] {
   const [coin, setCoin] = useState(DEFAULT_COIN);
   useEffect(() => {
-    setCoin(read());
-    const on = () => setCoin(read());
-    window.addEventListener("hashchange", on);
-    return () => window.removeEventListener("hashchange", on);
+    const read = () => setCoin(decodeURIComponent(window.location.hash.slice(1)) || DEFAULT_COIN);
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
   }, []);
-  return coin;
+  const go = (c: string) => {
+    window.location.hash = c;
+    setCoin(c);
+  };
+  return [coin, go];
 }
 
-/** The Hyperliquid terminal: live chart, ticket, and every private wallet's positions. */
+function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <span className="flex flex-col leading-tight">
+      <span className="text-[11px] text-muted">{label}</span>
+      <span className={cx("num text-[13px]", tone)}>{value}</span>
+    </span>
+  );
+}
+
+/** The Hyperliquid terminal: the chart is the stage; the ticket and positions sit beside it. */
 export function Terminal() {
-  const coin = useHashCoin();
+  const [coin, setCoin] = useHashCoin();
   const perps = usePerps();
   const perp = perpByName(perps.data, coin);
   const ctx = useLiveCtx(coin);
   const mids = useLiveMids();
   const registry = useRegistry();
+  const [picker, setPicker] = useState(false);
+  const [tab, setTab] = useState<"trade" | "positions">("trade");
 
-  const hlWallets = registry.wallets.filter((w) => w.venue === "hyperliquid");
-  const live = hlWallets.filter((w) => w.status === "ready" || w.status === "trading" || w.status === "returning");
-  const trading = hlWallets.find((w) => w.status === "trading");
-  const ready = readyWallet(registry, "hyperliquid");
+  const hl = registry.wallets.filter((w) => w.venue === "hyperliquid");
+  const live = hl.filter((w) => w.status === "ready" || w.status === "trading" || w.status === "returning");
+  const trading = hl.find((w) => w.status === "trading");
   const tradingState = useAccountState(trading);
   const holdsCoin = tradingState.data?.positions.some((p) => p.coin === coin) ?? false;
-  const wallet = holdsCoin ? trading : (ready ?? undefined);
+  const wallet = holdsCoin ? trading : (readyWallet(registry, "hyperliquid") ?? trading);
   const walletState = useAccountState(wallet);
-
-  const pending = hlWallets.find((w) => w.status === "preparing" || w.status === "funding");
-  const waiting = useMemo(() => {
-    if (!pending) return { text: "No private wallet is ready. Prepare one (or switch on “Keep one ready”)." };
-    const swap = latestSwap(pending, "fund");
-    if (!swap) return { text: "A private wallet is preparing: funding starts within ~3 min." };
-    const left = Math.max(
-      1,
-      Math.round((swap.createdAt + swap.timeEstimateSeconds * MS_PER_SECOND - Date.now()) / MS_PER_MINUTE),
-    );
-    return { text: `A private wallet is funding: about ${left} min left.` };
-  }, [pending]);
+  const pending = hl.find((w) => w.status === "preparing" || w.status === "funding");
 
   const position = walletState.data?.positions.find((p) => p.coin === coin);
   const triggers = walletState.data?.orders.filter((o) => o.coin === coin && o.trigger) ?? [];
@@ -65,42 +68,58 @@ export function Terminal() {
     stopLoss: triggers.find((o) => o.trigger?.kind.toLowerCase().includes("stop"))?.trigger?.px ?? null,
   };
 
-  const mark = ctx?.markPx ?? perp?.markPx ?? 0;
-  const change = ctx && ctx.prevDayPx > 0 ? ctx.markPx / ctx.prevDayPx - 1 : (perp?.change24h ?? 0);
-
-  if (perps.isPending)
-    return <div role="status" className="h-96 animate-pulse rounded-xl bg-white/5" aria-label="Loading markets" />;
-  if (!perp) {
-    return (
-      <p className="text-sm opacity-70">
-        No Hyperliquid perp called “{coin}”.{" "}
-        <a href="/markets" className="underline">
-          See all markets
-        </a>
-      </p>
-    );
-  }
+  const mark = ctx?.markPx ?? mids[coin] ?? perp?.markPx ?? 0;
+  const prev = ctx?.prevDayPx ?? perp?.prevDayPx ?? 0;
+  const change = prev > 0 ? mark / prev - 1 : 0;
+  const positions = live.length;
 
   return (
-    <section className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-        <h2 className="font-semibold text-2xl">{coin}-PERP</h2>
-        <span className="font-mono text-xl">{price(mark)}</span>
-        <span className={`font-mono text-sm ${upDown(change)}`}>{pct(change)} 24h</span>
-        <span className="text-sm opacity-70">Funding {funding(ctx?.funding ?? perp.funding)}/h</span>
-        <span className="text-sm opacity-70">
-          OI {compactUsd((ctx?.openInterest ?? 0) * mark || perp.openInterestUsd)}
-        </span>
-        <span className="text-sm opacity-70">Up to {perp.maxLeverage}×</span>
-      </header>
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <ChartPanel coin={coin} levels={levels} />
-        <Ticket perp={perp} mark={mark} wallet={wallet} state={walletState.data} waiting={wallet ? null : waiting} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <h3 className="font-medium">Your positions</h3>
-        <Positions wallets={live} perps={perps.data ?? []} mids={mids} />
-      </div>
-    </section>
+    <div className="grid min-h-[calc(100dvh-96px)] lg:h-[calc(100dvh-96px)] lg:grid-cols-[1fr_360px]">
+      <section className="relative flex min-h-[520px] flex-col border-hairline lg:border-r">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 pt-4">
+          {perp ? (
+            <AssetChip perp={perp} mark={mark} change={change} onOpen={() => setPicker(true)} />
+          ) : (
+            <Skeleton className="h-12 w-56 rounded-full" label="Loading the market" />
+          )}
+          {perp ? (
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <Stat
+                label="Funding / h"
+                value={funding(ctx?.funding ?? perp.funding)}
+                tone={(ctx?.funding ?? perp.funding) >= 0 ? "text-up" : "text-down"}
+              />
+              <Stat label="Open interest" value={compactUsd((ctx?.openInterest ?? 0) * mark || perp.openInterestUsd)} />
+              <Stat label="24h volume" value={compactUsd(ctx?.dayVolumeUsd ?? perp.dayVolumeUsd)} />
+            </div>
+          ) : null}
+        </div>
+        <div className="min-h-0 flex-1">
+          <ChartPanel coin={coin} levels={levels} />
+        </div>
+      </section>
+      <aside className="flex flex-col gap-4 overflow-y-auto p-4">
+        <WalletCard wallet={wallet} pending={pending} state={walletState.data} loading={walletState.isPending} />
+        <Segmented
+          className="self-start"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "trade", label: "Trade" },
+            { value: "positions", label: positions ? `Positions · ${positions}` : "Positions" },
+          ]}
+        />
+        {tab === "trade" ? (
+          perp ? (
+            <Ticket perp={perp} mark={mark} wallet={wallet} state={walletState.data} />
+          ) : (
+            <Skeleton className="h-96" label="Loading the ticket" />
+          )
+        ) : (
+          <Positions wallets={live} perps={perps.data ?? []} mids={mids} />
+        )}
+      </aside>
+      <MarketPicker open={picker} onClose={() => setPicker(false)} perps={perps.data} mids={mids} onPick={setCoin} />
+    </div>
   );
 }
