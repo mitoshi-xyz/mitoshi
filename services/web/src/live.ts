@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 /**
- * Live public market data (Hyperliquid, Polymarket). One object per venue keeps a single upstream WebSocket open and fans
+ * Live public market data (Hyperliquid, Polymarket, Polymarket Perps). One object per venue keeps a single upstream WebSocket open and fans
  * public channels out to every browser watching. Only market channels are allowed: anything that
  * names a user (fills, orders, balances) is refused, so this edge never learns who owns which
  * wallet. The upstream connection is opened from an alarm, outside any visitor's request.
@@ -33,7 +33,12 @@ interface Protocol {
   unsubscribe(keys: string[]): string[];
   /** Splits an upstream message into (key, data) pairs for the browsers watching. */
   route(text: string): { key: string; data: unknown }[];
+  /** Keys whose updates are held and sent at most once per COALESCE_MS (only the latest one). */
+  coalesce?(key: string): boolean;
 }
+
+/** Tickers arrive several times a second per instrument; browsers only need the latest once a second. */
+const COALESCE_MS = 1_000;
 
 /** A canonical key for a subscription, matching how upstream messages are routed. */
 function keyOf(s: Sub): string {
@@ -134,11 +139,53 @@ const polymarket: Protocol = {
   },
 };
 
-export const PROTOCOLS: Record<string, Protocol> = { hyperliquid, polymarket };
+const PERPS_TYPES = new Set(["bbo", "trades", "tickers", "klines", "statistics"]);
+/** Channels that also come as one stream for every instrument (`tickers::all`). */
+const PERPS_ALL = new Set(["tickers", "statistics"]);
+const PERPS_INTERVALS = new Set(["1m", "5m", "15m", "30m", "1h", "4h", "12h", "1d", "1w"]);
+const INSTRUMENT = /^\d{1,6}$/;
+/** Our key "klines:6:1m" is Polymarket's channel "klines::6::1m". */
+const perpsChannel = (key: string) => key.split(":").join("::");
+
+/** Polymarket Perps' public market data (docs.polymarket.com/perps/realtime-updates). */
+const pmperps: Protocol = {
+  url: "https://ws.perpetuals.polymarket.com/v1/ws",
+  // Docs (AsyncAPI "Ping"): idle connections close after 60 s; ping keeps them open.
+  pingFrame: JSON.stringify({ req: "post", op: { type: "ping" } }),
+  pingMs: 30_000,
+  parse(r) {
+    if (typeof r.type !== "string" || !PERPS_TYPES.has(r.type)) return null;
+    const id = r.coin;
+    if (typeof id !== "string" || !(INSTRUMENT.test(id) || (id === "all" && PERPS_ALL.has(r.type)))) return null;
+    const s: Sub = { type: r.type, coin: id };
+    if (r.type === "klines") {
+      if (typeof r.interval !== "string" || !PERPS_INTERVALS.has(r.interval)) return null;
+      s.interval = r.interval;
+    }
+    return s;
+  },
+  subscribe: (keys) => (keys.length ? [JSON.stringify({ req: "sub", chs: keys.map(perpsChannel) })] : []),
+  unsubscribe: (keys) => (keys.length ? [JSON.stringify({ req: "unsub", chs: keys.map(perpsChannel) })] : []),
+  route(text) {
+    const msg = JSON.parse(text) as { ch?: string; data?: unknown };
+    if (typeof msg.ch !== "string") return [];
+    const key = msg.ch.split("::").join(":");
+    const [type = ""] = key.split(":");
+    const out = [{ key, data: msg.data }];
+    if (PERPS_ALL.has(type)) out.push({ key: `${type}:all`, data: msg.data });
+    return out;
+  },
+  coalesce: (key) => PERPS_ALL.has(key.split(":")[0] ?? ""),
+};
+
+export const PROTOCOLS: Record<string, Protocol> = { hyperliquid, polymarket, pmperps };
 
 export class LiveFeed extends DurableObject<Record<string, unknown>> {
   private upstream: WebSocket | null = null;
   private pinger: ReturnType<typeof setInterval> | null = null;
+  private flusher: ReturnType<typeof setInterval> | null = null;
+  /** Coalesced updates waiting for the next flush; for an ":all" key, the latest per instrument. */
+  private held = new Map<string, unknown>();
   private protocol: Protocol | null = null;
 
   constructor(ctx: DurableObjectState, env: Record<string, unknown>) {
@@ -231,7 +278,10 @@ export class LiveFeed extends DurableObject<Record<string, unknown>> {
 
   private closeUpstream() {
     if (this.pinger) clearInterval(this.pinger);
+    if (this.flusher) clearInterval(this.flusher);
     this.pinger = null;
+    this.flusher = null;
+    this.held.clear();
     this.upstream?.close();
     this.upstream = null;
   }
@@ -250,6 +300,7 @@ export class LiveFeed extends DurableObject<Record<string, unknown>> {
     this.upstream = ws;
     this.sendUpstream(protocol.subscribe([...this.wanted()], true));
     this.pinger = setInterval(() => ws.send(protocol.pingFrame), protocol.pingMs);
+    if (protocol.coalesce) this.flusher = setInterval(() => this.flush(), COALESCE_MS);
     ws.addEventListener("message", (e) => this.fanOut(protocol, e.data));
     const lost = () => {
       if (this.upstream !== ws) return;
@@ -268,6 +319,25 @@ export class LiveFeed extends DurableObject<Record<string, unknown>> {
     } catch {
       return;
     }
+    const now = routed.filter((r) => {
+      if (!protocol.coalesce?.(r.key)) return true;
+      // ":all" streams hold one update per instrument; single keys hold the latest.
+      const id = (r.data as { iid?: unknown } | null)?.iid;
+      this.held.set(r.key.endsWith(":all") ? `${r.key}\n${String(id)}` : r.key, r.data);
+      return false;
+    });
+    this.send(now);
+  }
+
+  /** Sends the held updates (each once) and forgets them. */
+  private flush() {
+    if (this.held.size === 0) return;
+    const out = [...this.held].map(([k, data]) => ({ key: k.split("\n")[0] ?? k, data }));
+    this.held.clear();
+    this.send(out);
+  }
+
+  private send(routed: { key: string; data: unknown }[]) {
     if (routed.length === 0) return;
     const sockets = this.ctx.getWebSockets().map((ws) => ({
       ws,

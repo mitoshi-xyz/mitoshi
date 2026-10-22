@@ -1,40 +1,41 @@
 "use client";
 
 import type { PrivateWallet } from "@mitoshi/engine";
-import type { Perp } from "@mitoshi/venues/hyperliquid";
 import { useQueryClient } from "@tanstack/react-query";
 import { Layers } from "lucide-react";
 import { useState } from "react";
 import { cx, EmptyState, RollingNumber, Skeleton, Wait } from "@/kit";
 import { price, upDown } from "../format";
-import { hlAccount } from "../hyperliquid/hl";
-import { useAccountState } from "../hyperliquid/hooks";
 import { Mark } from "../marks/mark";
-import { sendHyperliquidHome } from "../private-wallets/home";
+import { DRIVERS, usePerpAccount } from "../perps/hooks";
+import type { PerpMarket, PerpVenue } from "../perps/model";
 import { MASK, useHideAmounts } from "../shell/prefs";
 
-const ADDRESS_HEAD = 8;
+const ADDRESS_HEAD = 6;
+const ADDRESS_TAIL = 4;
 
 interface Props {
+  venue: PerpVenue;
   wallet: PrivateWallet;
-  perps: Perp[];
-  mids: Record<string, number>;
+  markets: PerpMarket[];
+  marks: Record<string, number>;
 }
 
-function WalletPositions({ wallet, perps, mids }: Props) {
-  const state = useAccountState(wallet);
+function WalletPositions({ venue, wallet, markets, marks }: Props) {
+  const driver = DRIVERS[venue];
+  const account = usePerpAccount(venue, wallet);
   const queries = useQueryClient();
   const [hidden] = useHideAmounts();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const perpOf = (coin: string) => perps.find((p) => p.name === coin);
+  const marketOf = (id: string) => markets.find((m) => m.id === id);
 
   async function run(verb: string, job: () => Promise<unknown>) {
     setBusy(verb);
     setError(null);
     try {
       await job();
-      await queries.invalidateQueries({ queryKey: ["hyperliquid", "account", wallet.id] });
+      await queries.invalidateQueries({ queryKey: ["perps", venue, "account", wallet.id] });
     } catch (e) {
       setError(`${e instanceof Error ? e.message : String(e)}. Your money is where it was.`);
     } finally {
@@ -42,25 +43,27 @@ function WalletPositions({ wallet, perps, mids }: Props) {
     }
   }
 
-  const s = state.data;
-  if (state.isPending) return <Skeleton className="h-20" label="Reading the wallet" />;
+  const s = account.data;
+  if (account.isPending) return <Skeleton className="h-20" label="Reading the wallet" />;
+  const empty = s && s.positions.length === 0 && s.orders.length === 0;
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-hairline bg-surface-1 p-3">
+    <li className="flex flex-col gap-2 rounded-xl border border-hairline bg-surface-1 p-3">
       <div className="flex items-center justify-between text-[12px] text-muted">
-        <span>
-          Wallet <span className="font-mono">{wallet.address.slice(0, ADDRESS_HEAD)}…</span>
+        <span className="font-mono">
+          {wallet.address.slice(0, ADDRESS_HEAD)}…{wallet.address.slice(-ADDRESS_TAIL)}
         </span>
-        <span className="capitalize">{wallet.status === "returning" ? "coming home" : wallet.status}</span>
+        <span>{wallet.status === "returning" ? "Coming home" : wallet.status === "trading" ? "Trading" : "Ready"}</span>
       </div>
       {s?.positions.map((p) => {
-        const mark = mids[p.coin] ?? p.entryPx;
-        const perp = perpOf(p.coin);
+        const m = marketOf(p.marketId);
+        const mark = marks[p.marketId] ?? m?.markPx ?? p.entryPx;
         const long = p.size > 0;
+        const pnl = (long ? mark - p.entryPx : p.entryPx - mark) * Math.abs(p.size);
         return (
-          <div key={p.coin} className="flex flex-col gap-2 rounded-md bg-surface-2/60 p-2.5">
+          <div key={p.marketId} className="flex flex-col gap-2 rounded-lg bg-surface-2/60 p-2.5">
             <div className="flex items-center gap-2">
-              <Mark symbol={p.coin} size={22} />
-              <span className="font-semibold text-sm">{p.coin}</span>
+              <Mark symbol={m?.name ?? p.marketId} src={m?.logo ?? null} size={22} />
+              <span className="font-semibold text-sm">{m?.name ?? p.marketId}</span>
               <span
                 className={cx(
                   "rounded px-1.5 py-0.5 font-semibold text-[11px]",
@@ -69,63 +72,48 @@ function WalletPositions({ wallet, perps, mids }: Props) {
               >
                 {long ? "Long" : "Short"} {p.leverage}×
               </span>
-              <span className={cx("ml-auto text-sm", upDown(p.unrealizedPnl))}>
+              <span className={cx("ml-auto text-sm", upDown(pnl))}>
                 {hidden ? (
                   MASK
                 ) : (
-                  <RollingNumber
-                    value={p.unrealizedPnl}
-                    format={{ style: "currency", currency: "USD", signDisplay: "always" }}
-                  />
+                  <RollingNumber value={pnl} format={{ style: "currency", currency: "USD", signDisplay: "always" }} />
                 )}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-[12px]">
-              <span className="flex flex-col">
-                <span className="text-muted">Size</span>
-                <span className="num">{hidden ? MASK : Math.abs(p.size)}</span>
+            <div className="num flex justify-between text-[12px] text-ink-2">
+              <span>
+                {price(p.entryPx)} → {price(mark)}
               </span>
-              <span className="flex flex-col">
-                <span className="text-muted">Entry → mark</span>
-                <span className="num">
-                  {price(p.entryPx)} → {price(mark)}
-                </span>
-              </span>
-              <span className="flex flex-col">
-                <span className="text-muted">Liquidation</span>
-                <span className="num text-warning">{p.liquidationPx ? price(p.liquidationPx) : "–"}</span>
-              </span>
+              <span className="text-warning">Liq {p.liquidationPx ? price(p.liquidationPx) : "–"}</span>
             </div>
-            {perp ? (
+            {m ? (
               <button
                 type="button"
                 disabled={busy !== null}
-                onClick={() =>
-                  void run("Closing at market", async () => (await hlAccount(wallet)).close(perp, p, mark))
-                }
-                className="h-8 rounded-full border border-strong text-[13px] hover:bg-surface-3 disabled:opacity-40"
+                onClick={() => void run("Closing at market", () => driver.close(wallet, m, p, mark))}
+                className="h-9 rounded-full border border-strong font-medium text-[13px] hover:bg-surface-3 disabled:opacity-40"
               >
-                Close position
+                Close
               </button>
             ) : null}
           </div>
         );
       })}
       {s?.orders.map((o) => {
-        const perp = perpOf(o.coin);
+        const m = marketOf(o.marketId);
         return (
           <div key={o.oid} className="flex items-center justify-between gap-2 text-[12px] text-ink-2">
             <span className="flex items-center gap-1.5">
-              <Mark symbol={o.coin} size={16} />
+              <Mark symbol={m?.name ?? o.marketId} src={m?.logo ?? null} size={16} />
               {o.trigger
-                ? `${o.trigger.kind} at ${price(o.trigger.px)}`
+                ? `${o.trigger.kind === "tp" ? "Take profit" : "Stop loss"} ${price(o.trigger.px)}`
                 : `${o.isBuy ? "Buy" : "Sell"} ${o.size} at ${price(o.px)}`}
             </span>
-            {perp ? (
+            {m ? (
               <button
                 type="button"
                 disabled={busy !== null}
-                onClick={() => void run("Cancelling", async () => (await hlAccount(wallet)).cancel(perp, o.oid))}
+                onClick={() => void run("Cancelling", () => driver.cancel(wallet, m, o.oid))}
                 className="text-accent hover:underline disabled:opacity-40"
               >
                 Cancel
@@ -134,14 +122,14 @@ function WalletPositions({ wallet, perps, mids }: Props) {
           </div>
         );
       })}
-      {s && s.positions.length === 0 && wallet.status !== "returning" ? (
+      {empty && wallet.status !== "returning" ? (
         <button
           type="button"
           disabled={busy !== null}
-          onClick={() => void run("Gathering USDC and swapping home", () => sendHyperliquidHome(wallet.id))}
-          className="h-9 rounded-full bg-accent font-semibold text-[13px] text-accent-ink hover:brightness-110 disabled:opacity-40"
+          onClick={() => void run("Swapping home to shielded ZEC", () => driver.sendHome(wallet))}
+          className="h-10 rounded-full bg-accent font-semibold text-[13px] text-accent-ink hover:brightness-110 disabled:opacity-40"
         >
-          Send the money home
+          Send home
         </button>
       ) : null}
       {busy ? <Wait verb={busy} /> : null}
@@ -150,29 +138,15 @@ function WalletPositions({ wallet, perps, mids }: Props) {
   );
 }
 
-/** Every live Hyperliquid private wallet with what it holds. */
-export function Positions({
-  wallets,
-  perps,
-  mids,
-}: {
-  wallets: PrivateWallet[];
-  perps: Perp[];
-  mids: Record<string, number>;
-}) {
+/** Every live private wallet on a venue with what it holds. */
+export function Positions({ venue, wallets, markets, marks }: Omit<Props, "wallet"> & { wallets: PrivateWallet[] }) {
   if (wallets.length === 0) {
-    return (
-      <EmptyState
-        icon={Layers}
-        title="No positions yet"
-        body="Each position opens from its own brand-new wallet, so nobody can follow one trade to the next."
-      />
-    );
+    return <EmptyState icon={Layers} title="No positions yet" body="Each one opens from its own new wallet." />;
   }
   return (
     <ul className="flex flex-col gap-2">
       {wallets.map((w) => (
-        <WalletPositions key={w.id} wallet={w} perps={perps} mids={mids} />
+        <WalletPositions key={w.id} venue={venue} wallet={w} markets={markets} marks={marks} />
       ))}
     </ul>
   );

@@ -53,8 +53,8 @@ export class MarketChart {
   private colors: Colors;
   private readonly colorRoot: Element | undefined;
   private readonly watermark: string;
-  private format: (p: number) => string;
-  private formatTime: (ms: number) => string;
+  private readonly format: (p: number) => string;
+  private readonly formatTime: (ms: number) => string;
   private w = 0;
   private h = 0;
   private dpr = 1;
@@ -112,16 +112,6 @@ export class MarketChart {
     this.dirty = true;
   }
 
-  setFormat(format: (p: number) => string) {
-    this.format = format;
-    this.dirty = true;
-  }
-
-  setTimeFormat(formatTime: (ms: number) => string) {
-    this.formatTime = formatTime;
-    this.dirty = true;
-  }
-
   /** A live price tick (live mode eases toward it; other modes move the last bar's close). */
   pushPrice(price: number) {
     if (!Number.isFinite(price)) return;
@@ -150,6 +140,17 @@ export class MarketChart {
     if (last && bar.t === last.t) this.bars[this.bars.length - 1] = bar;
     else this.bars.push(bar);
     this.pushPrice(bar.c);
+    this.dirty = true;
+  }
+
+  /** Forgets every price and bar: the next tick starts a new market's line. */
+  reset() {
+    this.ringLen = 0;
+    this.ringAt = 0;
+    this.target = Number.NaN;
+    this.shown = Number.NaN;
+    this.bars = [];
+    this.yLo = Number.NaN;
     this.dirty = true;
   }
 

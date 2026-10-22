@@ -1,125 +1,145 @@
 "use client";
 
 import type { PrivateWallet } from "@mitoshi/engine";
-import type { AccountState, Perp } from "@mitoshi/venues/hyperliquid";
 import { useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, Gauge, ShieldHalf } from "lucide-react";
 import { useState } from "react";
-import { cue, cx, Segmented, TxCta, type TxPhase } from "@/kit";
+import { cue, cx, Keypad, pressKey, Segmented, TxCta, type TxPhase } from "@/kit";
 import { price, usd } from "../format";
-import { hlAccount } from "../hyperliquid/hl";
+import { DRIVERS } from "../perps/hooks";
+import type { PerpAccount, PerpMarket } from "../perps/model";
 import { openFund } from "../private-wallets/drawers";
 import { recordTrade } from "../private-wallets/home";
-import {
-  DEFAULT_LEVERAGE,
-  EPSILON,
-  LEVERAGE_TICKS,
-  MAINTENANCE_SHARE,
-  MIN_NOTIONAL_USD,
-  PCT,
-  SHARES,
-  SIZE_SIG,
-  TAKER_FEE,
-} from "./constants";
+import { EPSILON, MARGIN_DECIMALS, PCT, SHARES, SIZE_SIG } from "./constants";
+import { ExitsSheet } from "./exits-sheet";
+import { LeverageSheet } from "./leverage-sheet";
+import { type Order, quoteOrder } from "./order";
 
-/** Approximate liquidation for a fresh cross position (maintenance = half the max-leverage margin). */
-function liquidationPx(entry: number, leverage: number, maxLeverage: number, isLong: boolean): number {
-  const mm = 1 / (MAINTENANCE_SHARE * maxLeverage);
-  return isLong ? entry * (1 - 1 / leverage + mm) : entry * (1 + 1 / leverage - mm);
-}
-
-const num = (s: string) => (s.trim() === "" ? undefined : Number(s));
+/** Room after the typed digits, so the amount stays centred as it grows. */
+const CARET_CH = 0.5;
 
 type Outcome = { kind: "filled" | "resting" | "failed"; text: string } | null;
 
 export interface TicketProps {
-  perp: Perp;
+  market: PerpMarket;
   mark: number;
   wallet: PrivateWallet | undefined;
-  state: AccountState | undefined;
+  account: PerpAccount | undefined;
+  order: Order;
+  setOrder: (patch: Partial<Order>) => void;
+  /** Phones: the amount uses the keypad. */
+  keypad?: boolean;
+  /** In the order sheet the side sits in the sheet's header. */
+  sideInHeader?: boolean;
+  onPlaced?: () => void;
 }
 
-/** Long or short from a private wallet, with leverage, TP/SL and a readout before you send. */
-export function Ticket({ perp, mark, wallet, state }: TicketProps) {
+function Chip({
+  icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl bg-surface-2 px-3 text-left hover:bg-surface-3"
+    >
+      <span className="text-muted">{icon}</span>
+      <span className="flex min-w-0 flex-1 flex-col leading-tight">
+        <span className="text-[11px] text-muted">{label}</span>
+        <span className="num truncate font-semibold text-[13px]">{value}</span>
+      </span>
+      <ChevronRight size={14} className="shrink-0 text-muted" />
+    </button>
+  );
+}
+
+/** Long or short from a private wallet: the amount first, leverage and exits in their own sheets, one line of numbers. */
+export function Ticket({
+  market,
+  mark,
+  wallet,
+  account,
+  order,
+  setOrder,
+  keypad = false,
+  sideInHeader = false,
+  onPlaced,
+}: TicketProps) {
   const queries = useQueryClient();
-  const [side, setSide] = useState<"long" | "short">("long");
-  const [margin, setMargin] = useState("");
-  const [leverage, setLeverage] = useState(Math.min(DEFAULT_LEVERAGE, perp.maxLeverage));
-  const [kind, setKind] = useState<"market" | "limit">("market");
-  const [limit, setLimit] = useState("");
-  const [exits, setExits] = useState(false);
-  const [tp, setTp] = useState("");
-  const [sl, setSl] = useState("");
+  const driver = DRIVERS[market.venue];
   const [phase, setPhase] = useState<TxPhase>("idle");
   const [step, setStep] = useState("");
   const [outcome, setOutcome] = useState<Outcome>(null);
+  const [sheet, setSheet] = useState<"leverage" | "exits" | null>(null);
 
-  const isLong = side === "long";
-  const available = state ? state.withdrawable + state.spotUsdc : 0;
-  const marginUsd = Number(margin) || 0;
-  const entry = kind === "limit" ? (num(limit) ?? mark) : mark;
-  const notional = marginUsd * leverage;
-  const size = entry > 0 ? notional / entry : 0;
-  const liq = notional > 0 ? liquidationPx(entry, leverage, perp.maxLeverage, isLong) : null;
-  const ticks = LEVERAGE_TICKS.filter((t) => t <= perp.maxLeverage);
-
+  const q = quoteOrder(order, market, mark);
+  const free = account?.free ?? 0;
+  const busy = phase === "signing" || phase === "sent";
   const problem = !wallet
     ? null
-    : marginUsd <= 0
-      ? "Enter your margin"
-      : marginUsd > available + EPSILON
-        ? `Only ${usd(available)} is free in this wallet`
-        : notional < MIN_NOTIONAL_USD
-          ? `Hyperliquid's minimum position is ${usd(MIN_NOTIONAL_USD, 0)}`
-          : kind === "limit" && !(Number(limit) > 0)
+    : q.margin <= 0
+      ? "Enter an amount"
+      : q.margin > free + EPSILON
+        ? `Only ${usd(free)} is free`
+        : q.notional < market.minNotional
+          ? `The smallest position is ${usd(market.minNotional, 0)}`
+          : order.kind === "limit" && !(Number(order.limit) > 0)
             ? "Enter a limit price"
             : null;
 
   async function place() {
-    if (!wallet || problem) return;
+    if (!wallet || problem || busy) return;
     setOutcome(null);
+    setPhase("signing");
     try {
-      const account = await hlAccount(wallet);
-      setPhase("signing");
-      setStep("Moving the funding into the perp account");
-      await account.readyForPerps();
-      setStep(`Setting ${leverage}× leverage`);
-      await account.setLeverage(perp, leverage, true);
-      setStep("Signing with this wallet's own key");
-      const order = {
-        perp,
-        isBuy: isLong,
-        size,
-        ...(kind === "limit" ? { limitPx: Number(limit) } : {}),
-        ...(exits && num(tp) ? { takeProfitPx: Number(tp) } : {}),
-        ...(exits && num(sl) ? { stopLossPx: Number(sl) } : {}),
-      };
-      setPhase("sent");
-      setStep("Sent privately to Hyperliquid");
-      const res = await account.order(order, mark);
+      const res = await driver.place(
+        wallet,
+        {
+          market,
+          isBuy: q.isLong,
+          size: q.size,
+          leverage: order.leverage,
+          ...(order.kind === "limit" ? { limitPx: Number(order.limit) } : {}),
+          ...(q.tp ? { takeProfitPx: q.tp } : {}),
+          ...(q.sl ? { stopLossPx: q.sl } : {}),
+        },
+        mark,
+        (s) => {
+          setStep(s);
+          if (s.startsWith("Signing")) setPhase("sent");
+        },
+      );
       setPhase("confirmed");
       cue(res.kind === "filled" ? "fill" : "tap");
-      const filledPx = res.kind === "filled" ? res.avgPx : Number(limit);
-      const filledSize = res.kind === "filled" ? res.size : size;
+      const px = res.kind === "filled" ? res.avgPx : Number(order.limit);
+      const size = res.kind === "filled" ? res.size : q.size;
+      const side = q.isLong ? "Long" : "Short";
       recordTrade(wallet.id, {
         at: Date.now(),
-        label: `${isLong ? "Long" : "Short"} ${perp.name} ${leverage}×${res.kind === "resting" ? " (limit)" : ""}`,
-        asset: perp.name,
-        side: isLong ? "buy" : "sell",
-        inAmount: String(filledSize * filledPx),
-        outAmount: String(filledSize),
-        usd: res.kind === "filled" ? (filledSize * filledPx) / leverage : null,
+        label: `${side} ${market.name} ${order.leverage}×${res.kind === "resting" ? " (limit)" : ""}`,
+        asset: market.name,
+        side: q.isLong ? "buy" : "sell",
+        inAmount: String(size * px),
+        outAmount: String(size),
+        usd: res.kind === "filled" ? (size * px) / order.leverage : null,
         ref: String(res.oid),
       });
       setOutcome(
         res.kind === "filled"
-          ? {
-              kind: "filled",
-              text: `${isLong ? "Long" : "Short"} ${res.size} ${perp.name} filled at ${price(res.avgPx)}`,
-            }
-          : { kind: "resting", text: `Limit order resting at ${price(Number(limit))}` },
+          ? { kind: "filled", text: `${side} ${Number(size.toPrecision(SIZE_SIG))} ${market.name} at ${price(px)}` }
+          : { kind: "resting", text: `Limit resting at ${price(px)}` },
       );
-      setMargin("");
-      void queries.invalidateQueries({ queryKey: ["hyperliquid", "account", wallet.id] });
+      setOrder({ margin: "" });
+      void queries.invalidateQueries({ queryKey: ["perps", market.venue, "account", wallet.id] });
+      onPlaced?.();
     } catch (e) {
       setPhase("failed");
       cue("error");
@@ -129,158 +149,118 @@ export function Ticket({ perp, mark, wallet, state }: TicketProps) {
     }
   }
 
-  const input =
-    "h-11 w-full rounded-lg border border-hairline bg-surface-1 px-3 font-mono text-[15px] outline-none focus:border-strong";
+  const exits =
+    q.tp || q.sl
+      ? [q.tp ? `TP ${price(q.tp)}` : null, q.sl ? `SL ${price(q.sl)}` : null].filter(Boolean).join(" · ")
+      : "Off";
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-1 rounded-lg bg-surface-1 p-1">
-        {(["long", "short"] as const).map((s) => (
+    <div className="flex flex-col gap-3">
+      {sideInHeader ? null : (
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1">
+          {(["long", "short"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setOrder({ side: s })}
+              className={cx(
+                "h-10 rounded-lg font-semibold capitalize transition-colors duration-[var(--dur-state)]",
+                order.side === s ? (s === "long" ? "bg-up text-bg" : "bg-down text-bg") : "text-ink-2 hover:text-ink",
+              )}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-col items-center gap-1 py-1">
+        <span className="flex w-full justify-between text-[12px] text-muted">
+          <span>Margin</span>
+          <span className="num">{usd(free)} free</span>
+        </span>
+        <label className="flex items-baseline justify-center gap-1">
+          <span className="num font-semibold text-[40px] text-muted leading-none">$</span>
+          <input
+            inputMode={keypad ? "none" : "decimal"}
+            readOnly={keypad}
+            aria-label="Margin in USD"
+            placeholder="0"
+            value={order.margin}
+            onChange={(e) => setOrder({ margin: e.target.value.replace(/[^\d.]/g, "") })}
+            style={{ width: `${Math.max(1, order.margin.length || 1) + CARET_CH}ch` }}
+            className="num max-w-[9ch] bg-transparent text-center font-semibold text-[48px] leading-none outline-none placeholder:text-muted"
+          />
+        </label>
+        <span className="num text-[13px] text-ink-2">
+          {q.notional > 0
+            ? `${usd(q.notional)} · ${Number(q.size.toPrecision(SIZE_SIG))} ${market.name}`
+            : `${order.leverage}× · ${market.name}`}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-4 gap-1.5">
+        {SHARES.map((p) => (
           <button
-            key={s}
+            key={p}
             type="button"
-            onClick={() => setSide(s)}
-            className={cx(
-              "h-10 rounded-md font-semibold capitalize transition-colors duration-[var(--dur-state)]",
-              side === s ? (s === "long" ? "bg-up text-bg" : "bg-down text-bg") : "text-ink-2 hover:text-ink",
-            )}
+            disabled={!free}
+            onClick={() =>
+              setOrder({ margin: (Math.floor(((free * p) / PCT) * PCT) / PCT || 0).toFixed(MARGIN_DECIMALS) })
+            }
+            className="h-8 rounded-full bg-surface-2 text-[12px] text-ink-2 hover:text-ink disabled:opacity-40"
           >
-            {s}
+            {p === PCT ? "Max" : `${p}%`}
           </button>
         ))}
       </div>
 
-      <Segmented
-        size="sm"
-        value={kind}
-        onChange={setKind}
-        options={[
-          { value: "market", label: "Market" },
-          { value: "limit", label: "Limit" },
-        ]}
-      />
+      {keypad ? <Keypad onKey={(k) => setOrder({ margin: pressKey(order.margin, k, MARGIN_DECIMALS) })} /> : null}
 
-      <div className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between text-[12px]">
-          <span className="type-label text-muted">Margin</span>
-          <span className="num text-ink-2">{usd(available)} free</span>
-        </div>
-        <div className="relative">
-          <input
-            className={input}
-            inputMode="decimal"
-            placeholder="0.00"
-            value={margin}
-            onChange={(e) => setMargin(e.target.value)}
-          />
-          <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[13px] text-muted">USDC</span>
-        </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          {SHARES.map((p) => (
-            <button
-              key={p}
-              type="button"
-              disabled={!available}
-              onClick={() => setMargin((Math.floor(available * p) / PCT || 0).toFixed(2))}
-              className="h-7 rounded-full bg-surface-1 text-[12px] text-ink-2 hover:text-ink disabled:opacity-40"
-            >
-              {p === PCT ? "Max" : `${p}%`}
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-2">
+        <Chip
+          icon={<Gauge size={16} />}
+          label="Leverage"
+          value={`${order.leverage}×`}
+          onClick={() => setSheet("leverage")}
+        />
+        <Chip icon={<ShieldHalf size={16} />} label="TP / SL" value={exits} onClick={() => setSheet("exits")} />
       </div>
 
-      {kind === "limit" ? (
-        <div className="flex flex-col gap-2">
-          <span className="type-label text-muted">Limit price</span>
+      <div className="flex items-center gap-2">
+        <Segmented
+          size="sm"
+          value={order.kind}
+          onChange={(kind) => setOrder({ kind })}
+          options={[
+            { value: "market", label: "Market" },
+            { value: "limit", label: "Limit" },
+          ]}
+        />
+        {order.kind === "limit" ? (
           <input
-            className={input}
             inputMode="decimal"
+            aria-label="Limit price"
             placeholder={price(mark)}
-            value={limit}
-            onChange={(e) => setLimit(e.target.value)}
+            value={order.limit}
+            onChange={(e) => setOrder({ limit: e.target.value })}
+            className="h-8 min-w-0 flex-1 rounded-full border border-hairline bg-surface-2 px-3 font-mono text-[13px] outline-none focus:border-strong"
           />
-        </div>
-      ) : null}
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between">
-          <span className="type-label text-muted">Leverage</span>
-          <span className="num font-semibold text-sm">{leverage}×</span>
-        </div>
-        <input
-          type="range"
-          min={1}
-          max={perp.maxLeverage}
-          value={leverage}
-          onChange={(e) => setLeverage(Number(e.target.value))}
-          className="w-full accent-[var(--accent)]"
-        />
-        <div className="flex justify-between">
-          {ticks.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setLeverage(t)}
-              className="num text-[11px] text-muted hover:text-ink"
-            >
-              {t}×
-            </button>
-          ))}
-        </div>
+        ) : (
+          <span className="num ml-auto text-[12px] text-muted">
+            Liq {q.liquidation ? price(q.liquidation) : "–"} · fee {usd(q.fee)}
+          </span>
+        )}
       </div>
-
-      <label className="flex items-center justify-between text-[13px]">
-        <span>Take profit / stop loss</span>
-        <input
-          type="checkbox"
-          checked={exits}
-          onChange={(e) => setExits(e.target.checked)}
-          className="size-4 accent-[var(--accent)]"
-        />
-      </label>
-      {exits ? (
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            className={cx(input, "text-up")}
-            placeholder="TP price"
-            inputMode="decimal"
-            value={tp}
-            onChange={(e) => setTp(e.target.value)}
-          />
-          <input
-            className={cx(input, "text-down")}
-            placeholder="SL price"
-            inputMode="decimal"
-            value={sl}
-            onChange={(e) => setSl(e.target.value)}
-          />
-        </div>
-      ) : null}
-
-      <dl className="grid grid-cols-2 gap-y-1.5 rounded-lg bg-surface-1 p-3 text-[13px]">
-        <dt className="text-ink-2">Position</dt>
-        <dd className="num text-right">
-          {usd(notional)} · {size ? size.toPrecision(SIZE_SIG) : "0"} {perp.name}
-        </dd>
-        <dt className="text-ink-2">Entry ≈</dt>
-        <dd className="num text-right">{price(entry)}</dd>
-        <dt className="text-ink-2">Liquidation ≈</dt>
-        <dd className="num text-right text-warning">{liq ? price(liq) : "–"}</dd>
-        <dt className="text-ink-2">Hyperliquid fee ≈</dt>
-        <dd className="num text-right">{usd(notional * TAKER_FEE)}</dd>
-        <dt className="text-ink-2">Mitoshi fee</dt>
-        <dd className="text-right">none on trades</dd>
-      </dl>
 
       <TxCta
-        tone={isLong ? "up" : "down"}
+        tone={q.isLong ? "up" : "down"}
         phase={phase === "confirmed" || phase === "failed" ? "idle" : phase}
-        label={kind === "limit" ? `Place ${side} limit` : `${isLong ? "Long" : "Short"} ${perp.name} · ${leverage}×`}
+        label={problem && q.margin > 0 ? problem : `${q.isLong ? "Long" : "Short"} ${market.name} · ${order.leverage}×`}
         onClick={() => void place()}
-        {...(!wallet ? { fix: { label: "Fund a private wallet first", onClick: () => openFund("hyperliquid") } } : {})}
+        {...(!wallet ? { fix: { label: "Fund a private wallet", onClick: () => openFund(driver.wallet) } } : {})}
       />
       {step ? <p className="text-center text-[12px] text-ink-2">{step}…</p> : null}
-      {problem && marginUsd > 0 ? <p className="text-center text-[12px] text-warning">{problem}</p> : null}
       {outcome ? (
         <p
           className={cx(
@@ -291,6 +271,27 @@ export function Ticket({ perp, mark, wallet, state }: TicketProps) {
           {outcome.text}
         </p>
       ) : null}
+
+      <LeverageSheet
+        open={sheet === "leverage"}
+        onClose={() => setSheet(null)}
+        market={market}
+        value={order.leverage}
+        entry={q.entry}
+        isLong={q.isLong}
+        onChange={(leverage) => setOrder({ leverage })}
+      />
+      <ExitsSheet
+        open={sheet === "exits"}
+        onClose={() => setSheet(null)}
+        tp={order.tp}
+        sl={order.sl}
+        entry={q.entry}
+        leverage={order.leverage}
+        isLong={q.isLong}
+        pnlAt={q.pnlAt}
+        onChange={(tp, sl) => setOrder({ tp, sl })}
+      />
     </div>
   );
 }

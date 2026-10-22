@@ -27,7 +27,7 @@ export const LWD_METHODS = [
 export interface Upstream {
   /** Path prefixes a request may use. */
   paths: readonly string[];
-  methods: readonly ("GET" | "POST" | "DELETE")[];
+  methods: readonly ("GET" | "POST" | "DELETE" | "PATCH")[];
   /** Request headers passed through, beyond content-type and accept. */
   headers?: readonly string[];
   /** Seconds a GET response may be shared between users (public data only). */
@@ -203,6 +203,44 @@ export const UPSTREAMS: Record<string, Upstream> = {
       "simulateTransaction",
       "getSignaturesForAddress",
     ],
+  },
+  // Polymarket Perps (docs.polymarket.com/perps): public market data, and each private wallet's own
+  // account: the owner's proxy authorisation and withdrawals, and orders signed by that proxy.
+  // Lookups that name an address (registered, portfolio, position-fills) are never cached.
+  "api.perpetuals.polymarket.com": {
+    paths: [
+      "/v1/info/instruments",
+      "/v1/info/tickers",
+      "/v1/info/statistics",
+      "/v1/info/klines",
+      "/v1/info/book",
+      "/v1/info/trades",
+      "/v1/info/fees",
+      "/v1/info/registered",
+      "/v1/info/portfolio",
+      "/v1/info/position-fills",
+      "/v1/account/proxy",
+      "/v1/account/portfolio",
+      "/v1/account/open-orders",
+      "/v1/account/orders",
+      "/v1/account/fills",
+      "/v1/account/deposits",
+      "/v1/account/withdraw",
+      "/v1/account/withdrawals",
+      "/v1/trade/orders",
+      "/v1/trade/leverage",
+    ],
+    methods: ["GET", "POST", "DELETE", "PATCH"],
+    headers: ["polymarket-proxy", "polymarket-secret"],
+    cacheGetPaths: {
+      "/v1/info/instruments": 60,
+      "/v1/info/tickers": 2,
+      "/v1/info/statistics": 10,
+      "/v1/info/klines": 2,
+      "/v1/info/book": 1,
+      "/v1/info/trades": 2,
+      "/v1/info/fees": 300,
+    },
   },
   "1click.chaindefuser.com": {
     paths: ["/v0/tokens", "/v0/quote", "/v0/deposit/submit", "/v0/status"],

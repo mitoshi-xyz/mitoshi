@@ -96,6 +96,10 @@ export class PmAccount {
   sendPusd(to: string, amount: bigint) {
     return call({ kind: "sendPusd", key: this.key, to, amount: amount.toString() });
   }
+  /** Moves pUSD (base units) into this wallet's Polymarket Perps account; resolves to the tx hash. */
+  depositToPerps(amount: bigint): Promise<string> {
+    return call({ kind: "depositToPerps", key: this.key, amount: amount.toString() });
+  }
 }
 
 const opened = new Map<string, Promise<PmAccount>>();

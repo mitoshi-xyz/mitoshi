@@ -167,6 +167,15 @@ export class PolymarketAccount {
     await tx.wait();
   }
 
+  /**
+   * Moves pUSD from the Deposit Wallet into Polymarket Perps, credited to this signer's Perps
+   * account (gasless; `prepare` has approved the deposit contract). The docs' minimum is 10 pUSD.
+   */
+  async depositToPerps(amount: bigint): Promise<string> {
+    const tx = await this.client.depositToPerps({ amount });
+    return (await tx.wait()).transactionHash;
+  }
+
   /** Sends pUSD from the wallet (gasless): the trip home, to the bridge's withdrawal address. */
   async sendPusd(to: string, amount: bigint): Promise<void> {
     const tx = await this.client.transferErc20({

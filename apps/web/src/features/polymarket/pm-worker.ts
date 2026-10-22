@@ -74,6 +74,8 @@ async function handle(call: PmCall): Promise<unknown> {
       return a.redeem(call.conditionId);
     case "sendPusd":
       return a.sendPusd(call.to, BigInt(call.amount));
+    case "depositToPerps":
+      return a.depositToPerps(BigInt(call.amount));
   }
 }
 

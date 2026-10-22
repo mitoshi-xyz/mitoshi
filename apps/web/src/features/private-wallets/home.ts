@@ -4,6 +4,7 @@ import { advance, type PrivateWallet, type SwapRecord, type TradeRecord } from "
 import { ASSETS } from "@mitoshi/rails";
 import { PUSD_DECIMALS } from "@mitoshi/venues/polymarket";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
+import { bringPerpsHome } from "../pmperps/perps-home";
 import { pmBridge, pmMarket } from "../polymarket/pm";
 import { pmAccount } from "../polymarket/pm-account";
 import { solAccount } from "../solana/sol";
@@ -40,7 +41,7 @@ async function settled(wallet: string): Promise<void> {
 
 /**
  * Sends one Polymarket wallet's money home: cancel its orders, redeem resolved shares, sell the
- * rest at market, then a signed 1Click quote (Polygon USDC to ZEC, any amount, to a fresh shielded
+ * rest at market, withdraw anything in Polymarket Perps, then a signed 1Click quote (Polygon USDC to ZEC, any amount, to a fresh shielded
  * address), a bridge withdrawal address that pays that quote's deposit address, and one gasless
  * pUSD transfer to it. Refunds go back to the Deposit Wallet.
  */
@@ -63,6 +64,8 @@ export async function sendPolymarketHome(id: string): Promise<{ sent: number }> 
     else await account.sell(p.assetId, String(p.size));
   }
   await settled(w.address);
+  // Perps money first comes back to the Deposit Wallet (positions must be closed).
+  await bringPerpsHome(w);
   const cash = await pmMarket.pusd(w.address);
   const now = Date.now();
   if (cash < PUSD_DUST) {

@@ -1,29 +1,14 @@
 "use client";
 
 import { type Levels, MarketChart } from "@mitoshi/chart";
-import { INTERVALS, type Interval, type LiveStatus } from "@mitoshi/venues/hyperliquid";
+import type { LiveStatus } from "@mitoshi/venues/hyperliquid";
 import { CandlestickChart, LineChart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ChartLoading, cx, LiveDot } from "@/kit";
 import { price } from "../format";
-import { hlLive, hlMarket } from "../hyperliquid/hl";
+import { DRIVERS } from "../perps/hooks";
+import type { PerpMarket } from "../perps/model";
 
-interface WsCandle {
-  t: number;
-  o: string;
-  h: string;
-  l: string;
-  c: string;
-  v: string;
-}
-
-type View = "live" | Interval;
-
-const VIEWS: View[] = ["live", ...(Object.keys(INTERVALS) as Interval[])];
-const LABEL: Record<View, string> = {
-  live: "Live",
-  ...Object.fromEntries(Object.keys(INTERVALS).map((k) => [k, k])),
-} as Record<View, string>;
 const STATUS_WORDS: Record<LiveStatus, string> = {
   connecting: "Connecting",
   live: "Live",
@@ -31,16 +16,18 @@ const STATUS_WORDS: Record<LiveStatus, string> = {
 };
 
 /**
- * The terminal's chart: "Live" is the price itself at 60 Hz (fed by every trade and top-of-book change on the relay's
- * feed); the intervals are candles (history over OHTTP, then live candle updates), as a line or as bars.
+ * The terminal's chart: "Live" is the price itself at 60 Hz (every trade and top-of-book change on the relay's feed);
+ * the intervals are candles (history over OHTTP, then live candle updates), as bars or a line.
  */
-export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
+export function ChartPanel({ market, levels }: { market: PerpMarket; levels: Levels }) {
+  const driver = DRIVERS[market.venue];
   const box = useRef<HTMLDivElement>(null);
   const chart = useRef<MarketChart | null>(null);
-  const [view, setView] = useState<View>("live");
+  const [view, setView] = useState<string>("live");
   const [bars, setBarsStyle] = useState<"candles" | "line">("candles");
   const [load, setLoad] = useState<"loading" | "ready" | "error">("loading");
   const [status, setStatus] = useState<LiveStatus>("connecting");
+  const key = `${market.venue}:${market.id}`;
 
   useEffect(() => {
     if (!box.current) return;
@@ -53,27 +40,18 @@ export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
   }, []);
 
   useEffect(() => chart.current?.setLevels(levels), [levels]);
-  useEffect(() => hlLive().onStatus(setStatus), []);
+  useEffect(() => driver.onStatus(setStatus), [driver]);
   useEffect(() => chart.current?.setMode(view === "live" ? "live" : bars), [view, bars]);
-
-  // The live price: trades and top-of-book mid, whatever the view (it also moves the open candle).
+  // A venue's intervals differ: fall back to the live view when the current one is not offered.
   useEffect(() => {
-    const feed = hlLive();
-    const stopTrades = feed.subscribe({ type: "trades", coin }, (data) => {
-      const last = (data as { px: string }[]).at(-1);
-      if (last) chart.current?.pushPrice(Number(last.px));
-    });
-    const stopBbo = feed.subscribe({ type: "bbo", coin }, (data) => {
-      const [bid, ask] = (data as { bbo: [{ px: string } | null, { px: string } | null] }).bbo;
-      if (bid && ask) chart.current?.pushPrice((Number(bid.px) + Number(ask.px)) / 2);
-    });
-    return () => {
-      stopTrades();
-      stopBbo();
-    };
-  }, [coin]);
+    if (view !== "live" && !driver.intervals.includes(view)) setView("live");
+  }, [driver, view]);
 
-  // History and live candles for the chosen interval.
+  useEffect(() => {
+    chart.current?.reset();
+    return driver.subscribePrice(market, (px) => chart.current?.pushPrice(px));
+  }, [key]);
+
   useEffect(() => {
     if (view === "live") {
       setLoad("ready");
@@ -81,7 +59,7 @@ export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
     }
     let current = true;
     setLoad("loading");
-    hlMarket.candles(coin, view).then(
+    driver.candles(market, view).then(
       (rows) => {
         if (!current) return;
         chart.current?.setBars(rows);
@@ -89,28 +67,18 @@ export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
       },
       () => current && setLoad("error"),
     );
-    const stop = hlLive().subscribe({ type: "candle", coin, interval: view }, (data) => {
-      const c = data as WsCandle;
-      chart.current?.pushBar({
-        t: c.t,
-        o: Number(c.o),
-        h: Number(c.h),
-        l: Number(c.l),
-        c: Number(c.c),
-        v: Number(c.v),
-      });
-    });
+    const stop = driver.subscribeCandle(market, view, (b) => chart.current?.pushBar(b));
     return () => {
       current = false;
       stop();
     };
-  }, [coin, view]);
+  }, [key, view]);
 
   return (
-    <div className="relative flex h-full min-h-[420px] flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3">
-        <div className="flex items-center gap-0.5 overflow-x-auto [scrollbar-width:none] rounded-full bg-surface-1/80 p-0.5 backdrop-blur">
-          {VIEWS.map((v) => (
+    <div className="relative flex h-full min-h-0 flex-col">
+      <div className="flex items-center justify-between gap-2 px-3 pt-2">
+        <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-full bg-surface-1/80 p-0.5 backdrop-blur [scrollbar-width:none]">
+          {["live", ...driver.intervals].map((v) => (
             <button
               key={v}
               type="button"
@@ -120,13 +88,16 @@ export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
                 view === v ? "bg-ink text-bg" : "text-ink-2 hover:text-ink",
               )}
             >
-              {LABEL[v]}
+              {v === "live" ? "Live" : v}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <span
-            className={cx("inline-flex items-center gap-1.5 text-xs", status === "live" ? "text-up" : "text-muted")}
+            className={cx(
+              "hidden items-center gap-1.5 text-xs sm:inline-flex",
+              status === "live" ? "text-up" : "text-muted",
+            )}
           >
             <LiveDot tone={status === "live" ? "up" : "muted"} />
             {STATUS_WORDS[status]}
@@ -161,7 +132,7 @@ export function ChartPanel({ coin, levels }: { coin: string; levels: Levels }) {
         {load === "loading" ? <ChartLoading verb="Loading candles, privately" /> : null}
         {load === "error" ? (
           <p className="absolute inset-0 flex items-center justify-center text-down text-sm">
-            Could not load {coin} candles. Choose another interval to try again.
+            Could not load {market.name} candles. Pick another interval.
           </p>
         ) : null}
       </div>

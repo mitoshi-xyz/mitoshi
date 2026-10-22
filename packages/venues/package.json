@@ -2,13 +2,14 @@
   "name": "@mitoshi/venues",
   "private": true,
   "type": "module",
-  "description": "Venue adapters (Hyperliquid, Polymarket, Solana). Every call goes over OHTTP; each private wallet signs with its own key.",
+  "description": "Venue adapters (Hyperliquid, Polymarket, Polymarket Perps, Solana). Every call goes over OHTTP; each private wallet signs with its own key.",
   "exports": {
     ".": "./src/index.ts",
     "./hyperliquid": "./src/hyperliquid/index.ts",
     "./polymarket": "./src/polymarket/index.ts",
     "./solana": "./src/solana/index.ts",
-    "./polymarket/trading": "./src/polymarket/trading.ts"
+    "./polymarket/trading": "./src/polymarket/trading.ts",
+    "./pmperps": "./src/pmperps/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -16,6 +17,7 @@
   },
   "dependencies": {
     "@mitoshi/net": "workspace:*",
+    "@msgpack/msgpack": "3.1.3",
     "@nktkas/hyperliquid": "catalog:",
     "@noble/curves": "catalog:",
     "@polymarket/client": "0.12.0",

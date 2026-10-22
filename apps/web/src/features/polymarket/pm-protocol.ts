@@ -15,7 +15,8 @@ export type PmCall =
   | ({ kind: "cancel"; orderId: string } & Key)
   | ({ kind: "openOrders" } & Key)
   | ({ kind: "redeem"; conditionId: string } & Key)
-  | ({ kind: "sendPusd"; to: string; amount: string } & Key);
+  | ({ kind: "sendPusd"; to: string; amount: string } & Key)
+  | ({ kind: "depositToPerps"; amount: string } & Key);
 
 export type PmReply = { id: number; ok: unknown } | { id: number; error: string };
 
@@ -33,4 +34,5 @@ export interface PmResults {
   openOrders: PmOpenOrder[];
   redeem: undefined;
   sendPusd: undefined;
+  depositToPerps: string;
 }

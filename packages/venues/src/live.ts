@@ -6,7 +6,10 @@ export type LiveSub =
   | { type: "l2Book"; coin: string }
   | { type: "bbo"; coin: string }
   | { type: "activeAssetCtx"; coin: string }
-  | { type: "market"; assetId: string };
+  | { type: "market"; assetId: string }
+  // Polymarket Perps: `coin` is the instrument id ("all" for every ticker).
+  | { type: "tickers"; coin: string }
+  | { type: "klines"; coin: string; interval: string };
 
 export type LiveStatus = "connecting" | "live" | "reconnecting";
 

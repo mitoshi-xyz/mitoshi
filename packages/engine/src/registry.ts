@@ -104,6 +104,11 @@ export interface PrivateWallet {
   recovered?: boolean;
   /** The venue account is set up for trading (Polymarket: Deposit Wallet deployed and approvals given). */
   prepared?: boolean;
+  /**
+   * Polymarket Perps: the proxy signer this wallet's own key authorised to trade its Perps account
+   * (encrypted with the rest of the registry; a new one is authorised if it is lost or expires).
+   */
+  perps?: { proxy: `0x${string}`; proxyKey: `0x${string}`; secret: string; expiry: number };
   error?: string;
 }
 
