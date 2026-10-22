@@ -27,11 +27,18 @@ export class CoreModule {
     if (saved?.length) files.set(WALLET_FILE, new File(saved));
     const dir = new PreopenDirectory(WASI_DATA_DIR, files);
     const quiet = ConsoleStdout.lineBuffered(() => {});
-    const wasi = new WASI([], [], [new OpenFile(new File([])), quiet, quiet, dir]);
+    // `debug: false` must be explicit: the shim turns its syscall log on when the option is absent.
+    const wasi = new WASI([], [], [new OpenFile(new File([])), quiet, quiet, dir], { debug: false });
     const module = wasm instanceof WebAssembly.Module ? wasm : await WebAssembly.compile(wasm);
     const instance = await WebAssembly.instantiate(module, { wasi_snapshot_preview1: wasi.wasiImport });
+    const exports = instance.exports as unknown as CoreExports;
+    // The shim's random_get falls back to Math.random() when memory is shared. Keys come from that
+    // randomness, so a shared-memory build must never run.
+    if (typeof SharedArrayBuffer !== "undefined" && exports.memory.buffer instanceof SharedArrayBuffer) {
+      throw new Error("refusing to run the wallet core on shared memory (its randomness would be weak)");
+    }
     wasi.initialize(instance as unknown as { exports: { memory: WebAssembly.Memory; _initialize?: () => unknown } });
-    return new CoreModule(instance.exports as unknown as CoreExports, dir);
+    return new CoreModule(exports, dir);
   }
 
   private put(bytes: Uint8Array): [number, number] {

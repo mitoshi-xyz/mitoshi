@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bjorn3/browser_wasi_shim": "0.4.2"
+    "@bjorn3/browser_wasi_shim": "0.4.2",
+    "@mitoshi/net": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:"

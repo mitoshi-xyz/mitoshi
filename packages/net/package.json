@@ -1,0 +1,19 @@
+{
+  "name": "@mitoshi/net",
+  "private": true,
+  "type": "module",
+  "description": "Mitoshi's network layer: OHTTP for every user call, plain relay paths for block data and images.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hpke": "catalog:",
+    "ohttp-ts": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

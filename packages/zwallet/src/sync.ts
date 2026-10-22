@@ -1,3 +1,4 @@
+import type { PrivateFetch } from "@mitoshi/net";
 import { BIRTHDAY_LOOKBACK_BLOCKS, SCAN_BATCH_BLOCKS, SUBTREE_PROTOCOLS } from "./constants";
 import type { CoreModule } from "./core";
 import { lwdCall } from "./grpc-web";
@@ -6,32 +7,36 @@ import type { ScanRange, SyncProgress } from "./types";
 
 const DONE = new Set(["Scanned", "Ignored"]);
 
+/** The light server, reached through OHTTP. */
 export class Lwd {
-  constructor(private readonly base: string) {}
+  constructor(
+    private readonly base: string,
+    private readonly send: PrivateFetch,
+  ) {}
 
   async tip(): Promise<number> {
-    const [msg] = await lwdCall(this.base, "GetLatestBlock", new Uint8Array());
+    const [msg] = await lwdCall(this.send, this.base, "GetLatestBlock", new Uint8Array());
     if (!msg) throw new Error("GetLatestBlock returned nothing");
     return blockIdHeight(msg);
   }
 
   async treeState(height: number): Promise<Uint8Array> {
-    const [msg] = await lwdCall(this.base, "GetTreeState", new Uint8Array(blockId(height)));
+    const [msg] = await lwdCall(this.send, this.base, "GetTreeState", new Uint8Array(blockId(height)));
     if (!msg) throw new Error(`no tree state for ${height}`);
     return msg;
   }
 
   subtreeRoots(protocol: number): Promise<Uint8Array[]> {
-    return lwdCall(this.base, "GetSubtreeRoots", subtreeRootsArg(0, protocol));
+    return lwdCall(this.send, this.base, "GetSubtreeRoots", subtreeRootsArg(0, protocol));
   }
 
   /** Compact blocks in [start, end). */
   blocks(start: number, end: number): Promise<Uint8Array[]> {
-    return lwdCall(this.base, "GetBlockRange", blockRange(start, end - 1));
+    return lwdCall(this.send, this.base, "GetBlockRange", blockRange(start, end - 1));
   }
 
   async broadcast(raw: Uint8Array): Promise<void> {
-    const [msg] = await lwdCall(this.base, "SendTransaction", rawTransaction(raw));
+    const [msg] = await lwdCall(this.send, this.base, "SendTransaction", rawTransaction(raw));
     const reply = msg ? sendResponse(msg) : { code: -1, message: "no reply" };
     if (reply.code !== 0) throw new Error(`broadcast rejected: ${reply.message}`);
   }

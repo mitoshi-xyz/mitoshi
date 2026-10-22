@@ -3,13 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "build": "esbuild src/vercel.ts --bundle --platform=node --format=esm --target=node22 --outfile=api/gateway.mjs",
+    "deploy": "pnpm build && vercel deploy --prod --yes",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "hpke": "catalog:",
+    "ohttp-ts": "catalog:"
+  },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261022.1",
-    "typescript": "catalog:",
-    "wrangler": "^4.100.0"
+    "@types/node": "catalog:",
+    "esbuild": "0.28.2",
+    "typescript": "catalog:"
   }
 }

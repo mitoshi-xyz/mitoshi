@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3300",
-    "build": "next build",
+    "build": "next build && node scripts/headers.mjs",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@mitoshi/net": "workspace:*",
     "@mitoshi/zwallet": "workspace:*",
     "@scure/bip39": "2.4.0",
     "@tanstack/react-query": "catalog:",

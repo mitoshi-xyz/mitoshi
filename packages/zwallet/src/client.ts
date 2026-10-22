@@ -44,10 +44,11 @@ export class WalletClient {
     });
   }
 
-  open(network: Network, lwd: string, saved?: Uint8Array): Promise<{ nu7Height: number | null }> {
+  /** Opens the wallet engine. `relay` is the OHTTP relay base every light-server call goes through. */
+  open(network: Network, relay: string, saved?: Uint8Array): Promise<{ nu7Height: number | null }> {
     const wasmUrl = new URL("../generated/zwallet.wasm", import.meta.url).toString();
     return this.request(
-      saved ? { kind: "open", network, lwd, wasmUrl, saved } : { kind: "open", network, lwd, wasmUrl },
+      saved ? { kind: "open", network, relay, wasmUrl, saved } : { kind: "open", network, relay, wasmUrl },
     );
   }
 

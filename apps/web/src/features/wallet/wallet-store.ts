@@ -4,7 +4,7 @@ import { MNEMONIC_STRENGTH_BITS, type Summary, type SyncProgress, WalletClient }
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { useSyncExternalStore } from "react";
-import { IRONWOOD_ACTIVATION, LWD_BASE, WALLET_SYNC_INTERVAL_MS, ZEC_NETWORK } from "@/constants";
+import { IRONWOOD_ACTIVATION, RELAY, WALLET_SYNC_INTERVAL_MS, ZEC_NETWORK } from "@/constants";
 import { vaultGet, vaultPut } from "../vault/vault";
 
 export type WalletPhase = "idle" | "loading" | "empty" | "creating" | "syncing" | "ready" | "error";
@@ -78,11 +78,17 @@ export async function bootWallet() {
       onPersist: (bytes) => void vaultPut(ZEC_NETWORK, "walletdb", bytes),
     });
     const saved = await vaultGet(ZEC_NETWORK, "walletdb");
-    await client.open(ZEC_NETWORK, LWD_BASE, saved ?? undefined);
+    await client.open(ZEC_NETWORK, RELAY, saved ?? undefined);
     const hasPhrase = (await vaultGet(ZEC_NETWORK, "mnemonic")) !== null;
     if (!hasPhrase) {
       set({ phase: "empty" });
       return;
+    }
+    // Show what this device already knows straight away; the sync then brings it to the tip.
+    try {
+      set({ phase: "ready", summary: await client.summary() });
+    } catch {
+      // A wallet that never finished its first sync has no summary yet.
     }
     startSyncing();
     void client.warmProver();

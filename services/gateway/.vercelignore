@@ -1,0 +1,4 @@
+*
+!api
+!api/gateway.mjs
+!vercel.json

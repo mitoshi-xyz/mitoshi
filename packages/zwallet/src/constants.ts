@@ -1,6 +1,15 @@
 /** The lightwalletd gRPC service name (cash.z.wallet.sdk.rpc). */
 export const LWD_SERVICE = "cash.z.wallet.sdk.rpc.CompactTxStreamer";
 
+/**
+ * The light servers the gateway calls for the wallet (every call goes over OHTTP, so these hosts
+ * only ever see the gateway). Interim: ChainSafe's public gRPC-web proxies.
+ */
+export const LWD_UPSTREAM = {
+  main: "https://zcash-mainnet.chainsafe.dev",
+  test: "https://zcash-testnet.chainsafe.dev",
+} as const;
+
 /** Blocks fetched and scanned per batch. Small enough to keep the UI's progress smooth. */
 export const SCAN_BATCH_BLOCKS = 100;
 

@@ -1,11 +1,13 @@
-/** The Mitoshi gateway (OHTTP gateway, public-data proxy, lightwalletd relay). */
-export const GATEWAY = process.env.NEXT_PUBLIC_GATEWAY ?? "https://mitoshi-gateway.kakure-price-relay.workers.dev";
+/**
+ * The OHTTP relay (same origin in production). Every call the app makes goes to it: OHTTP messages
+ * it cannot read, and pictures through its image proxy. Development points at the deployed relay.
+ */
+export const RELAY =
+  process.env.NEXT_PUBLIC_RELAY ??
+  (process.env.NODE_ENV === "development" ? "https://mitoshi-web.kakure-price-relay.workers.dev/relay" : "/relay");
 
 /** Zcash network the app runs on. Development uses testnet; production is mainnet. */
 export const ZEC_NETWORK: "main" | "test" = process.env.NEXT_PUBLIC_ZEC_NETWORK === "main" ? "main" : "test";
-
-/** The lightwalletd route on the gateway for the current network. */
-export const LWD_BASE = `${GATEWAY}/lwd/${ZEC_NETWORK}`;
 
 /** How often an open wallet checks for new blocks. */
 export const WALLET_SYNC_INTERVAL_MS = 30_000;

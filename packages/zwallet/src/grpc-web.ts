@@ -1,3 +1,4 @@
+import type { PrivateFetch } from "@mitoshi/net";
 import { LWD_SERVICE } from "./constants";
 
 const FRAME_FLAG_BYTES = 1;
@@ -8,10 +9,11 @@ const STATUS_OK = /grpc-status:\s*0\b/;
 
 /**
  * One unary or server-streaming lightwalletd call over gRPC-web. Returns every message payload.
- * `base` is the Mitoshi gateway's lightwalletd route, never a third-party host (the gateway
- * keeps the user's IP away from the light server).
+ * `send` is Mitoshi's OHTTP fetch, so the light server sees only the gateway and the relay sees
+ * only ciphertext.
  */
 export async function lwdCall(
+  send: PrivateFetch,
   base: string,
   method: string,
   body: Uint8Array,
@@ -24,11 +26,9 @@ export async function lwdCall(
     method: "POST",
     headers: { "content-type": "application/grpc-web+proto", "x-grpc-web": "1" },
     body: frame,
-    credentials: "omit",
-    referrerPolicy: "no-referrer",
   };
   if (signal) init.signal = signal;
-  const res = await fetch(`${base}/${LWD_SERVICE}/${method}`, init);
+  const res = await send(`${base}/${LWD_SERVICE}/${method}`, init);
   if (!res.ok) throw new Error(`${method}: HTTP ${res.status}`);
   // Trailers-only responses carry the status in headers instead of a trailer frame.
   const headerStatus = res.headers.get("grpc-status");

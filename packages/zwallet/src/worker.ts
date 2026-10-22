@@ -3,6 +3,8 @@
  * The wallet worker: owns the WASI wallet core so proving and scanning never block the page.
  * Every reply carries the request id; `progress` and `persist` are unsolicited events.
  */
+import { createPrivateFetch } from "@mitoshi/net";
+import { LWD_UPSTREAM } from "./constants";
 import { CoreModule } from "./core";
 import { createAccount, Lwd, syncToTip } from "./sync";
 import type { Built, Proposal, Request, Response, Summary } from "./types";
@@ -33,7 +35,7 @@ async function handle(req: Request): Promise<unknown> {
     case "open": {
       const wasm = await WebAssembly.compileStreaming(fetch(req.wasmUrl));
       core = await CoreModule.load(wasm, req.saved);
-      lwd = new Lwd(req.lwd);
+      lwd = new Lwd(LWD_UPSTREAM[req.network], createPrivateFetch(req.relay));
       return core.call("init", { network: req.network });
     }
     case "create": {
