@@ -1,0 +1,45 @@
+# Mitoshi's browser Zcash wallet core: Zcash's official SQLite wallet store compiled to wasm32-wasip1.
+# JS owns all networking (gRPC-web through the Mitoshi gateway) and passes raw protobuf bytes in;
+# this module keeps the wallet database and builds transactions. Build: `./build.sh`.
+[package]
+name = "mitoshi-zwallet"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# The NU7-ready librustzcash cohort released 2026-10-21 (mainnet NU7 at 3,543,405).
+zcash_client_sqlite = { version = "0.23.0", default-features = false, features = ["orchard"] }
+zcash_client_backend = { version = "0.25.0", default-features = false, features = ["orchard"] }
+zcash_primitives = { version = "0.31.0", default-features = false, features = ["std", "circuits"] }
+zcash_protocol = "0.11.0"
+zcash_keys = { version = "0.17.0", features = ["orchard"] }
+zcash_address = "0.14.0"
+zip321 = "0.10.0"
+orchard = { version = "0.16", default-features = false, features = ["circuit"] }
+sapling = { package = "sapling-crypto", version = "0.9", default-features = false }
+incrementalmerkletree = "0.9"
+jubjub = "0.11"
+bls12_381 = "0.9"
+rand_core = { version = "0.10", default-features = false }
+shardtree = "0.8"
+# SQLite compiled for WASI (rusqlite's own wasm32-wasi VFS).
+rusqlite = { version = "0.37", features = ["bundled", "wasm32-wasi-vfs"] }
+rand = { version = "0.10", default-features = false, features = ["sys_rng"] }
+prost = "0.14"
+secrecy = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
