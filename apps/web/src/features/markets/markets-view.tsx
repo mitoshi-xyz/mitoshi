@@ -2,8 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Skeleton } from "@/kit";
-import { useLiveMids, usePerps } from "../hyperliquid/hooks";
+import { Segmented, Skeleton } from "@/kit";
+import { VenueMark } from "../marks/mark";
+import { useLiveMarks, usePerpMarkets } from "../perps/hooks";
+import type { PerpVenue } from "../perps/model";
 import { EventCard } from "../polymarket/event-card";
 import { pmMarket } from "../polymarket/pm";
 import { usePrices, useTokens } from "../solana/hooks";
@@ -25,16 +27,25 @@ export function MarketsView() {
     queryFn: () => pmMarket.events("trending"),
     staleTime: LIST_STALE_MS,
   });
-  const perps = usePerps();
-  const mids = useLiveMids();
+  const [venue, setVenue] = useState<PerpVenue>("hyperliquid");
+  const perps = usePerpMarkets(venue);
+  const marks = useLiveMarks(venue);
   const tokens = useTokens("");
   const [allPerps, setAllPerps] = useState(false);
   const topPerps = useMemo(
     () =>
+      // Polymarket's tab is what Hyperliquid has not got: stocks, indices and commodities.
       [...(perps.data ?? [])]
+        .filter((p) => p.venue !== "pmperps" || p.category !== "crypto")
         .sort((a, b) => b.dayVolumeUsd - a.dayVolumeUsd)
         .slice(0, allPerps ? undefined : PERPS_ON_HOME),
     [perps.data, allPerps],
+  );
+  const venueLabel = (v: PerpVenue, label: string) => (
+    <span className="flex items-center gap-1.5">
+      <VenueMark venue={v === "pmperps" ? "polymarket" : "hyperliquid"} size={16} />
+      {label}
+    </span>
   );
   const topTokens = (tokens.data ?? []).slice(0, TOKENS_ON_HOME);
   const prices = usePrices(topTokens.map((t) => t.mint));
@@ -43,7 +54,7 @@ export function MarketsView() {
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-1">
         <h1 className="type-headline-lg">Markets</h1>
-        <p className="text-ink-2">Polymarket, Hyperliquid and Solana. Every trade from a wallet nobody can follow.</p>
+        <p className="text-ink-2">Trade privately from anywhere.</p>
       </div>
       <MarketsHero />
 
@@ -60,22 +71,33 @@ export function MarketsView() {
         <SectionHead
           index="02"
           title="Perpetuals"
-          venue="hyperliquid"
           extra={
             <button
               type="button"
               onClick={() => setAllPerps(!allPerps)}
               className="text-[13px] text-ink-2 hover:text-ink"
             >
-              {allPerps ? "Show top 8" : `All ${perps.data?.length ?? ""} perps`}
+              {allPerps ? "Top 8" : `All ${perps.data?.length ?? ""}`}
             </button>
           }
+        />
+        <Segmented
+          className="self-start"
+          value={venue}
+          onChange={(v) => {
+            setVenue(v);
+            setAllPerps(false);
+          }}
+          options={[
+            { value: "hyperliquid", label: venueLabel("hyperliquid", "Crypto") },
+            { value: "pmperps", label: venueLabel("pmperps", "Stocks · gold · oil") },
+          ]}
         />
         <div className="flex flex-col">
           <PerpHeader />
           {perps.isPending
             ? Array.from({ length: SKELETONS }, (_, i) => <Skeleton key={`p-${i}`} className="my-1 h-12" />)
-            : topPerps.map((p) => <PerpRow key={p.name} perp={p} live={mids[p.name]} />)}
+            : topPerps.map((p) => <PerpRow key={`${p.venue}:${p.id}`} perp={p} live={marks[p.id]} />)}
         </div>
       </section>
 

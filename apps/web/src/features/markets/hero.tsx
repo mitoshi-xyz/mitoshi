@@ -4,25 +4,38 @@ import { MarketChart } from "@mitoshi/chart";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ChangeChip, cx, RollingNumber } from "@/kit";
+import { ChangeChip, cx, RollingNumber, Skeleton } from "@/kit";
 import { price } from "../format";
-import { hlLive } from "../hyperliquid/hl";
-import { perpByName, useLiveMids, usePerps } from "../hyperliquid/hooks";
-import { Mark } from "../marks/mark";
+import { Mark, VenueMark } from "../marks/mark";
+import { DRIVERS, useLiveStats, usePerpMarkets } from "../perps/hooks";
+import { type PerpVenue, terminalHref } from "../perps/model";
 
-const HERO_COINS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"] as const;
+/** The hero's markets: crypto on Hyperliquid, a stock and gold on Polymarket Perps. */
+const HERO: readonly { venue: PerpVenue; id: string }[] = [
+  { venue: "hyperliquid", id: "BTC" },
+  { venue: "hyperliquid", id: "ETH" },
+  { venue: "hyperliquid", id: "SOL" },
+  { venue: "pmperps", id: "NVDA-USD" },
+  { venue: "pmperps", id: "GOLD-USD" },
+];
 const PRICE_SIG = 7;
+const VENUE_MARK = { hyperliquid: "hyperliquid", pmperps: "polymarket" } as const;
 
-/** The Markets hero: one live market at 60 Hz, and the two buttons that open it from a brand-new wallet. */
+/** The Markets hero: one live market at 60 Hz, and the two buttons that trade it from a brand-new wallet. */
 export function MarketsHero() {
-  const [coin, setCoin] = useState<(typeof HERO_COINS)[number]>("BTC");
+  const [pick, setPick] = useState(HERO[0] ?? { venue: "hyperliquid" as const, id: "BTC" });
   const box = useRef<HTMLDivElement>(null);
   const chart = useRef<MarketChart | null>(null);
-  const perps = usePerps();
-  const mids = useLiveMids();
-  const perp = perpByName(perps.data, coin);
-  const live = mids[coin] ?? perp?.markPx ?? 0;
-  const change = perp && perp.prevDayPx > 0 ? live / perp.prevDayPx - 1 : 0;
+  const hl = usePerpMarkets("hyperliquid");
+  const pm = usePerpMarkets("pmperps");
+  const all = [...(hl.data ?? []), ...(pm.data ?? [])];
+  const marketOf = (h: { venue: PerpVenue; id: string }) => all.find((m) => m.venue === h.venue && m.id === h.id);
+  const market = marketOf(pick);
+  const stats = useLiveStats(market);
+  // The rolling number follows the venue's mark (about once a second); the chart takes every tick.
+  const mark = stats?.markPx || market?.markPx || 0;
+  const change = market && market.prevDayPx > 0 ? mark / market.prevDayPx - 1 : 0;
+  const key = `${pick.venue}:${pick.id}`;
 
   useEffect(() => {
     if (!box.current) return;
@@ -35,82 +48,76 @@ export function MarketsHero() {
   }, []);
 
   useEffect(() => {
-    const feed = hlLive();
-    const stop = feed.subscribe({ type: "trades", coin }, (data) => {
-      const last = (data as { px: string }[]).at(-1);
-      if (last) chart.current?.pushPrice(Number(last.px));
-    });
-    const stopBbo = feed.subscribe({ type: "bbo", coin }, (data) => {
-      const [bid, ask] = (data as { bbo: [{ px: string } | null, { px: string } | null] }).bbo;
-      if (bid && ask) chart.current?.pushPrice((Number(bid.px) + Number(ask.px)) / 2);
-    });
-    return () => {
-      stop();
-      stopBbo();
-    };
-  }, [coin]);
+    chart.current?.reset();
+    if (!market) return;
+    return DRIVERS[market.venue].subscribePrice(market, (px) => chart.current?.pushPrice(px));
+    // One subscription per market; the list refreshing does not restart it.
+  }, [key, Boolean(market)]);
 
+  const href = terminalHref(pick);
   return (
-    <section className="grid grid-cols-[minmax(0,1fr)] overflow-hidden rounded-xl border border-hairline bg-surface-1 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="relative flex min-h-[300px] flex-col">
-        <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+    <section className="flex flex-col overflow-hidden rounded-xl border border-hairline bg-surface-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+        {market ? (
           <div className="flex items-center gap-3">
-            <Mark symbol={coin} size={40} />
-            <div className="flex flex-col leading-tight">
-              <span className="text-[13px] text-muted">{coin}-PERP · Hyperliquid</span>
-              <span className="flex items-baseline gap-2">
-                <RollingNumber
-                  value={live}
-                  format={{ maximumSignificantDigits: PRICE_SIG }}
-                  className="font-semibold text-[28px]"
-                />
-                <ChangeChip change={change} />
-              </span>
-            </div>
+            <span className="relative">
+              <Mark symbol={market.name} src={market.logo} size={40} />
+              <VenueMark
+                venue={VENUE_MARK[market.venue]}
+                size={16}
+                className="absolute -right-0.5 -bottom-0.5 ring-2 ring-surface-1"
+              />
+            </span>
+            <span className="flex items-baseline gap-2">
+              <RollingNumber
+                value={mark}
+                format={{ maximumSignificantDigits: PRICE_SIG }}
+                className="font-semibold text-[28px]"
+              />
+              <ChangeChip change={change} />
+            </span>
           </div>
-          <div className="flex gap-1 rounded-full bg-surface-2 p-0.5">
-            {HERO_COINS.map((c) => (
+        ) : (
+          <Skeleton className="h-10 w-48 rounded-full" label="Loading the market" />
+        )}
+        <div className="flex max-w-full gap-1 overflow-x-auto rounded-full bg-surface-2 p-0.5 [scrollbar-width:none]">
+          {HERO.map((h) => {
+            const m = marketOf(h);
+            const name = m?.name ?? h.id.replace("-USD", "");
+            const on = h.venue === pick.venue && h.id === pick.id;
+            return (
               <button
-                key={c}
+                key={`${h.venue}:${h.id}`}
                 type="button"
-                onClick={() => setCoin(c)}
+                onClick={() => setPick(h)}
                 className={cx(
-                  "flex items-center gap-1.5 rounded-full py-1 pr-2.5 pl-1 text-xs",
-                  coin === c ? "bg-ink text-bg" : "text-ink-2",
+                  "flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-2.5 pl-1 text-xs",
+                  on ? "bg-ink text-bg" : "text-ink-2",
                 )}
               >
-                <Mark symbol={c} size={18} />
-                {c}
+                <Mark symbol={name} src={m?.logo ?? null} size={18} />
+                {name}
               </button>
-            ))}
-          </div>
-        </div>
-        <div className="relative min-h-[240px] flex-1">
-          <div ref={box} className="absolute inset-0" />
+            );
+          })}
         </div>
       </div>
-      <div className="flex flex-col justify-between gap-5 border-hairline border-t p-5 lg:border-t-0 lg:border-l">
-        <div className="flex flex-col gap-2">
-          <span className="type-label text-accent">Trade privately</span>
-          <p className="type-title">Every position opens from a wallet that has never existed before.</p>
-          <p className="text-[13px] text-ink-2">
-            Funded from your shielded ZEC through NEAR Intents. No history, no links to you or to your other trades.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Link
-            href={`/trade#${coin}`}
-            className="flex h-12 items-center justify-center gap-1.5 rounded-lg bg-up font-semibold text-bg hover:brightness-110"
-          >
-            <ArrowUpRight size={18} /> Long
-          </Link>
-          <Link
-            href={`/trade#${coin}`}
-            className="flex h-12 items-center justify-center gap-1.5 rounded-lg bg-down font-semibold text-bg hover:brightness-110"
-          >
-            <ArrowDownRight size={18} /> Short
-          </Link>
-        </div>
+      <div className="relative h-[260px] md:h-[320px]">
+        <div ref={box} className="absolute inset-0" />
+      </div>
+      <div className="grid grid-cols-2 gap-2 p-4">
+        <Link
+          href={href}
+          className="flex h-12 items-center justify-center gap-1.5 rounded-full bg-up font-bold text-bg tracking-[0.04em] hover:brightness-110"
+        >
+          <ArrowUpRight size={18} strokeWidth={3} /> LONG
+        </Link>
+        <Link
+          href={href}
+          className="flex h-12 items-center justify-center gap-1.5 rounded-full bg-down font-bold text-bg tracking-[0.04em] hover:brightness-110"
+        >
+          <ArrowDownRight size={18} strokeWidth={3} /> SHORT
+        </Link>
       </div>
     </section>
   );
