@@ -111,12 +111,14 @@ async function readVenue(w: PrivateWallet): Promise<VenueRead> {
   if (w.venue === "polymarket") {
     // Public data only: opening the account would deploy the wallet just to read it.
     // A wallet that opened Polymarket Perps also has a Perps account (read only once it exists).
-    const [positions, cash, perps] = await Promise.all([
+    // Cash is pUSD plus any USDC a refunded trip home brought back.
+    const [positions, pusd, usdc, perps] = await Promise.all([
       pmMarket.positions(w.address),
       pmMarket.pusd(w.address),
+      pmMarket.usdc(w.address),
       w.perps ? pmDriver.account(w) : Promise.resolve(null),
     ]);
-    return { venue: "polymarket", positions, cash, perps };
+    return { venue: "polymarket", positions, cash: pusd + usdc, perps };
   }
   if (w.venue === "hyperliquid") {
     const account = await hlAccount(w);

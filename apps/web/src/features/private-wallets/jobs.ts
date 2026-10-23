@@ -40,7 +40,7 @@ export {
   VENUE_ASSET,
   venueAddress,
 } from "./funding";
-export { confidentialSwaps } from "./swaps";
+export { type SwapMode, swapMode } from "./swaps";
 
 const TICK_MS = 5_000;
 const POLL_MS = 15_000;
@@ -270,15 +270,25 @@ function once(id: string, job: (id: string) => Promise<void>) {
   void job(id).finally(() => running.delete(id));
 }
 
-/** Tops up "keep one ready": a venue with a size set and no live wallet gets a new one. */
+/** Venues whose switch is making their first wallet right now, so a tick doesn't make a second. */
+const starting = new Set<Venue>();
+
+/** Whether "keep one ready" should add a wallet on a venue: a size set, none waiting, and the ZEC to fund it. */
+function wantsWallet(venue: Venue, size: number | null | undefined): size is number {
+  if (!size || starting.has(venue)) return false;
+  if (liveWallets(currentRegistry(), venue).some((w) => w.status !== "trading")) return false;
+  return size + FUNDING_FEE_RESERVE_ZAT <= balances().spendable;
+}
+
+/**
+ * Tops up "keep one ready" in the background. These top-ups wait the long refill delay, so a refill never
+ * follows the trade that used the last wallet.
+ */
 function keepReady() {
   const r = currentRegistry();
-  const { spendable } = balances();
   for (const venue of Object.keys(r.keepReady) as Venue[]) {
     const size = r.keepReady[venue];
-    if (!size || liveWallets(r, venue).some((w) => w.status !== "trading")) continue;
-    if (size + FUNDING_FEE_RESERVE_ZAT > spendable) continue;
-    void prepareWallet(venue, size, true).catch(() => undefined);
+    if (wantsWallet(venue, size)) void prepareWallet(venue, size, true).catch(() => undefined);
   }
 }
 
@@ -331,4 +341,10 @@ export function retryWallet(id: string) {
 
 export function setKeepReady(venue: Venue, sizeZat: number | null) {
   mutate((r) => ({ ...r, keepReady: { ...r.keepReady, [venue]: sizeZat } }));
+  // Turning it on is a request, like tapping Fund: the first wallet starts at an ordinary random moment.
+  if (!canFund().ok || !wantsWallet(venue, sizeZat)) return;
+  starting.add(venue);
+  void prepareWallet(venue, sizeZat)
+    .catch(() => undefined)
+    .finally(() => starting.delete(venue));
 }

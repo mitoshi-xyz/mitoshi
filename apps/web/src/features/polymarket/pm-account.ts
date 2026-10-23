@@ -1,7 +1,7 @@
 "use client";
 
 import { evmKey, type PrivateWallet } from "@mitoshi/engine";
-import type { PmOpenOrder, PmOrderResult } from "@mitoshi/venues/polymarket/trading";
+import type { PmOpenOrder, PmOrderResult, PmToken } from "@mitoshi/venues/polymarket/trading";
 import { RELAY } from "@/constants";
 import { deviceSeed } from "../wallet/wallet-store";
 import type { PmCall, PmReply, PmResults } from "./pm-protocol";
@@ -93,8 +93,9 @@ export class PmAccount {
   redeem(conditionId: string) {
     return call({ kind: "redeem", key: this.key, conditionId });
   }
-  sendPusd(to: string, amount: bigint) {
-    return call({ kind: "sendPusd", key: this.key, to, amount: amount.toString() });
+  /** Sends pUSD or native USDC (base units) from the wallet, gasless. */
+  transfer(token: PmToken, to: string, amount: bigint) {
+    return call({ kind: "transfer", key: this.key, token, to, amount: amount.toString() });
   }
   /** Moves pUSD (base units) into this wallet's Polymarket Perps account; resolves to the tx hash. */
   depositToPerps(amount: bigint): Promise<string> {

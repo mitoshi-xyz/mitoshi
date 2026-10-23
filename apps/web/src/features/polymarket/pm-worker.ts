@@ -80,8 +80,8 @@ async function handle(call: PmCall): Promise<unknown> {
       return a.openOrders();
     case "redeem":
       return a.redeem(call.conditionId);
-    case "sendPusd":
-      return a.sendPusd(call.to, BigInt(call.amount));
+    case "transfer":
+      return a.transfer(call.token, call.to, BigInt(call.amount));
     case "depositToPerps":
       return a.depositToPerps(BigInt(call.amount));
   }

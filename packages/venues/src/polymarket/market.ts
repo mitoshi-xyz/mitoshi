@@ -13,6 +13,7 @@ import {
   type HistoryRange,
   PAGE_SIZE,
   POLYGON_RPC,
+  POLYGON_USDC,
   POSITIONS_PAGE,
   PUSD,
   PUSD_DECIMALS,
@@ -270,12 +271,22 @@ export class PolymarketMarket {
   }
 
   /** The wallet's pUSD (its cash on Polymarket), read from Polygon. */
-  async pusd(wallet: string): Promise<number> {
+  pusd(wallet: string): Promise<number> {
+    return this.erc20(PUSD, wallet);
+  }
+
+  /** Native USDC in the wallet. Fundings arrive as pUSD, so only a refunded trip home leaves any here. */
+  usdc(wallet: string): Promise<number> {
+    return this.erc20(POLYGON_USDC, wallet);
+  }
+
+  /** A balance of a 6-decimal token on Polygon (pUSD and native USDC both are), in whole units. */
+  private async erc20(token: string, wallet: string): Promise<number> {
     const data = `${BALANCE_OF}${wallet.slice(2).toLowerCase().padStart(ADDRESS_WORD_CHARS, "0")}`;
     const res = await this.send(POLYGON_RPC, {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: PUSD, data }, "latest"] }),
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: token, data }, "latest"] }),
     });
     const body = (await res.json()) as { result?: string; error?: { message?: string } };
     if (!res.ok || !body.result) throw new Error(`Polygon RPC: ${body.error?.message ?? res.status}`);

@@ -1,7 +1,7 @@
 "use client";
 
 import { fundableSizes, LADDER_ZAT, type Venue, ZAT_PER_ZEC } from "@mitoshi/engine";
-import { APP_FEE_BPS, APP_FEE_RECIPIENT } from "@mitoshi/rails";
+import { swapTerms } from "@mitoshi/rails";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, ChevronDown, Clock, Eye } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import { VenueMark } from "../marks/mark";
 import { LeakMeter } from "../privacy/leak-meter";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { useWallet } from "../wallet/wallet-store";
-import { balances, canFund, confidentialSwaps, FUNDING_FEE_RESERVE_ZAT, prepareWallet, previewFunding } from "./jobs";
+import { balances, canFund, FUNDING_FEE_RESERVE_ZAT, prepareWallet, previewFunding } from "./jobs";
 import { useRegistry } from "./registry-store";
 import { useNow } from "./use-now";
 import { shortAddress, VENUE_ORDER, VENUES } from "./venues";
@@ -123,6 +123,7 @@ export function FundDrawer({
     queryFn: () => previewFunding(key.venue, key.size),
   });
   const p = preview.data;
+  const terms = p ? swapTerms(p.quote) : null;
   const settling = key.venue !== venue || key.size !== size;
 
   const ready = affordable.has(size);
@@ -213,7 +214,7 @@ export function FundDrawer({
                   Ask again
                 </button>
               </div>
-            ) : !p || settling ? (
+            ) : !p || !terms || settling ? (
               <Skeleton className="h-14 rounded-xl" label="Asking NEAR Intents for a price, privately" />
             ) : (
               <details className="group rounded-xl bg-surface-2">
@@ -234,8 +235,15 @@ export function FundDrawer({
                 <dl className="grid grid-cols-2 gap-y-1.5 border-hairline border-t px-4 py-3 text-[13px]">
                   <dt className="text-ink-2">Network fee</dt>
                   <dd className="num text-right">{zec(FUNDING_FEE_RESERVE_ZAT)} ZEC</dd>
+                  <dt className="text-ink-2">Swap cost</dt>
+                  <dd className="num text-right">
+                    ${terms.costUsd.toFixed(USD_DIGITS)}
+                    {terms.feeBps ? ` · NEAR fee ${terms.feeBps / BPS_PER_PERCENT}%` : ""}
+                  </dd>
                   <dt className="text-ink-2">Mitoshi fee</dt>
-                  <dd className="num text-right">{APP_FEE_RECIPIENT ? `${APP_FEE_BPS / BPS_PER_PERCENT}%` : "none"}</dd>
+                  <dd className="num text-right">
+                    {terms.mitoshiBps ? `${terms.mitoshiBps / BPS_PER_PERCENT}%` : "none"}
+                  </dd>
                   {p.credited ? (
                     <>
                       <dt className="text-ink-2">Bridge to pUSD</dt>
@@ -245,7 +253,7 @@ export function FundDrawer({
                   <dt className="text-ink-2">Route</dt>
                   <dd className="text-right">
                     NEAR Intents{p.via ? ` · ${p.via}` : ""}
-                    {confidentialSwaps() ? " · confidential" : ""}
+                    {terms.confidential ? " · confidential" : " · public"}
                   </dd>
                 </dl>
               </details>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
-import { formatUnits, quoteRequest } from "./oneclick.ts";
+import { formatUnits, quoteRequest, swapTerms } from "./oneclick.ts";
 import { stableStringify, verifyQuote } from "./signature.ts";
 import type { QuoteResponse } from "./types.ts";
 
@@ -64,6 +64,21 @@ describe("quote requests", () => {
     });
     assert.equal(r.swapType, "FLEX_INPUT");
     assert.equal(r.confidentiality, undefined, "1Click has no confidential mode for FLEX_INPUT");
+  });
+});
+
+describe("swap terms", () => {
+  it("reads the mode and the fees from 1Click's answer, not from the request", () => {
+    const t = swapTerms(fixture);
+    assert.equal(t.confidential, false, "the fixture came back public");
+    assert.equal(t.mitoshiBps, 0, "no Mitoshi fee without a named recipient");
+    assert.equal(t.feeBps, 30, "every listed fee counts");
+    assert.ok(t.costUsd > 0);
+    const granted = structuredClone(fixture);
+    granted.quoteRequest.confidentiality = "basic";
+    delete granted.quoteRequest.appFees;
+    assert.equal(swapTerms(granted).confidential, true);
+    assert.equal(swapTerms(granted).feeBps, 0);
   });
 });
 

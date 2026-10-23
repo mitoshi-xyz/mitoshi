@@ -1,6 +1,6 @@
 "use client";
 
-import { type HistoryEntry, ZAT_PER_ZEC } from "@mitoshi/zwallet";
+import { BLOCK_SECONDS, type HistoryEntry, RECEIVED_CONFIRMATIONS, ZAT_PER_ZEC } from "@mitoshi/zwallet";
 import { Check, Copy, ExternalLink, RefreshCw, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
@@ -10,13 +10,16 @@ import { freshAddress, useWallet } from "./wallet-store";
 const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
 const GROUP = 6;
 const ZEC_DIGITS = 8;
+const SECONDS_PER_MINUTE = 60;
+/** Ten blocks at 75 s, rounded: what the copy promises before a deposit is spendable. */
+const SPENDABLE_MINUTES = Math.round((RECEIVED_CONFIRMATIONS * BLOCK_SECONDS) / SECONDS_PER_MINUTE);
 
 const grouped = (a: string) => a.match(new RegExp(`.{1,${GROUP}}`, "g"))?.join(" ") ?? a;
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
 
 /**
  * Deposit: a never-used shielded address as a dotted QR, and the deposit followed live: waiting, seen in a block,
- * then where it came from (fully shielded: ready now; a public address: rests 2–6 h).
+ * counted to the 10 confirmations the wallet needs, then where it came from (a public address rests 2–6 h more).
  */
 export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const w = useWallet();
@@ -42,6 +45,13 @@ export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () =>
   const arrived: HistoryEntry | undefined = open
     ? w.history.find((h) => h.delta > 0 && !seenAtOpen.current.has(h.txid))
     : undefined;
+  const tip = w.summary?.tip ?? null;
+  const confirmations = arrived?.minedHeight != null && tip !== null ? tip - arrived.minedHeight + 1 : 0;
+  const spendable = confirmations >= RECEIVED_CONFIRMATIONS;
+  const minutesLeft = Math.max(
+    1,
+    Math.ceil(((RECEIVED_CONFIRMATIONS - confirmations) * BLOCK_SECONDS) / SECONDS_PER_MINUTE),
+  );
 
   return (
     <Drawer open={open} onClose={onClose} title={`Deposit ${UNIT}`}>
@@ -88,16 +98,21 @@ export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () =>
             steps={[
               { label: "Deposit seen", state: "done", detail: `+${zec(arrived.delta)} ${UNIT}` },
               {
-                label: arrived.minedHeight === null ? "Confirming in a block" : "Confirmed",
-                state: arrived.minedHeight === null ? "active" : "done",
+                label: spendable
+                  ? "Spendable"
+                  : arrived.minedHeight === null
+                    ? "Waiting for a block"
+                    : `${confirmations} of ${RECEIVED_CONFIRMATIONS} blocks`,
+                state: spendable ? "done" : "active",
+                detail: spendable ? undefined : `about ${minutesLeft} min`,
               },
               {
                 label:
                   arrived.fromPublic === null
                     ? "Checking where it came from"
                     : arrived.fromPublic
-                      ? "From a public address: resting 2–6 h before it can fund a wallet"
-                      : "Fully shielded: ready to use now",
+                      ? "From a public address: rests 2–6 h before it can fund a wallet"
+                      : "Fully shielded: no rest",
                 state: arrived.fromPublic === null ? "active" : "done",
               },
             ]}
@@ -110,9 +125,9 @@ export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () =>
       <div className="flex gap-3 text-[13px] text-ink-2">
         <ShieldCheck size={18} className="mt-0.5 shrink-0 text-up" />
         <p>
-          Send from a shielded wallet (Zodl, Zashi, Ywallet) and it is usable the moment it lands. From an exchange or
-          any transparent address it works too, but rests 2–6 hours first, so its arrival can't be matched to your next
-          trade.
+          From a shielded wallet (Zodl, Zashi, Ywallet) it is spendable after {RECEIVED_CONFIRMATIONS} blocks, about{" "}
+          {SPENDABLE_MINUTES} minutes. From an exchange or a transparent address it rests 2–6 hours more, so its arrival
+          can't be matched to your next trade.
         </p>
       </div>
     </Drawer>

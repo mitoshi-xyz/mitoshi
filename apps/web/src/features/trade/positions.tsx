@@ -46,7 +46,8 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
 
   const s = account.data;
   if (account.isPending) return <Skeleton className="h-20" label="Reading the wallet" />;
-  const empty = s && s.positions.length === 0 && s.orders.length === 0;
+  // Sending home cancels open orders itself; only open positions must be closed first.
+  const closed = s !== undefined && s.positions.length === 0;
   return (
     <li className="flex flex-col gap-2 rounded-xl border border-hairline bg-surface-1 p-3">
       <div className="flex items-center justify-between text-[12px] text-muted">
@@ -129,14 +130,14 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
           </div>
         );
       })}
-      {empty && wallet.status !== "returning" ? (
+      {closed && wallet.status !== "returning" ? (
         <button
           type="button"
           disabled={busy !== null}
           onClick={() => void run("Swapping home to shielded ZEC", () => driver.sendHome(wallet))}
           className="h-10 rounded-full bg-accent font-semibold text-[13px] text-accent-ink hover:brightness-110 disabled:opacity-40"
         >
-          Send home
+          {s.orders.length ? "Cancel orders and send home" : "Send home"}
         </button>
       ) : null}
       {busy ? <Wait verb={busy} /> : null}

@@ -7,24 +7,33 @@ import { cx, Sheet, Switch } from "@/kit";
 import { VenueMark } from "../marks/mark";
 import { setKeepReady } from "./jobs";
 import { useRegistry } from "./registry-store";
+import { useNow } from "./use-now";
 import { STATUS, VENUE_ORDER, VENUES } from "./venues";
+import { inMinutes } from "./wallet-steps";
 
 const ZEC_DIGITS = 8;
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
 /** The size a venue starts at when its switch goes on. */
 const DEFAULT_SIZE = LADDER_ZAT[2];
 
-/** What "keep one ready" holds for a venue right now, in two words. */
-function warmWord(venue: Venue, r: ReturnType<typeof useRegistry>): { text: string; ok: boolean } {
+/** What "keep one ready" holds for a venue right now, in a few words: a waiting wallet says when it starts. */
+function warmWord(venue: Venue, r: ReturnType<typeof useRegistry>, now: number): { text: string; ok: boolean } {
   const live = liveWallets(r, venue).filter((w) => w.status !== "trading");
   if (live.some((w) => w.status === "ready")) return { text: "Ready", ok: true };
   const next = live[0];
-  return next ? { text: STATUS[next.status].word, ok: false } : { text: "Waiting for ZEC", ok: false };
+  if (!next) return { text: "Waiting for ZEC", ok: false };
+  if (next.status === "preparing" && next.fundAt)
+    return { text: `Starts in ${inMinutes(next.fundAt - now)}`, ok: false };
+  return { text: STATUS[next.status].word, ok: false };
 }
 
-/** "Keep one ready": while Mitoshi is open, a funded wallet waits per venue, so a trade never waits for its funding. */
+/**
+ * "Keep one ready": while Mitoshi is open, a funded wallet waits per venue. The first starts soon after the switch
+ * goes on; each one after it starts at a random time hours later, so it can't be matched to the trade before it.
+ */
 export function KeepReady() {
   const registry = useRegistry();
+  const now = useNow();
   const [sizing, setSizing] = useState<Venue | null>(null);
   return (
     <section className="flex flex-col gap-2">
@@ -33,7 +42,7 @@ export function KeepReady() {
         {VENUE_ORDER.map((id) => {
           const v = VENUES[id];
           const size = registry.keepReady[id];
-          const warm = size ? warmWord(id, registry) : null;
+          const warm = size ? warmWord(id, registry, now) : null;
           return (
             <li key={id} className={cx("flex items-center gap-3 px-3 py-3", !v.live && "opacity-50")}>
               <VenueMark venue={id} size={32} />

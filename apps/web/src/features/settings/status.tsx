@@ -146,7 +146,7 @@ export function Status() {
         />
         <Row
           name="Mitoshi relay · Cloudflare"
-          sees="Your IP address, never what you ask (every request is sealed for the gateway)"
+          sees="Your IP and the public markets you view, never what a wallet request asks (those are sealed)"
           ok={feed === "live" ? true : feed === "connecting" ? null : false}
           detail={feed === "live" ? "live" : feed}
         />
@@ -155,7 +155,7 @@ export function Status() {
         ))}
         <Row
           name="Zcash light server"
-          sees="Requests for blocks from the gateway; your shielded notes are decrypted only here"
+          sees="Requests for blocks from the gateway; your shielded notes are decrypted only in your browser"
           ok={w.syncError ? false : w.summary?.tip ? true : null}
           detail={
             w.syncError

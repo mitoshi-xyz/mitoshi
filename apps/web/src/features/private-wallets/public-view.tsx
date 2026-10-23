@@ -2,7 +2,7 @@
 
 import { isCanonical, type PrivateWallet, type Registry, walletPath, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Copy, ExternalLink, Eye, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Eye, Minus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { cx, Drawer, Skeleton } from "@/kit";
 import { hlMarket } from "../hyperliquid/hl";
@@ -31,9 +31,13 @@ function useFootprint(w: PrivateWallet) {
 }
 
 interface LinkCheck {
-  ok: boolean;
+  /** Null when this device can't tell, like a recovered wallet's funding size: unknown is not a link. */
+  ok: boolean | null;
   text: string;
 }
+
+/** Whether a wallet's checks found something public that ties it to another of yours. */
+export const linkFound = (checks: LinkCheck[]) => checks.some((c) => c.ok === false);
 
 /**
  * Whether anything public ties this wallet to another of yours, checked against everything this
@@ -58,10 +62,12 @@ export function linkChecks(w: PrivateWallet, r: Registry): LinkCheck[] {
       ok: !mine.some((a) => otherSwapEnds.has(a)),
       text: "Its swaps share no deposit, refund or payout address with any other wallet",
     },
-    {
-      ok: isCanonical(w.sizeZat),
-      text: `Funded by one NEAR Intents swap of ${zec(w.sizeZat)} ZEC, a standard size many people use`,
-    },
+    w.recovered
+      ? { ok: null, text: "Found again from your words, so this device has no record of its funding swap" }
+      : {
+          ok: isCanonical(w.sizeZat),
+          text: `Funded by one NEAR Intents swap of ${zec(w.sizeZat)} ZEC, a standard size many people use`,
+        },
   ];
 }
 
@@ -101,7 +107,7 @@ function PublicBody({ w }: { w: PrivateWallet }) {
   const footprint = useFootprint(w);
   const venue = VENUES[w.venue];
   const checks = linkChecks(w, registry);
-  const linked = checks.some((c) => !c.ok);
+  const linked = linkFound(checks);
   const f = footprint.data;
   return (
     <>
@@ -169,12 +175,18 @@ function PublicBody({ w }: { w: PrivateWallet }) {
               <span
                 className={cx(
                   "mt-0.5 flex size-[18px] shrink-0 items-center justify-center rounded-full",
-                  c.ok ? "bg-up text-bg" : "bg-down text-bg",
+                  c.ok === null ? "bg-surface-3 text-ink-2" : c.ok ? "bg-up text-bg" : "bg-down text-bg",
                 )}
               >
-                {c.ok ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}
+                {c.ok === null ? (
+                  <Minus size={12} strokeWidth={3} />
+                ) : c.ok ? (
+                  <Check size={12} strokeWidth={3} />
+                ) : (
+                  <X size={12} strokeWidth={3} />
+                )}
               </span>
-              <span className={c.ok ? "text-ink" : "text-down"}>{c.text}</span>
+              <span className={c.ok === false ? "text-down" : c.ok === null ? "text-ink-2" : "text-ink"}>{c.text}</span>
             </li>
           ))}
         </ul>
@@ -183,8 +195,8 @@ function PublicBody({ w }: { w: PrivateWallet }) {
       <section className="flex flex-col gap-2 text-[13px]">
         <h3 className="type-title">What stays public</h3>
         <p className="text-ink-2">
-          This wallet's own trades on {venue.name}; one hop in and one hop out at a standard size; and NEAR Intents'
-          record of each swap. None of it names you or your other wallets.
+          This wallet's own trades on {venue.name}; its funding, at a standard size, and its trip home, at whatever it
+          held; and NEAR Intents' record of each swap. None of it names you or your other wallets.
         </p>
       </section>
 

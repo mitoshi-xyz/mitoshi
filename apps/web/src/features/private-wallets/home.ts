@@ -6,7 +6,7 @@ import { PUSD_DECIMALS } from "@mitoshi/venues/polymarket";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
 import { bringPerpsHome } from "../pmperps/perps-home";
 import { pmBridge, pmMarket } from "../polymarket/pm";
-import { pmAccount } from "../polymarket/pm-account";
+import { type PmAccount, pmAccount } from "../polymarket/pm-account";
 import { solAccount } from "../solana/sol";
 import { freshAddress } from "../wallet/wallet-store";
 import { putWallet, walletById } from "./registry-store";
@@ -27,7 +27,31 @@ const PUSD_UNITS = 10 ** PUSD_DECIMALS;
 const PUSD_DUST = 1;
 const SETTLE_POLL_MS = 3_000;
 const SETTLE_TRIES = 20;
+/** Polymarket's bridge skips deposits under this (bridge.polymarket.com/supported-assets: minCheckoutUsd for Polygon USDC). */
+const BRIDGE_MIN_USD = 2;
+const REWRAP_POLL_MS = 5_000;
+const REWRAP_TRIES = 72;
+/** The re-bridged refund counts as arrived once the wallet holds this share of it (the bridge's fee). */
+const REWRAP_ARRIVED_SHARE = 0.98;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * A refunded trip home comes back to the Deposit Wallet as Polygon USDC, which the trip home doesn't send. It goes
+ * through the wallet's own bridge address (the one its funding used) to become pUSD again, and leaves with the rest.
+ * Resolves to the USDC left behind because it is under the bridge's minimum (0 when none).
+ */
+async function rewrapRefund(w: PrivateWallet, account: PmAccount): Promise<number> {
+  const usdc = await pmMarket.usdc(w.address);
+  if (usdc === 0) return 0;
+  if (usdc < BRIDGE_MIN_USD) return usdc;
+  const before = await pmMarket.pusd(w.address);
+  await account.transfer("usdc", await pmBridge.depositAddress(w.address), BigInt(Math.floor(usdc * PUSD_UNITS)));
+  for (let i = 0; i < REWRAP_TRIES; i++) {
+    await sleep(REWRAP_POLL_MS);
+    if ((await pmMarket.pusd(w.address)) >= before + usdc * REWRAP_ARRIVED_SHARE) return 0;
+  }
+  throw new Error("the refunded USDC is still turning into pUSD; send home again in a few minutes");
+}
 
 /** Waits until a wallet holds no shares (sells and redemptions have settled on chain). */
 async function settled(wallet: string): Promise<void> {
@@ -66,11 +90,13 @@ export async function sendPolymarketHome(id: string): Promise<{ sent: number }> 
   await settled(w.address);
   // Perps money first comes back to the Deposit Wallet (positions must be closed).
   await bringPerpsHome(w);
+  const stranded = await rewrapRefund(w, account);
   const cash = await pmMarket.pusd(w.address);
   const now = Date.now();
   if (cash < PUSD_DUST) {
     w = advance(walletById(id) ?? w, "returning", now, "Only dust is left");
-    putWallet(advance(w, "retired", now, "Under 1 pUSD stays: less than the trip home would cost"));
+    const left = stranded ? ` (and ${stranded.toFixed(2)} USDC, under the bridge's $${BRIDGE_MIN_USD} minimum)` : "";
+    putWallet(advance(w, "retired", now, `Under 1 pUSD stays${left}: less than the trip home would cost`));
     return { sent: 0 };
   }
   const amount = BigInt(Math.floor(cash * PUSD_UNITS));
@@ -111,7 +137,7 @@ export async function sendPolymarketHome(id: string): Promise<{ sent: number }> 
     `Sending ${cash.toFixed(2)} pUSD home`,
   );
   putWallet(w);
-  await account.sendPusd(withdrawal, amount);
+  await account.transfer("pusd", withdrawal, amount);
   const sent: PrivateWallet = walletById(id) ?? w;
   putWallet({
     ...withSwap(sent, "return", { status: "KNOWN_DEPOSIT_TX", depositTx: `bridge:${withdrawal}` }),

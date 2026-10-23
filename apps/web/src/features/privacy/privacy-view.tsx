@@ -17,8 +17,8 @@ import {
 import { cx } from "@/kit";
 import { type Venue, VenueMark } from "../marks/mark";
 import { openPublicView } from "../private-wallets/drawers";
-import { confidentialSwaps } from "../private-wallets/jobs";
-import { linkChecks } from "../private-wallets/public-view";
+import { type SwapMode, swapMode } from "../private-wallets/jobs";
+import { linkChecks, linkFound } from "../private-wallets/public-view";
 import { useRegistry } from "../private-wallets/registry-store";
 import { shortAddress } from "../private-wallets/venues";
 import { StatusPill } from "../private-wallets/wallet-card";
@@ -41,14 +41,14 @@ const PARTIES: Party[] = [
   {
     name: "Mitoshi relay (Cloudflare)",
     icon: Globe2,
-    sees: "Your IP address, and that a sealed request went by",
-    never: "What you asked, or which wallet it was about (OHTTP seals it for the gateway)",
+    sees: "Your IP address, the public markets you look at, and that sealed requests went by",
+    never: "What a sealed request asks, or which wallet it is about (OHTTP seals it for the gateway)",
   },
   {
     name: "Mitoshi gateway (Ireland)",
     icon: Layers,
     sees: "What one request asks, like one address's balance",
-    never: "Who asked: no IP, no cookies, no account. It keeps nothing",
+    never: "Who asked: no IP, no cookies, no account. It logs nothing and caches only public market data",
   },
   {
     name: "Hyperliquid, Solana, Polymarket",
@@ -59,14 +59,14 @@ const PARTIES: Party[] = [
   {
     name: "NEAR Intents",
     mark: "near",
-    sees: "Each swap: a standard ZEC amount in, a fresh wallet out",
-    never: "Which swaps are yours: each one has its own fresh refund and payout address",
+    sees: "Each swap: a standard ZEC amount into a fresh wallet, or a wallet's balance back to a fresh shielded address",
+    never: "Which swaps are yours: no two share a deposit, refund or payout address",
   },
   {
     name: "The Zcash chain",
     mark: "zcash",
-    sees: "That a shielded transaction happened, plus the one public hop to NEAR's deposit address",
-    never: "Your balance, your addresses, or amounts inside the shielded pool",
+    sees: "That shielded transactions happened, plus the hops through NEAR: a standard amount in, a trip home's amount out",
+    never: "Your balance, your addresses, or any amount inside the shielded pool",
   },
 ];
 
@@ -75,20 +75,32 @@ const RULES = [
   { icon: Ruler, text: "Standard sizes only (0.01 to 1 ZEC), so a funding looks like everyone else's." },
   { icon: Timer, text: "Each funding starts at a random moment, never the moment you tap." },
   { icon: Clock, text: "Money that arrives from a public address rests 2–6 hours before it can fund anything." },
-  { icon: RefreshCcw, text: "Every swap gets a fresh shielded address for its refund and its payout." },
+  { icon: RefreshCcw, text: "Every funding refunds to a fresh shielded address, and every trip home pays out to one." },
   { icon: MailX, text: "No memos, and the standard transaction shape, so nothing stands out on chain." },
-  { icon: EyeOff, text: "Every request is sealed with OHTTP; every picture comes through Mitoshi's image proxy." },
+  {
+    icon: EyeOff,
+    text: "Everything about your wallets goes sealed with OHTTP; public prices and pictures come through Mitoshi's relay.",
+  },
   {
     icon: ShieldCheck,
     text: "Each wallet is read on its own random schedule, so no venue sees them asked about together.",
   },
 ];
 
+/** NEAR's confidential mode keeps a swap's deposit and payout from being paired on its public record. */
+const MODE_LINE: Record<SwapMode, string> = {
+  confidential:
+    "NEAR grants confidential mode: its record can't pair a swap's deposit with its payout (Polymarket's trip home aside).",
+  public: "NEAR is answering with public quotes: its record pairs each swap's deposit with its payout.",
+  unknown: "Mitoshi asks NEAR for confidential mode on every quote; this shows what it grants once one answers.",
+};
+
 /** Privacy: your wallets as the public sees them, who sees what, and the rules that keep it apart. */
 export function PrivacyView() {
   const registry = useRegistry();
   const live = registry.wallets.filter((w) => !["retired", "refunded"].includes(w.status));
-  const linked = registry.wallets.filter((w) => linkChecks(w, registry).some((c) => !c.ok));
+  const linked = registry.wallets.filter((w) => linkFound(linkChecks(w, registry)));
+  const mode = swapMode(registry);
   return (
     <section className="flex flex-col gap-10">
       <div className="flex max-w-2xl flex-col gap-1">
@@ -161,10 +173,7 @@ export function PrivacyView() {
             </li>
           ))}
         </ul>
-        <p className="text-[12px] text-muted">
-          NEAR's confidential mode, in which a swap's deposit and payout can't be matched to each other, is{" "}
-          {confidentialSwaps() ? "on for your swaps" : "off: it needs a NEAR partner key on the gateway"}.
-        </p>
+        <p className={cx("text-[12px]", mode === "public" ? "text-warning" : "text-muted")}>{MODE_LINE[mode]}</p>
       </section>
 
       <section className="flex flex-col gap-3">
@@ -191,8 +200,9 @@ export function PrivacyView() {
         <div className="flex flex-col gap-2 rounded-xl border border-hairline bg-surface-1 p-4 text-[13px]">
           <h2 className="type-title">What stays public</h2>
           <p className="text-ink-2">
-            Each wallet's own trades on its venue; one hop in and one hop out, at a standard size; and NEAR Intents'
-            record of each swap. None of it carries your name, your IP, or a link to your other wallets.
+            Each wallet's own trades on its venue; its funding, at a standard size, and its trip home, at whatever it
+            held; and NEAR Intents' record of each swap. None of it carries your name, your IP, or a link to your other
+            wallets.
           </p>
         </div>
       </section>

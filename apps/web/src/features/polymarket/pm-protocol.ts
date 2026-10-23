@@ -1,4 +1,4 @@
-import type { PmOpenOrder, PmOrderResult } from "@mitoshi/venues/polymarket/trading";
+import type { PmOpenOrder, PmOrderResult, PmToken } from "@mitoshi/venues/polymarket/trading";
 
 /** Messages to the Polymarket worker. `key` is one private wallet's signer key (hex). */
 type Key = { key: `0x${string}` };
@@ -15,7 +15,7 @@ export type PmCall =
   | ({ kind: "cancel"; orderId: string } & Key)
   | ({ kind: "openOrders" } & Key)
   | ({ kind: "redeem"; conditionId: string } & Key)
-  | ({ kind: "sendPusd"; to: string; amount: string } & Key)
+  | ({ kind: "transfer"; token: PmToken; to: string; amount: string } & Key)
   | ({ kind: "depositToPerps"; amount: string } & Key);
 
 export type PmReply = { id: number; ok: unknown } | { id: number; error: string };
@@ -33,6 +33,6 @@ export interface PmResults {
   cancel: undefined;
   openOrders: PmOpenOrder[];
   redeem: undefined;
-  sendPusd: undefined;
+  transfer: undefined;
   depositToPerps: string;
 }

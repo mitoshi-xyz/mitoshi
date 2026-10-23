@@ -70,6 +70,31 @@ export function quoteRequest(input: SwapInput): QuoteRequest {
   return req;
 }
 
+/** What a signed quote grants, read from 1Click's answer rather than from what was asked. */
+export interface SwapTerms {
+  /** NEAR's confidential mode: its public record can't pair this deposit with its payout. */
+  confidential: boolean;
+  /** Mitoshi's own fee in the quote, in basis points (none until APP_FEE_RECIPIENT is set). */
+  mitoshiBps: number;
+  /** Every other fee the quote lists: 1Click's platform fee (20 bps with a partner key, 25 without). */
+  feeBps: number;
+  /** What the route costs in all, in dollars: the input's value minus the output's, at 1Click's prices. */
+  costUsd: number;
+}
+
+export function swapTerms(q: QuoteResponse): SwapTerms {
+  const fees = q.quoteRequest.appFees ?? [];
+  const ours = (f: { recipient: string }) => APP_FEE_RECIPIENT !== null && f.recipient === APP_FEE_RECIPIENT;
+  const bps = (list: { fee: number }[]) => list.reduce((n, f) => n + f.fee, 0);
+  const mode = q.quoteRequest.confidentiality;
+  return {
+    confidential: mode === "basic" || mode === "advanced",
+    mitoshiBps: bps(fees.filter(ours)),
+    feeBps: bps(fees.filter((f) => !ours(f))),
+    costUsd: Math.max(0, Number(q.quote.amountInUsd) - Number(q.quote.amountOutUsd)),
+  };
+}
+
 /** The 1Click client, every call over OHTTP (`send`). */
 export class OneClick {
   private readonly send: PrivateFetch;

@@ -36,5 +36,14 @@ export const MNEMONIC_STRENGTH_BITS = 256;
 /** Zatoshis per ZEC. */
 export const ZAT_PER_ZEC = 100_000_000;
 
+/**
+ * Confirmations before a received note can be spent: zcash_client_backend's ConfirmationsPolicy::default()
+ * (data_api/wallet.rs), 10 for notes from others and 3 for this wallet's own change. The core uses that policy.
+ */
+export const RECEIVED_CONFIRMATIONS = 10;
+
+/** Zcash's target block spacing since Blossom (ZIP 208), in seconds. */
+export const BLOCK_SECONDS = 75;
+
 /** The worker reports the engine download at most once per this many bytes (256 KiB). */
 export const LOAD_REPORT_BYTES = 262_144;

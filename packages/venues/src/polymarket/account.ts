@@ -1,7 +1,10 @@
 import { createPublicClient, createSecureClient, OrderSide, OrderType, remoteBuilderSigning } from "@polymarket/client";
 import { privateKey } from "@polymarket/client/viem";
-import { PUSD } from "./constants.ts";
+import { POLYGON_USDC, PUSD } from "./constants.ts";
 import type { PmPosition } from "./market.ts";
+
+/** The two tokens a Deposit Wallet holds: pUSD to trade with, and native USDC only after a refunded trip home. */
+export type PmToken = "pusd" | "usdc";
 
 /**
  * One private wallet's Polymarket account, through the official SDK (@polymarket/client 0.12.0):
@@ -176,10 +179,13 @@ export class PolymarketAccount {
     return (await tx.wait()).transactionHash;
   }
 
-  /** Sends pUSD from the wallet (gasless): the trip home, to the bridge's withdrawal address. */
-  async sendPusd(to: string, amount: bigint): Promise<void> {
+  /**
+   * Sends pUSD or native USDC (base units) from the wallet, gasless: pUSD on the trip home to the bridge's withdrawal
+   * address; USDC from a refunded trip home back to the wallet's own bridge address, to become pUSD again.
+   */
+  async transfer(token: PmToken, to: string, amount: bigint): Promise<void> {
     const tx = await this.client.transferErc20({
-      tokenAddress: PUSD,
+      tokenAddress: token === "pusd" ? PUSD : POLYGON_USDC,
       recipientAddress: to,
       amount,
     } as Parameters<Client["transferErc20"]>[0]);
