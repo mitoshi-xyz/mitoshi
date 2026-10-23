@@ -1,6 +1,14 @@
 /** The landing's words. Every line says only what the product does. */
 export const LANDING = {
-  nav: { how: "How it works", venues: "Venues", privacy: "Privacy", docs: "Docs", open: "Open Mitoshi" },
+  nav: {
+    how: "How it works",
+    venues: "Venues",
+    demo: "Demo",
+    privacy: "Privacy",
+    docs: "Docs",
+    open: "Open Mitoshi",
+    openShort: "Open app",
+  },
   hero: {
     chip: "Live on Zcash mainnet",
     title: ["Trade privately", "from"],
@@ -144,7 +152,30 @@ export const LANDING = {
     ],
   },
   final: { title: "Your next trade, from a wallet nobody has seen.", open: "Open Mitoshi" },
-  footer: { built: "Built for ZECATHON 2026", repo: "Source", docs: "Docs", privacy: "Privacy", status: "Status" },
+  demo: {
+    title: "Demo",
+    pending: "Recording soon",
+    watch: "Watch on YouTube",
+    line: "Until it's up, try it live.",
+    stillAlt: "Mitoshi on a phone: a Polymarket event, the NVIDIA perps terminal and a Long order sheet",
+    coverAlt: "Play the Mitoshi demo",
+    tries: [
+      { label: "Long a stock", href: "/trade#pm/NVDA-USD" },
+      { label: "Back an outcome", href: "/predict" },
+      { label: "What the public sees", href: "/privacy" },
+    ],
+  },
+  footer: {
+    built: "Built for ZECATHON 2026",
+    repo: "Source",
+    demo: "Demo",
+    docs: "Docs",
+    privacy: "Privacy",
+    status: "Status",
+  },
 } as const;
 
 export const REPO_URL = "https://github.com/mitoshi-xyz/mitoshi";
+
+/** The demo recording on YouTube, once it exists. /demo links out to it: nothing from YouTube loads on this site. */
+export const DEMO_VIDEO_URL: string | null = null;

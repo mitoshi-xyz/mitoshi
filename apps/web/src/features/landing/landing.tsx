@@ -3,45 +3,13 @@ import Link from "next/link";
 import { Mark, VenueMark } from "../marks/mark";
 import { Seal } from "../shell/seal";
 import { SceneArt } from "../welcome/scene-art";
-import { LANDING as L, REPO_URL } from "./copy";
+import { LANDING as L } from "./copy";
+import { LandingFooter, LandingNav } from "./frame";
 import { HeroVisual } from "./hero-visual";
 import { Tape } from "./tape";
 import "@/styles/landing.css";
 import "@/styles/welcome.css";
 import { LandingQueries } from "./queries";
-
-function Nav() {
-  return (
-    <header className="sticky top-0 z-[var(--z-sticky)] px-3 pt-3">
-      <nav className="lp-nav" aria-label="Mitoshi">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="Mitoshi home">
-          <Seal size={34} />
-          <span className="font-extrabold font-heading text-[19px] tracking-[0.02em]">MITOSHI</span>
-          <span className="hidden font-stamp text-[14px] text-[var(--lp-ink-3)] sm:inline">見通し</span>
-        </Link>
-        <div className="mx-auto hidden items-center gap-1 md:flex">
-          {[
-            ["#how", L.nav.how],
-            ["#venues", L.nav.venues],
-            ["/privacy", L.nav.privacy],
-            ["/docs", L.nav.docs],
-          ].map(([href, label]) => (
-            <a
-              key={href}
-              href={href}
-              className="rounded-full px-3.5 py-2.5 font-semibold text-[14px] text-[var(--lp-ink-2)] hover:bg-[var(--lp-line)] hover:text-[var(--lp-ink)]"
-            >
-              {label}
-            </a>
-          ))}
-        </div>
-        <Link href="/markets" className="lp-btn lp-btn-accent lp-btn-sm ml-auto md:ml-0">
-          {L.nav.open}
-        </Link>
-      </nav>
-    </header>
-  );
-}
 
 function Hero() {
   return (
@@ -52,7 +20,7 @@ function Hero() {
       <span className="lp-wordmark" aria-hidden>
         見通し
       </span>
-      <Nav />
+      <LandingNav />
       <div className="lp-wrap relative grid items-center gap-12 pt-12 md:pt-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="lp-rise flex flex-col items-start gap-6">
           <span className="inline-flex items-center gap-2 rounded-full bg-[var(--lp-card-2)] px-3 py-1.5 text-[13px] shadow-[inset_0_0_0_1px_var(--lp-line)]">
@@ -299,31 +267,6 @@ function Final() {
   );
 }
 
-function Footer() {
-  return (
-    <footer className="lp-wrap flex flex-wrap items-center gap-x-6 gap-y-3 border-[var(--lp-line)] border-t py-8 text-[14px] text-[var(--lp-ink-3)]">
-      <span className="flex items-center gap-2 text-[var(--lp-ink-2)]">
-        <Seal size={22} /> Mitoshi 見通し
-      </span>
-      <span>{L.footer.built}</span>
-      <span className="ml-auto flex flex-wrap gap-5">
-        <a href={REPO_URL} className="hover:text-[var(--lp-ink)]">
-          {L.footer.repo}
-        </a>
-        <a href="/docs" className="hover:text-[var(--lp-ink)]">
-          {L.footer.docs}
-        </a>
-        <a href="/privacy" className="hover:text-[var(--lp-ink)]">
-          {L.footer.privacy}
-        </a>
-        <a href="/status" className="hover:text-[var(--lp-ink)]">
-          {L.footer.status}
-        </a>
-      </span>
-    </footer>
-  );
-}
-
 /** The landing: one dark world, the live product in the hero, then how it works, what's public, venues, privacy. */
 export function Landing() {
   return (
@@ -339,7 +282,7 @@ export function Landing() {
         <Built />
         <Faq />
         <Final />
-        <Footer />
+        <LandingFooter />
       </main>
     </LandingQueries>
   );

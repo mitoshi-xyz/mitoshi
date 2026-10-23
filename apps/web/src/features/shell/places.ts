@@ -9,6 +9,7 @@ import {
   EyeOff,
   LayoutGrid,
   type LucideIcon,
+  PlayCircle,
   Settings,
   Target,
   WalletCards,
@@ -132,6 +133,13 @@ export const PAGES: readonly Page[] = [
     href: "/status",
     icon: Activity,
     description: "Every party on the private path, live.",
+    group: "mitoshi",
+  },
+  {
+    name: "Demo",
+    href: "/demo",
+    icon: PlayCircle,
+    description: "Mitoshi in two minutes.",
     group: "mitoshi",
   },
   {
