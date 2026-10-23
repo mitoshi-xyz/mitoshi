@@ -315,7 +315,7 @@ function Footer() {
         <a href="/privacy" className="hover:text-[var(--lp-ink)]">
           {L.footer.privacy}
         </a>
-        <a href="/settings#status" className="hover:text-[var(--lp-ink)]">
+        <a href="/status" className="hover:text-[var(--lp-ink)]">
           {L.footer.status}
         </a>
       </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { LiveStatus } from "@mitoshi/venues/hyperliquid";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LiveDot } from "@/kit";
 import { hlLive } from "../hyperliquid/hl";
@@ -19,9 +20,12 @@ export function HealthChip() {
     };
   }, []);
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-hairline px-3 py-1 text-[12px] text-ink-2">
+    <Link
+      href="/status"
+      className="inline-flex items-center gap-2 rounded-full border border-hairline px-3 py-1 text-[12px] text-ink-2 hover:border-strong hover:text-ink"
+    >
       <LiveDot tone={status === "live" ? "up" : "muted"} />
       {status === "live" ? "Private relay · live" : status === "reconnecting" ? "Reconnecting…" : "Connecting…"}
-    </span>
+    </Link>
   );
 }

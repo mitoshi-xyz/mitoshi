@@ -1,11 +1,14 @@
 "use client";
 
-import { Download, Eye, Fingerprint, KeyRound, Lock, LockOpen } from "lucide-react";
+import { Copy, Download, Eye, Fingerprint, KeyRound, Lock, LockOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LOCK_MIN_CHARS, ZEC_NETWORK } from "@/constants";
 import { Button, cx, toast } from "@/kit";
 import { downloadBackup, makeBackup } from "../vault/backup";
 import { lockVault, setVaultLock, vaultGet, vaultLockState } from "../vault/vault";
+
+/** Copied words are cleared from the clipboard after a minute (when the page still has focus). */
+const CLIPBOARD_CLEAR_MS = 60_000;
 
 function Card({
   icon: Icon,
@@ -15,7 +18,7 @@ function Card({
 }: {
   icon: typeof Lock;
   title: string;
-  body: string;
+  body?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -24,9 +27,9 @@ function Card({
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-accent">
           <Icon size={17} />
         </span>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col justify-center gap-0.5">
           <h3 className="font-medium text-[15px]">{title}</h3>
-          <p className="text-[13px] text-ink-2">{body}</p>
+          {body ? <p className="text-[13px] text-ink-2">{body}</p> : null}
         </div>
       </div>
       {children}
@@ -122,6 +125,25 @@ function Words() {
           {holding ? <Eye size={16} /> : <Fingerprint size={16} />}{" "}
           {holding ? "Showing while you hold" : "Hold to reveal"}
         </button>
+        <Button
+          icon={<Copy size={15} />}
+          aria-label="Copy the 24 words"
+          onClick={() =>
+            void navigator.clipboard.writeText(words.join(" ")).then(
+              () => {
+                toast({
+                  tone: "up",
+                  title: "Words copied",
+                  body: "Paste them somewhere safe, then clear the clipboard",
+                });
+                setTimeout(() => void navigator.clipboard.writeText("").catch(() => undefined), CLIPBOARD_CLEAR_MS);
+              },
+              () => toast({ tone: "down", title: "Could not copy" }),
+            )
+          }
+        >
+          Copy
+        </Button>
         <Button onClick={() => setWords(null)}>Hide</Button>
       </div>
     </div>
@@ -159,18 +181,10 @@ export function Security() {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="type-title">Security</h2>
-      <Card
-        icon={KeyRound}
-        title="Recovery words"
-        body="The 24 words bring back this wallet and every private wallet made from it, in any browser."
-      >
+      <Card icon={KeyRound} title="Recovery words">
         <Words />
       </Card>
-      <Card
-        icon={Download}
-        title="Backup file"
-        body="Your words and your private-wallet list in one file, locked with a passphrase. Restore picks up every wallet at once."
-      >
+      <Card icon={Download} title="Backup file" body="Words and wallets in one passphrase-locked file">
         {backupOpen ? (
           <NewPassphrase
             busy={busy}
@@ -186,11 +200,7 @@ export function Security() {
       <Card
         icon={lockOn ? Lock : LockOpen}
         title={lockOn ? "Passphrase lock is on" : "Passphrase lock"}
-        body={
-          lockOn
-            ? "Opening Mitoshi in this browser asks for your passphrase. The vault key is stored only wrapped under it."
-            : "Ask for a passphrase whenever Mitoshi opens in this browser. Without it, nothing in the vault can be read."
-        }
+        body={lockOn ? "Asked each time Mitoshi opens" : "Ask each time Mitoshi opens"}
       >
         {lockOn === null ? null : lockOn ? (
           <div className="flex flex-wrap gap-2">

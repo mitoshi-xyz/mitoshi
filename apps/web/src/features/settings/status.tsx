@@ -123,8 +123,7 @@ export function Status() {
   useEffect(() => hlLive().onStatus(setFeed), []);
   const synced = w.syncedAt ? Math.round((Date.now() - w.syncedAt) / MS_PER_SECOND) : null;
   return (
-    <section id="status" className="flex scroll-mt-24 flex-col gap-3">
-      <h2 className="type-title">Status</h2>
+    <section className="flex flex-col gap-3">
       <ul className="overflow-hidden rounded-xl border border-hairline bg-surface-1">
         <Row
           name="Your browser"

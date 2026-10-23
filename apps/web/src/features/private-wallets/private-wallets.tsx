@@ -1,8 +1,8 @@
 "use client";
 
 import type { PrivateWallet } from "@mitoshi/engine";
-import { Plus, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Plus, WalletCards } from "lucide-react";
+import { useState } from "react";
 import { Button, EmptyState, Segmented } from "@/kit";
 import { openFund, openPublicView } from "./drawers";
 import { canFund } from "./jobs";
@@ -12,8 +12,6 @@ import { useNow } from "./use-now";
 import { WalletCard } from "./wallet-card";
 
 const DONE = new Set<PrivateWallet["status"]>(["retired", "refunded"]);
-/** Opening /wallets#new starts a new wallet (the Balance page's "Fund a private wallet"). */
-const NEW_HASH = "#new";
 
 /** Private wallets: make one, keep one ready per venue, and follow each wallet from funding to home. */
 export function PrivateWallets() {
@@ -22,12 +20,6 @@ export function PrivateWallets() {
   const [tab, setTab] = useState<"live" | "done">("live");
   const allowed = canFund();
 
-  useEffect(() => {
-    if (window.location.hash !== NEW_HASH) return;
-    history.replaceState(null, "", window.location.pathname);
-    openFund();
-  }, []);
-
   const live = registry.wallets.filter((w) => !DONE.has(w.status));
   const done = registry.wallets.filter((w) => DONE.has(w.status));
   const shown = tab === "live" ? live : done;
@@ -35,17 +27,11 @@ export function PrivateWallets() {
   const moving = live.filter((w) => ["preparing", "funding", "returning"].includes(w.status)).length;
 
   return (
-    <section className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex max-w-2xl flex-col gap-1">
-          <h1 className="type-headline-lg">Private wallets</h1>
-          <p className="text-ink-2">
-            Each trade gets a wallet that has never existed before, funded from your shielded ZEC. Nobody can link two
-            of them, or any of them to you.
-          </p>
-        </div>
-        <Button tone="primary" size="lg" icon={<Plus size={18} />} onClick={() => openFund()}>
-          New private wallet
+    <section className="flex flex-col gap-6">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="type-headline-lg">Wallets</h1>
+        <Button tone="primary" icon={<Plus size={18} />} onClick={() => openFund()}>
+          New
         </Button>
       </div>
 
@@ -73,13 +59,9 @@ export function PrivateWallets() {
         </div>
         {shown.length === 0 ? (
           <EmptyState
-            icon={Sparkles}
+            icon={WalletCards}
             title={tab === "live" ? "No private wallets yet" : "Nothing finished yet"}
-            body={
-              tab === "live"
-                ? "Fund one, or let “Keep one ready” hold one for each venue. Each starts at a random moment and is ready in about 8 minutes."
-                : "Wallets that came home or were refunded land here, with their whole story."
-            }
+            body={tab === "live" ? "One per trade, ready in about 8 minutes." : "Wallets that came home land here."}
             {...(tab === "live" ? { action: { label: "New private wallet", onClick: () => openFund() } } : {})}
           />
         ) : (
