@@ -23,7 +23,9 @@ export default function FeesDocs() {
       />
       <Note>
         Mitoshi's own funding fee is built in (0.2% through NEAR's app fees) but switched off: it takes effect only once
-        a fee recipient is named, and the Fund screen always shows the fee line before you confirm.
+        a fee recipient is named, and the Fund screen always shows the fee line before you confirm. Once it is on,
+        NEAR's record of each funding names Mitoshi's fee account, so fundings that came through Mitoshi can be listed
+        (not who made them).
       </Note>
       <H2>Timing</H2>
       <Table

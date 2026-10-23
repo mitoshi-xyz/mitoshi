@@ -99,7 +99,7 @@ from each venue's public feeds through Mitoshi's relay, so your IP never reaches
 
 | Party | Sees | Does not see |
 | --- | --- | --- |
-| **Cloudflare relay** (`mitoshi-web`) | Your IP address and the size of each request | What you asked: every user call is an encrypted [Oblivious HTTP](https://www.rfc-editor.org/rfc/rfc9458) message |
+| **Cloudflare relay** (`mitoshi-web`) | Your IP address, the size of each request, and which public markets you look at (prices and books are public data) | What you asked about your wallets: every user call, and every picture of something you hold, is an encrypted [Oblivious HTTP](https://www.rfc-editor.org/rfc/rfc9458) message |
 | **Gateway** (Vercel, Dublin) | The decrypted request, from a Cloudflare address | Your IP, or which requests come from the same person |
 | **Each venue** | That wallet's own orders and positions, from Ireland | Your other wallets, your balance, your IP |
 | **NEAR Intents** | One swap: a shielded deposit to a new wallet, with a fresh refund address | Who sent it, or any other swap of yours |
@@ -107,7 +107,9 @@ from each venue's public feeds through Mitoshi's relay, so your IP never reaches
 | **Mitoshi's servers** | Only what the relay and gateway rows say; there is no database and no account | Your keys, your list of wallets, your positions: they live only in your browser, encrypted |
 
 Visible on purpose, and shown in the app: each wallet's own trades; one public hop per funding or return, at a standard
-amount; NEAR's record of the swap; and Polymarket's builder attribution on Deposit Wallet creation. The full threat model
+amount; NEAR's record of the swap; and Polymarket's builder attribution on each wallet's gasless relayer calls (creation,
+approvals, redeeming, moving pUSD into Perps, the trip home), which tells Polymarket these come from Mitoshi users, not
+which one. The full threat model
 is at [/docs/privacy](https://mitoshi.xyz/docs/privacy).
 
 ## Architecture
@@ -178,7 +180,8 @@ claimed here.
   wallet per venue can be kept warm while the app is open.
 - **Timing.** Funding runs at sampled random moments and portfolio reads are jittered, but a watcher with the full
   public record can still try timing analysis. The rest rules and standard amounts are what make that hard.
-- **Two hops you have to trust not to collude.** The relay and the gateway are run by the same project today.
+- **Two hops you have to trust not to collude.** One operator runs the relay and the gateway and also serves the app,
+  so keeping them apart is a promise you can check in this repository, not something the code can enforce.
 - **Light servers.** Compact blocks come from public servers until Mitoshi runs its own.
 - **Web only.** There is no app-store build.
 

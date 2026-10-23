@@ -52,6 +52,7 @@ export const APP_FEE_BPS = 20;
 
 /**
  * The NEAR account that receives the funding fee. Unset until the owner names one; with no
- * recipient no app fee is added (and none is shown).
+ * recipient no app fee is added (and none is shown). Once set, NEAR's record of each funding names
+ * this account, so anyone can list the fundings that came through Mitoshi (not who made them).
  */
 export const APP_FEE_RECIPIENT: string | null = null;

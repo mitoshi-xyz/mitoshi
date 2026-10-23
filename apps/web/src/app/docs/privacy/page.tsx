@@ -58,7 +58,7 @@ export default function PrivacyDocs() {
           "Every swap gets a fresh shielded refund address, and every trip home a fresh shielded payout address.",
           "No memos, and the standard transaction shape.",
           "No builder code on orders. Portfolio reads for different wallets run on independent random schedules (what remains is under What stays public, below).",
-          "The recovery scan asks about one address at a time, seconds apart.",
+          "The recovery scan asks about one address at a time, 3–9 seconds apart. Someone watching the gateway during a recovery could still group the addresses it asks about, so it only runs when you restore from your words.",
         ]}
       />
       <H2>The leak meter</H2>
@@ -75,8 +75,10 @@ export default function PrivacyDocs() {
           "Each wallet's own trades on its venue.",
           "One hop in and one hop out per wallet, at a standard size, through NEAR's deposit addresses.",
           "NEAR Intents' record of each swap, which pairs its deposit with its payout. NEAR's confidential mode, in which deposits and payouts can't be matched, is used whenever the gateway holds a NEAR partner key.",
-          "On Polymarket, wallet creation is gasless through Polymarket's relayer and attributed to Mitoshi's builder profile: Polymarket knows a wallet was made by a Mitoshi user, not which one.",
-          "Reading your wallets: while Portfolio or a terminal is open, the venues and the gateway see their balances asked about in the same stretch of time. Each wallet is read on its own random schedule, through one gateway address shared by every user, and the gateway keeps no logs, but someone watching many sessions could still notice two addresses that are always asked about in the same minutes. Keep fewer wallets open at once if that matters to you.",
+          "On Polymarket, each wallet's relayer calls (creating it, its approvals, redeeming, moving pUSD into Perps, the trip home) are gasless and attributed to Mitoshi's builder profile: Polymarket knows these come from Mitoshi users, and when, not which user.",
+          "Public market data (prices, order books, the pictures on lists) comes through the relay unencrypted, so the relay sees which public markets an IP looks at. It does not see your wallets, orders, balances or holdings: those, and the pictures of what you hold, go over Oblivious HTTP.",
+          "One operator runs the relay and the gateway and also serves this app, so keeping the two apart is a promise you can check in the open source, not something the code can enforce. The gateway's key is pinned in the app.",
+          "Reading your wallets: while Portfolio or a terminal is open, the venues and the gateway see their balances asked about in the same stretch of time. Each wallet is read on its own random schedule, through one gateway address shared by every user, and the gateway writes no logs, but someone watching many sessions could still notice two addresses that are always asked about in the same minutes. Keep fewer wallets open at once if that matters to you.",
         ]}
       />
       <Note tone="warn">
