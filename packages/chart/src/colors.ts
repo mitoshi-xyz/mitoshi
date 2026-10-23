@@ -55,8 +55,3 @@ export const defaultFormat = (p: number) => {
   const digits = p >= LARGE ? DIGITS.large : p >= 1 ? DIGITS.unit : p >= CENT ? DIGITS.small : DIGITS.tiny;
   return p.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 };
-
-export const defaultTime = (ms: number) => {
-  const d = new Date(ms);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-};

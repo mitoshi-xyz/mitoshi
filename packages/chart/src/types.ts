@@ -19,14 +19,16 @@ export interface Levels {
   liquidation?: number | null;
 }
 
+export type TimeFormat = (ms: number, spanMs: number, precise: boolean) => string;
+
 export interface ChartOptions {
   mode?: ChartMode;
   /** The faint glyphs behind the line. */
   watermark?: string;
   /** How a price is written on the axis and pill. */
   format?: (price: number) => string;
-  /** How a time is written under candles. */
-  formatTime?: (ms: number) => string;
+  /** How a time is written on the axis and, `precise`, under the pointer; `spanMs` is the time on screen. */
+  formatTime?: TimeFormat;
   /** Where the colour tokens are read from (default: the document): a page section with its own palette. */
   colorsFrom?: Element;
 }

@@ -1,5 +1,6 @@
 import { alpha, type Colors } from "./colors";
-import type { Bar } from "./types";
+import { spanOf } from "./time";
+import type { Bar, TimeFormat } from "./types";
 
 /** Candles (with volume), the history line, time labels and the crosshair reading. */
 
@@ -74,15 +75,21 @@ export function paintHistoryLine(f: Frame, top: number, bottom: number) {
   ctx.fill();
 }
 
-export function paintTimeLabels(f: Frame, timeH: number, everyPx: number, formatTime: (ms: number) => string) {
+export function paintTimeLabels(f: Frame, timeH: number, everyPx: number, formatTime: TimeFormat) {
   const { ctx, colors, bars, xOf, spacing, plotH } = f;
+  const span = spanOf(bars);
+  let previous = "";
   ctx.fillStyle = colors.muted;
   ctx.font = `500 ${TIME_FONT}px ${colors.mono}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   const every = Math.max(1, Math.round(everyPx / spacing));
   bars.forEach((b, i) => {
-    if ((bars.length - 1 - i) % every === 0) ctx.fillText(formatTime(b.t), xOf(i), plotH + timeH / 2);
+    if ((bars.length - 1 - i) % every !== 0) return;
+    const label = formatTime(b.t, span, false);
+    // A week of hourly bars lands two labels on one day; the second says nothing new.
+    if (label !== previous) ctx.fillText(label, xOf(i), plotH + timeH / 2);
+    previous = label;
   });
 }
 
@@ -92,7 +99,7 @@ export function paintCrosshair(
   hover: { x: number; y: number },
   candles: boolean,
   format: (p: number) => string,
-  formatTime: (ms: number) => string,
+  formatTime: TimeFormat,
 ): Bar | null {
   const { ctx, colors, bars, xOf, spacing, plotW, plotH } = f;
   const i = Math.round(bars.length - HALF_PX - (plotW - hover.x) / spacing);
@@ -113,7 +120,7 @@ export function paintCrosshair(
   const pct = `${change >= 0 ? "+" : ""}${(change * PCT).toFixed(PCT_DIGITS)}%`;
   const text = candles
     ? `O ${format(b.o)}  H ${format(b.h)}  L ${format(b.l)}  C ${format(b.c)}  ${pct}`
-    : `${formatTime(b.t)}  ${format(b.c)}`;
+    : `${formatTime(b.t, spanOf(bars), true)}  ${format(b.c)}`;
   ctx.font = `500 ${TIME_FONT}px ${colors.mono}`;
   ctx.fillStyle = colors.ink;
   ctx.textAlign = "left";

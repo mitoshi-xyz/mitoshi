@@ -10,7 +10,7 @@
  * CSS variables and follow the theme. The loop runs only while the canvas is on screen and the tab is visible.
  */
 
-import { type Colors, defaultFormat, defaultTime, readColors } from "./colors";
+import { type Colors, defaultFormat, readColors } from "./colors";
 import {
   AXIS_W,
   BODY_RATIO,
@@ -43,7 +43,8 @@ import { attachPointer, watchBox } from "./input";
 import { axisWidthFor, paintAxis, paintDots, paintLevels, paintPill, paintWatermark } from "./paint";
 import { type Frame, paintCandles, paintCrosshair, paintHistoryLine, paintTimeLabels } from "./paint-history";
 import { type Point, paintGuide, paintHead, paintLiveLine } from "./paint-live";
-import type { Bar, ChartMode, ChartOptions, Levels } from "./types";
+import { defaultTime } from "./time";
+import type { Bar, ChartMode, ChartOptions, Levels, TimeFormat } from "./types";
 
 export class MarketChart {
   private readonly box: HTMLElement;
@@ -54,7 +55,7 @@ export class MarketChart {
   private readonly colorRoot: Element | undefined;
   private readonly watermark: string;
   private readonly format: (p: number) => string;
-  private readonly formatTime: (ms: number) => string;
+  private readonly formatTime: TimeFormat;
   private w = 0;
   private h = 0;
   private dpr = 1;
@@ -124,8 +125,10 @@ export class MarketChart {
     this.dirty = true;
   }
 
-  setBars(bars: Bar[]) {
+  /** Replaces the history. `fit` shows all of it at once, as a range picker promises, instead of a zoomable window. */
+  setBars(bars: Bar[], fit = false) {
     this.bars = [...bars].sort((a, b) => a.t - b.t);
+    if (fit) this.count = Math.max(1, this.bars.length);
     this.offset = 0;
     this.yLo = Number.NaN;
     const last = this.bars.at(-1);
@@ -393,4 +396,4 @@ export class MarketChart {
   }
 }
 
-export type { Bar, ChartMode, ChartOptions, Levels } from "./types";
+export type { Bar, ChartMode, ChartOptions, Levels, TimeFormat } from "./types";
