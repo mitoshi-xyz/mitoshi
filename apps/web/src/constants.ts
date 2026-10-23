@@ -34,3 +34,6 @@ export const VAULT_IV_BYTES = 12;
 export const LOCK_PBKDF2_ITERATIONS = 600_000;
 export const LOCK_SALT_BYTES = 16;
 export const LOCK_MIN_CHARS = 8;
+
+/** The documentation site (apps/docs). Old /docs links on this site redirect there (services/web). */
+export const DOCS_URL = "https://docs.mitoshi.xyz";

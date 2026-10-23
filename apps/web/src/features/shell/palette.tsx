@@ -130,6 +130,8 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
     if (!hit) return;
     onClose();
     if (hit.run) hit.run();
+    // Another site (the docs) is a page load, not an in-app route.
+    else if (/^https?:\/\//.test(hit.href)) window.location.assign(hit.href);
     else router.push(hit.href);
   };
 

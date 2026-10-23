@@ -14,6 +14,7 @@ import {
   Target,
   WalletCards,
 } from "lucide-react";
+import { DOCS_URL } from "@/constants";
 
 export interface Place {
   id: string;
@@ -144,7 +145,7 @@ export const PAGES: readonly Page[] = [
   },
   {
     name: "Docs",
-    href: "/docs",
+    href: DOCS_URL,
     icon: BookOpen,
     description: "How it works, the threat model, fees and recovery.",
     group: "mitoshi",

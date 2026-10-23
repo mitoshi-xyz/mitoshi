@@ -26,3 +26,16 @@ export const STATIC_CACHE = "public, max-age=31536000, immutable";
 
 /** Images are shared by everyone, so the relay may cache them. */
 export const IMAGE_CACHE_SECONDS = 86_400;
+
+/** The documentation site, and where each old in-app /docs page now lives on it. */
+export const DOCS_ORIGIN = "https://docs.mitoshi.xyz";
+export const DOCS_PREFIX = "/docs";
+export const DOCS_MOVED: Record<string, string> = {
+  "": "/",
+  "/how-it-works": "/private-wallets",
+  "/privacy": "/privacy",
+  "/venues": "/venues/polymarket",
+  "/fees": "/fees-and-timing",
+  "/recovery": "/backup-and-recovery",
+  "/architecture": "/architecture",
+};

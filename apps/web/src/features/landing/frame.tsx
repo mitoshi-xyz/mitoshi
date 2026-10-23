@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DOCS_URL } from "@/constants";
 import { Seal } from "../shell/seal";
 import { LANDING as L, REPO_URL } from "./copy";
 
@@ -7,7 +8,7 @@ const LINKS = [
   ["/#venues", L.nav.venues],
   ["/demo", L.nav.demo],
   ["/privacy", L.nav.privacy],
-  ["/docs", L.nav.docs],
+  [DOCS_URL, L.nav.docs],
 ] as const;
 
 /** The landing's glass nav, shared by the landing and /demo. Demo stays visible on phones, beside Open. */
@@ -57,7 +58,7 @@ export function LandingFooter() {
         {[
           [REPO_URL, L.footer.repo],
           ["/demo", L.footer.demo],
-          ["/docs", L.footer.docs],
+          [DOCS_URL, L.footer.docs],
           ["/privacy", L.footer.privacy],
           ["/status", L.footer.status],
         ].map(([href, label]) => (

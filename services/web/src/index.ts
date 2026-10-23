@@ -1,6 +1,9 @@
 import {
   CANONICAL_HOST,
   DEV_ORIGINS,
+  DOCS_MOVED,
+  DOCS_ORIGIN,
+  DOCS_PREFIX,
   IMAGE_CACHE_SECONDS,
   MAX_RELAY_BODY_BYTES,
   PASS_BACK,
@@ -107,6 +110,10 @@ export default {
         return new Response(null, { status: HTTP_NO_CONTENT, headers: h });
       }
       return relay(request, env, url.pathname.slice(RELAY_PREFIX.length), url.search);
+    }
+    if (url.pathname === DOCS_PREFIX || url.pathname.startsWith(`${DOCS_PREFIX}/`)) {
+      const page = url.pathname.slice(DOCS_PREFIX.length).replace(/\/$/, "");
+      return Response.redirect(`${DOCS_ORIGIN}${DOCS_MOVED[page] ?? "/"}`, HTTP_MOVED);
     }
     if (url.pathname.startsWith(STATIC_PREFIX)) {
       // Only a file that exists is cached for good; a miss (a chunk from another deploy) is never cached.
