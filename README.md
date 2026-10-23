@@ -1,190 +1,160 @@
 <p align="center">
   <a href="https://mitoshi.xyz">
-    <img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade privately from anywhere. Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." />
+    <img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade Polymarket and Hyperliquid from shielded ZEC. Each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." />
   </a>
 </p>
 
 <h1 align="center">Mitoshi · 見通し</h1>
-<p align="center"><b>A new wallet for every trade.</b><br/>Trade Polymarket and Hyperliquid from shielded ZEC: each position opens from a brand-new wallet funded through NEAR Intents, so copy traders find one trade and no history.</p>
+<p align="center"><b>A new wallet for every trade.</b><br/>Trade Polymarket and Hyperliquid from shielded ZEC.</p>
 
 <p align="center">
   <a href="https://mitoshi.xyz"><b>Open Mitoshi</b></a>
   &nbsp;·&nbsp;
   <a href="https://mitoshi.xyz/demo"><b>Demo</b></a>
   &nbsp;·&nbsp;
-  <a href="https://mitoshi.xyz/docs/how-it-works"><b>How it works</b></a>
+  <a href="https://mitoshi.xyz/docs"><b>Docs</b></a>
   &nbsp;·&nbsp;
-  <a href="https://mitoshi.xyz/privacy"><b>Who sees what</b></a>
+  <a href="#who-sees-what"><b>Who sees what</b></a>
   &nbsp;·&nbsp;
-  <a href="https://mitoshi.xyz/status"><b>Service status</b></a>
+  <a href="#proof-and-evidence"><b>Proof</b></a>
   &nbsp;·&nbsp;
-  <a href="https://mitoshi.xyz/docs"><b>Documentation</b></a>
+  <a href="https://mitoshi.xyz/status"><b>Status</b></a>
 </p>
 
-**Mitoshi keeps your money in Zcash's shielded pool and opens every position from a brand-new, single-use wallet.**
-Each wallet is funded from the pool through NEAR Intents at a standard amount and at a random moment, makes one trade on
-the venue's real market, and sends the money home to a fresh shielded address when you close. Anyone watching the venue
-sees a wallet with one trade and no history, and nothing that links it to your other wallets or to you.
+Each position opens from a brand-new wallet funded through NEAR Intents, so copy traders find one trade and no
+history. Your balance never leaves Zcash's shielded pool: a real Zcash wallet runs in your browser, every funding is one
+standard amount sent at a random moment, every call about your wallets goes out encrypted through two hops, and when
+you close, the money comes home to a fresh shielded address. The market sees the trade, not who made it.
 
-Built for **[ZECATHON](https://thezecathon.com)**, the Zcash privacy hackathon (Sep 28 – Oct 28, 2026). *Mitoshi*
-(見通し) means **outlook**: the view ahead. This is a **new product written during the build window**. It shares only
-the Mitoshi name and brand with the earlier, unrelated Mitoshi prediction market on Tempo, and uses none of its code. The
-git history of this repository starts on 2026-10-22. See [what is verified](#what-is-verified) for what has run end to
-end and what is still waiting.
+Built for **[ZECATHON](https://thezecathon.com) · Private Markets** ([how Mitoshi meets the hackathon](#how-mitoshi-meets-the-hackathon)).
+*Mitoshi* (見通し) means **outlook**: the view ahead.
 
-## Problem and value
+## One trade, start to finish
 
-### Problem
+<p align="center">
+  <img src="apps/web/public/captures/event.jpg" width="250" alt="A Polymarket event in Mitoshi: Republican Presidential Nominee 2028, J.D. Vance at 44.1%, with a one-month odds chart and Yes 44¢ / No 56¢." />
+  <img src="apps/web/public/captures/terminal.jpg" width="250" alt="The Polymarket Perps terminal in Mitoshi: NVIDIA at 214.42 on one-hour candles, with Long and Short." />
+  <img src="apps/web/public/captures/order.jpg" width="250" alt="The Long NVIDIA order sheet: $25 at 5× leverage, $125.00 position, 0.58164 NVDA, fee $0.05." />
+</p>
 
-On a public venue your wallet is your track record. Win a few trades and copy-trading bots follow the address: they
-mirror each entry, crowd the exit and trade ahead of your size. A new wallet does not help for long, because it is
-found through the money that funds it. Privacy tools that exist today cover one venue each, or ask you to sign in and
-trust a pool you cannot inspect.
+1. **A private balance.** Create a wallet at [mitoshi.xyz/wallet](https://mitoshi.xyz/wallet): 24 words, made and kept in
+   your browser. Deposit shielded ZEC from Zodl to a fresh address. No account, no sign-up.
+2. **Pick a market.** Say NVIDIA on Polymarket Perps. The ticket starts with the amount: **$25 at 5×** is a **$125.00**
+   position, **0.58164 NVDA**, fee **$0.05**.
+3. **A wallet nobody has seen.** Mitoshi derives a new key for this position and pays one standard amount (0.01, 0.02,
+   0.05 … ZEC) from the shielded pool into NEAR Intents at a random moment. A confidential quote on 2026-10-23 turned
+   **0.01 ZEC into 11.86 USDC in about 465 s**.
+4. **Trade.** The order goes to the venue's real book, signed by that wallet's own key.
+5. **See what a copy trader sees.** "What the public sees" opens the wallet's public record: one funding from a NEAR
+   swap, one trade, no history, no link to your other wallets.
+6. **Come home.** Closing sells at market and swaps the proceeds back to a fresh shielded address.
 
-### Value
+### Who sees what
 
-Mitoshi gives the trader one private balance and many public venues:
-
-| You want to | Mitoshi does | Start here |
+| Party | Sees | Never sees |
 | --- | --- | --- |
-| **Bet on an outcome** | Polymarket events: probability chart, every outcome, Yes/No at the book's price, limit orders, redeem | [Predict](https://mitoshi.xyz/predict) |
-| **Trade stocks, gold or oil** | Polymarket Perps: NVIDIA, indices, gold, oil, with leverage and TP/SL | [NVDA](https://mitoshi.xyz/trade#pm/NVDA-USD) |
-| **Trade crypto perps** | Hyperliquid: live chart, long/short, leverage, TP/SL | [BTC](https://mitoshi.xyz/trade#BTC) |
-| **Buy a token** | Solana tokens through Jupiter | [Tokens](https://mitoshi.xyz/tokens) |
-| **Check what leaks** | The copy-trader's view of each wallet, and a leak meter on every send | [Privacy](https://mitoshi.xyz/privacy) |
+| **The venue** (Polymarket, Hyperliquid, Jupiter) | One fresh wallet's own trades, sent from Ireland | Your other wallets, your balance, your IP or country |
+| **A copy trader** | A wallet with one funding from a NEAR swap and one trade | Whose it is, or any other wallet of yours |
+| **NEAR Intents** | One confidential swap, with a fresh shielded refund address | Who sent it, or any other swap of yours |
+| **The Zcash chain** | That a shielded transaction happened | Amounts, addresses, or that it was you |
+| **Relay** (Cloudflare) | Your IP and which public markets you look at | What you ask about your wallets: every user call is an encrypted [Oblivious HTTP](https://www.rfc-editor.org/rfc/rfc9458) message |
+| **Gateway** (Vercel, Dublin) | One decrypted request, from the relay's address | Your IP, or which requests come from the same person |
 
-There is no account and no sign-up. The keys are made from 24 words in your browser and stay there.
+No server holds your keys, your list of wallets or your positions; they live only in your browser, encrypted. What is
+public on purpose (each wallet's own trades, one hop per funding at a standard amount, NEAR's swap record, and Polymarket's
+builder attribution on gasless wallet calls) is in the [threat model](https://mitoshi.xyz/docs/privacy).
 
-## Demo
+## Demo video
 
 <p align="center">
   <a href="https://mitoshi.xyz/demo">
-    <img src=".github/assets/demo-cover.png" width="960" alt="Play the Mitoshi demo: Trade privately from anywhere, over three phone screens from the app." />
+    <img src=".github/assets/demo-cover.png" width="960" alt="Play the Mitoshi demo: A new wallet for every trade, over three phone screens from the app." />
   </a>
 </p>
 
-The two-minute recording is being made. Until it is up, [/demo](https://mitoshi.xyz/demo) shows a still from the app
-and links straight to the live screens.
+Follow the proof on the live app:
 
-## A first trade
+1. Open a stock: [NVIDIA on Polymarket Perps](https://mitoshi.xyz/trade#pm/NVDA-USD), live candles and the order sheet.
+2. Open an event: [Predict](https://mitoshi.xyz/predict), any market's odds history and Yes/No ticket.
+3. Open DevTools → Network on any page: every request goes to mitoshi.xyz, and every user call is `POST /relay/ohttp`.
+4. Read [who sees what](https://mitoshi.xyz/privacy) and the [service status](https://mitoshi.xyz/status) of each hop.
 
-1. **Make a private balance.** Open [mitoshi.xyz/wallet](https://mitoshi.xyz/wallet), write down 24 words and check
-   three of them. The wallet engine runs in a Web Worker in your browser.
-2. **Deposit ZEC.** Send from Zodl or any shielded wallet to the address Mitoshi shows (a fresh one each time). A fully
-   shielded deposit can be used at once; value that came from a public address rests for 2–6 hours first.
-3. **Open a market.** Say NVIDIA on Polymarket Perps. The ticket starts with the amount: type $25, pick 5× leverage and
-   a take-profit in their sheets.
-4. **Fund a private wallet.** Mitoshi derives a new key for this position and pays one standard amount (0.01, 0.02,
-   0.05, 0.1… ZEC) from the shielded pool to a NEAR Intents deposit address. 1Click delivers the venue's collateral to the
-   new wallet. Its own estimate for these routes was 452–465 seconds in dry quotes on 2026-10-22.
-5. **Trade.** The order goes to the venue's real book, signed by the new wallet's key.
-6. **Look at it as a stranger would.** "What the public sees" shows the wallet's public record: one funding from a NEAR
-   swap, one position, no history, no links.
-7. **Close and come home.** Closing sells at market and swaps the proceeds back to ZEC at a fresh shielded address.
-   Leftovers smaller than the trip home are shown as dust, never merged into another wallet.
+## How it works
 
-## Venues
+<p align="center">
+  <a href="https://mitoshi.xyz/docs/architecture">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/system-map-dark.png" />
+      <img src=".github/assets/system-map-light.png" width="960" alt="System map: the Mitoshi app, its Zcash wallet and per-position keys in the browser send every user call over Oblivious HTTP to a Cloudflare relay that sees the IP, then to a Vercel gateway in Dublin that sees the request, then to allowlisted upstreams: the Zcash light server, NEAR Intents 1Click, and Polymarket, Hyperliquid and Jupiter. Public prices come through the relay." />
+    </picture>
+  </a>
+</p>
+<p align="center"><a href="https://mitoshi.xyz/docs/architecture">Open the detailed map</a> · <a href=".github/diagrams/readme-system.mmd">Edit the Mermaid source</a></p>
 
-| Venue | What you trade | How a fresh wallet is set up | Collateral |
-| --- | --- | --- | --- |
-| **Polymarket** | Prediction markets | A Deposit Wallet per position, created gasless through Polymarket's relayer | USDC on Polygon, bridged to pUSD |
-| **Polymarket Perps** | US stocks, indices, gold, oil | A fresh key opens a perps account and signs orders through a 7-day proxy key; the first deposit (10 pUSD minimum) registers it | pUSD from that wallet's Deposit Wallet |
-| **Hyperliquid** | Crypto perps | A fresh key; USDC arrives on HyperCore and moves spot to perp (a new account pays Hyperliquid's 1 USDC activation fee) | USDC |
-| **Solana** | Tokens, through Jupiter | A fresh ed25519 key | SOL, which also pays gas |
+<p align="center">
+  <a href="https://mitoshi.xyz/docs/how-it-works">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/funding-flow-dark.png" />
+      <img src=".github/assets/funding-flow-light.png" width="960" alt="Funding round trip: at a random moment, your shielded ZEC sends one standard amount with a fresh shielded refund address to NEAR Intents, which pays USDC, pUSD or SOL to a fresh wallet in a confidential swap; the wallet opens one position on the venue, closes it, sends the proceeds back through NEAR Intents to a fresh shielded address. A copy trader finds one funding, one trade, no history." />
+    </picture>
+  </a>
+</p>
+<p align="center"><a href="https://mitoshi.xyz/docs/how-it-works">Open the step-by-step guide</a> · <a href=".github/diagrams/readme-funding.mmd">Edit the Mermaid source</a></p>
 
-Orders carry **no builder tag**: Polymarket publishes the builder field when it is set. Prices, books and candles come
-from each venue's public feeds through Mitoshi's relay, so your IP never reaches the venue.
+- **One wallet per position.** Keys come from your 24 words on a hardened path of their own, so no two wallets share a
+  key, a proxy, a refund address or a request.
+- **Standard amounts at random times.** Fundings use the canonical denominations of ZIP 318 (n × 10^k ZEC, n ∈ {1, 2, 5}),
+  start 20 s to 3 min after you ask, and never at a deposit or when the app opens. A keep-ready replacement waits a random
+  delay (90 min on average, at most 12 h), so a new wallet never appears right after your trade. ZEC that arrived from a
+  public address rests 2–6 hours first.
+- **Two hops, nothing third-party.** Every page and every worker may reach mitoshi.xyz only (CSP with per-page script
+  hashes), and pages are sent `no-transform`, so no proxy can add a script. Pictures of what you hold come over OHTTP too.
+- **A leak meter on every send** flags a withdrawal that matches a recent payout in amount or timing.
 
-## Who sees what
-
-| Party | Sees | Does not see |
+| Built on | What it does | Where |
 | --- | --- | --- |
-| **Cloudflare relay** (`mitoshi-web`) | Your IP address, the size of each request, and which public markets you look at (prices and books are public data) | What you asked about your wallets: every user call, and every picture of something you hold, is an encrypted [Oblivious HTTP](https://www.rfc-editor.org/rfc/rfc9458) message |
-| **Gateway** (Vercel, Dublin) | The decrypted request, from a Cloudflare address | Your IP, or which requests come from the same person |
-| **Each venue** | That wallet's own orders and positions, from Ireland | Your other wallets, your balance, your IP |
-| **NEAR Intents** | One swap: a shielded deposit to a new wallet, with a fresh refund address | Who sent it, or any other swap of yours |
-| **Zcash chain** | That a shielded transaction happened | Amounts, addresses, or that it was you |
-| **Mitoshi's servers** | Only what the relay and gateway rows say; there is no database and no account | Your keys, your list of wallets, your positions: they live only in your browser, encrypted |
+| **Zcash** · librustzcash | `zcash_client_sqlite` 0.23 and `zcash_client_backend` 0.25 (`zcash_protocol` 0.11, NU7-ready), compiled to `wasm32-wasip1`: sync, Ironwood and Orchard notes, proofs and sends in a Web Worker, encrypted into IndexedDB | [packages/zwallet](packages/zwallet) |
+| **Zcash** · ZIPs 32, 315, 317, 318 | Keys from the 24 words; rest periods; fees; canonical amounts and timing | [packages/engine](packages/engine) |
+| **NEAR Intents** · 1Click | Every rail in and out of the shielded pool, in confidential mode, with signed quotes checked before any deposit | [packages/rails](packages/rails) |
+| **Oblivious HTTP** (RFC 9458) | The client, the relay and the gateway with its upstream allowlist | [packages/net](packages/net) · [services/web](services/web) · [services/gateway](services/gateway) |
+| **Venues** | Polymarket (Deposit Wallets, CLOB), Polymarket Perps, Hyperliquid, Solana through Jupiter | [packages/venues](packages/venues) |
 
-Visible on purpose, and shown in the app: each wallet's own trades; one public hop per funding or return, at a standard
-amount; NEAR's record of the swap; and Polymarket's builder attribution on each wallet's gasless relayer calls (creation,
-approvals, redeeming, moving pUSD into Perps, the trip home), which tells Polymarket these come from Mitoshi users, not
-which one. The full threat model
-is at [/docs/privacy](https://mitoshi.xyz/docs/privacy).
+## How Mitoshi meets the hackathon
 
-## Architecture
+ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."*
 
-```
-Browser (static Next.js export on mitoshi.xyz)
- ├─ App: React 19, TanStack Query, Tailwind v4, a canvas chart engine
- ├─ Wallet worker: zcash_client_sqlite on wasm32-wasip1 (sync, balance, fresh addresses, proofs, sends)
- ├─ Engine: denominations, rest rules, random scheduler, wallet registry, leak meter
- └─ Venue adapters: Polymarket · Polymarket Perps · Hyperliquid · Solana (Jupiter) · 1Click rails
+| Requirement or criterion (verbatim) | How Mitoshi meets it | Check it |
+| --- | --- | --- |
+| **Privacy:** "Does it actually preserve privacy, or does it only look like it does? Leaks are disqualifying, not deductions." | Shielded balance in the browser, one fresh wallet per position, standard amounts at random times, confidential NEAR swaps, every call over Oblivious HTTP, no server-side state. Residuals are written down, not hidden | [Who sees what](#who-sees-what) · [threat model](https://mitoshi.xyz/docs/privacy) · [gateway allowlist](services/gateway/src/constants.ts) |
+| **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [mitoshi.xyz](https://mitoshi.xyz) |
+| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 32 unit tests | [Proof and evidence](#proof-and-evidence) |
+| **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
+| **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
+| "All code written during the build window. Libraries are fine; existing products are not." | The repository's history starts on 2026-10-22; libraries are listed above and in the lockfile | [Prior work](#prior-work) |
+| "Open source at submission." | MIT, public | [LICENSE](LICENSE) |
 
-every user call:  browser ──OHTTP──▶ mitoshi-web /relay/ohttp   (Cloudflare Worker, placed in eu-west-1)
-                                   ──▶ mitoshi-gateway          (Vercel Function, dub1)  ──▶ allowlisted upstreams
-public data:      browser ──▶ mitoshi-web /relay/live/* and /relay/img   (one shared feed per market; pictures proxied)
-```
+## Proof and evidence
 
-- **Two hops.** The relay learns who, the gateway learns what. The relay's Worker logs are off; the gateway writes no
-  logs of its own, and Vercel's request log sees only the relay's Cloudflare address and the gateway's path.
-- **The gateway runs on Vercel, not Cloudflare.** Tests on 2026-10-22 showed that a Cloudflare Worker passes the
-  visitor's country to Cloudflare-hosted sites, Polymarket among them. From Vercel's Dublin region every request
-  leaves from Ireland, the region Polymarket's docs name as the closest one without restrictions.
-- **The gateway calls only an allowlist** of hosts and paths ([services/gateway/src/constants.ts](services/gateway/src/constants.ts)).
-  It holds the Polymarket Builder secret and signs only Deposit Wallet relayer requests.
-- **Pages arrive as built.** Every page has a CSP with per-page script hashes, cross-origin isolation, and
-  `Cache-Control: no-transform`, so Cloudflare cannot inject analytics or rewrite a page. The 404 page carries its own
-  policy in a meta tag.
-
-## Built on Zcash
-
-- **A real Zcash wallet in the browser.** Zcash's own `zcash_client_sqlite` 0.23 and `zcash_client_backend` 0.25
-  (with `zcash_protocol` 0.11, which carries the mainnet NU7 height 3,543,405), compiled to `wasm32-wasip1` and run in a
-  Web Worker through a WASI shim. It scans and spends Ironwood (NU6.3) and Orchard notes; Sapling is never spent.
-  The wallet database is encrypted (AES-GCM) into IndexedDB.
-- **ZIP 32** keys from the 24 words. Venue keys use a hardened path of our own (BIP32 for EVM, SLIP-0010 for Solana).
-- **ZIP 318** (draft, "Orchard to Ironwood Migration") supplies the canonical denominations (n × 10^k ZEC, n ∈ {1, 2, 5})
-  and the timing rules: random delays, and never syncing and broadcasting in the same window.
-- **ZIP 315** wallet practice for rest periods, and **ZIP 317** fees.
-- **Light client over OHTTP.** Even a block range reveals a wallet's birthday, so every lightwalletd call is an OHTTP
-  message. Compact blocks currently come from ChainSafe's public gRPC-web servers, which only ever see the gateway.
-- **NEAR Intents 1Click** for every rail in and out of the pool, with a fresh shielded refund address per swap.
-
-## What is verified
-
-Dated, and checked again on 2026-10-23.
+Dated; re-checked on 2026-10-23.
 
 | What | Evidence |
 | --- | --- |
-| Browser wallet builds, proves and broadcasts an Ironwood spend (NU7 testnet) | `ceb45a85df00f55d8a7b6c4318c65aa22c33c702a4bff476c2feef0dee7d4e5d`, mined at height 4,529,708 (9,166 bytes). Proving key warm-up 11.8 s, proof about 17.5 s single-threaded |
+| The browser wallet builds, proves and broadcasts an Ironwood spend | NU7 testnet `ceb45a85df00f55d8a7b6c4318c65aa22c33c702a4bff476c2feef0dee7d4e5d`, height 4,529,708, 9,166 bytes; proving-key warm-up 11.8 s, proof about 17.5 s single-threaded |
 | Sends from the app, direct and over OHTTP | `c1569f9f34a75c6896b272f7804ed501285acbfb472ce1dcf53fc869fa6938e2` (height 4,529,789) and `8a14a08bc1af88c6b8f644fdc22d11731e431a8b2257fccac4a3768430981b86` (height 4,529,846) |
-| No third-party request from the page | On mitoshi.xyz the resource list holds one host, mitoshi.xyz; every user call is `POST /relay/ohttp` |
-| Live public data on every venue | Polymarket events and odds, Polymarket Perps and Hyperliquid prices and candles, Jupiter tokens, all through the relay |
-| Gateway egress | Ireland (Vercel dub1, AWS eu-west-1) for every visitor |
-| Polymarket over OHTTP | SDK market lookup, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and, with the Builder keys set (2026-10-23), the gateway's builder signer returning signed relayer headers |
-| Confidential swaps on NEAR | With the partner key on the gateway (2026-10-23), a dry 1Click quote over OHTTP is accepted in confidential mode (0.01 ZEC → 11.86 USDC on HyperCore, about 465 s) |
-| Unit tests | 28 passing: engine 14 (denominations, rest rules, scheduler, registry, leak meter), rails 7 (1Click quotes and signature check), venues 7 (Polymarket Perps signing) |
+| No third-party request from a page | On mitoshi.xyz the resource list holds one host, mitoshi.xyz |
+| Confidential swaps on NEAR | A dry 1Click quote over OHTTP accepted in confidential mode: 0.01 ZEC → 11.86 USDC on HyperCore, about 465 s |
+| Polymarket over OHTTP | Market lookup, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and the gateway's builder signer returning signed relayer headers |
+| Gateway egress | Ireland (Vercel dub1) for every visitor, so no venue learns a user's country |
+| Unit tests | 32 passing: engine 18 (denominations, rest rules, scheduling, registry, keys, leak meter), rails 7 (1Click quotes and signature check), venues 7 (Polymarket Perps signing) |
 
-The three testnet transactions were read back with `GetTransaction` from `zcash-testnet.chainsafe.dev`, the light
-server the wallet syncs from. Public testnet explorers such as testnet.zcashexplorer.app follow an older testnet chain
-(its tip was block 4,489,821 on 2026-10-23), so they do not show them.
+The testnet transactions were read back with `GetTransaction` from the light server the wallet syncs from; public
+testnet explorers follow an older testnet chain and do not show them.
 
-**Not yet run on mainnet:** the full round trip on each venue (fund a fresh wallet, trade, close, come home). It waits
-for mainnet ZEC in the test wallet and Polymarket Builder keys on the gateway. Until it has run, no live trade is
-claimed here.
-
-## Limits
-
-- **The venues see trades.** Each wallet's orders are public on its venue; Mitoshi hides who placed them, not what was traded.
-- **Funding takes minutes.** A fresh wallet is ready after one swap (1Click estimates about 7.5 minutes). One ready
-  wallet per venue can be kept warm while the app is open.
-- **Timing.** Funding runs at sampled random moments and portfolio reads are jittered, but a watcher with the full
-  public record can still try timing analysis. The rest rules and standard amounts are what make that hard.
-- **Two hops you have to trust not to collude.** One operator runs the relay and the gateway and also serves the app,
-  so keeping them apart is a promise you can check in this repository, not something the code can enforce.
-- **Light servers.** Compact blocks come from public servers until Mitoshi runs its own.
-- **Web only.** There is no app-store build.
+**Also in the app:** a [portfolio](https://mitoshi.xyz/portfolio) across every wallet and venue, private
+[wallets](https://mitoshi.xyz/wallets) with their timeline and "keep one ready", the copy-trader's view of each wallet,
+backup and recovery from the 24 words, and a [status](https://mitoshi.xyz/status) page for every hop. Guides:
+[how it works](https://mitoshi.xyz/docs/how-it-works) · [venues](https://mitoshi.xyz/docs/venues) ·
+[fees and timing](https://mitoshi.xyz/docs/fees) · [recovery](https://mitoshi.xyz/docs/recovery).
 
 ## Run it locally
 
@@ -198,50 +168,54 @@ pnpm install
 pnpm --filter @mitoshi/web dev
 ```
 
-That serves http://localhost:3300 on Zcash testnet, using the deployed relay at mitoshi.xyz/relay. For mainnet on
-port 3301:
-
-```bash
-pnpm --filter @mitoshi/web dev:main
-```
-
-Checks:
-
-```bash
-pnpm lint && pnpm typecheck && pnpm test
-```
-
-Rebuild the wallet WASM (Rust, LLVM clang and the wasi-libc sysroot): `pnpm --filter @mitoshi/zwallet build:wasm`.
-Deploys: `pnpm --filter @mitoshi/web-worker deploy` (web app and relay, Cloudflare) and
-`pnpm --filter @mitoshi/gateway deploy` (gateway, Vercel). The owner sets secrets on the gateway; none live in the repo.
-
-## Find the code and guides
+That serves http://localhost:3300 on Zcash testnet through the deployed relay; `dev:main` serves mainnet on port 3301.
+Checks: `pnpm lint && pnpm typecheck && pnpm test`. Rebuild the wallet WASM with
+`pnpm --filter @mitoshi/zwallet build:wasm` (Rust, LLVM clang and the wasi-libc sysroot). Deploy with
+`pnpm --filter @mitoshi/web-worker deploy` (app and relay) and `pnpm --filter @mitoshi/gateway deploy` (gateway); its
+secrets are set on the host, never in the repository.
 
 | Area | Where |
 | --- | --- |
-| Web app: screens, flows, states | [apps/web/src/features](apps/web/src/features) |
-| Wallet engine (Rust → WASM) and its worker client | [packages/zwallet](packages/zwallet) |
-| Denominations, rest rules, scheduler, registry, leak meter | [packages/engine](packages/engine) |
-| 1Click quotes, deposits, status, signature check | [packages/rails](packages/rails) |
-| Venue adapters | [packages/venues](packages/venues) (`polymarket`, `pmperps`, `hyperliquid`, `solana`) |
-| OHTTP client and the pinned key config | [packages/net](packages/net) |
+| Screens, flows and states | [apps/web/src/features](apps/web/src/features) |
+| Zcash wallet (Rust → WASM) and its worker | [packages/zwallet](packages/zwallet) |
+| Amounts, timing, registry, leak meter | [packages/engine](packages/engine) |
+| NEAR Intents 1Click | [packages/rails](packages/rails) |
+| Venue adapters | [packages/venues](packages/venues) |
+| OHTTP client and pinned key | [packages/net](packages/net) |
 | Chart engine | [packages/chart](packages/chart) |
-| Relay, live feeds, image proxy, web hosting | [services/web](services/web) |
-| OHTTP gateway, upstream allowlist, builder signer | [services/gateway](services/gateway) |
-| Guides | [How it works](https://mitoshi.xyz/docs/how-it-works) · [Privacy](https://mitoshi.xyz/docs/privacy) · [Venues](https://mitoshi.xyz/docs/venues) · [Fees](https://mitoshi.xyz/docs/fees) · [Architecture](https://mitoshi.xyz/docs/architecture) · [Recovery](https://mitoshi.xyz/docs/recovery) |
+| Relay, live feeds, hosting | [services/web](services/web) |
+| Gateway and upstream allowlist | [services/gateway](services/gateway) |
+| README diagrams | [.github/diagrams](.github/diagrams) |
 
-## Provenance and credits
+## Credits
 
-- **Original work.** Written for ZECATHON from 2026-10-22. No code is copied from the earlier Mitoshi or from the
-  author's other products.
-- **README art.** The banner and demo cover are composed in HTML ([.github/assets/source](.github/assets/source)) from
-  unchanged captures of the live app on 2026-10-23, and rendered with headless Chrome. The cover is artwork with a play
-  button, not a recording, and shows no transaction. Details are in [provenance.json](.github/assets/provenance.json).
-- **Marks.** Coin and network marks come from [`@web3icons/core`](https://github.com/0xa3k5/web3icons) (MIT); the
-  Polymarket and Jupiter marks are vendored as described in [SOURCES.md](apps/web/scripts/venues/SOURCES.md). Every mark
-  belongs to its owner and is used only to name the venue.
-- **Fonts.** Sora, Inter and JetBrains Mono (SIL OFL), self-hosted at build time; a Noto Serif JP subset for 見通し
-  (SIL OFL 1.1, [licence](apps/web/src/fonts/noto-serif-jp/OFL.txt)).
+- **Marks.** Coin and network marks from [`@web3icons/core`](https://github.com/0xa3k5/web3icons) (MIT); the Polymarket
+  and Jupiter marks are vendored as described in [SOURCES.md](apps/web/scripts/venues/SOURCES.md). Every mark belongs to
+  its owner and is used only to name the venue.
+- **Fonts.** Sora, Inter and JetBrains Mono (SIL OFL), self-hosted; a Noto Serif JP subset for 見通し (SIL OFL 1.1,
+  [licence](apps/web/src/fonts/noto-serif-jp/OFL.txt)).
+- **Images.** The banner and demo cover are composed in HTML ([.github/assets/source](.github/assets/source)) from
+  unchanged captures of the live app, and the cover is artwork with a play button, not a recording; see
+  [provenance.json](.github/assets/provenance.json).
+
+## Prior work
+
+Mitoshi was written for ZECATHON; this repository's history starts on 2026-10-22. It shares only its name and brand
+with an earlier, unrelated project, and uses none of its code.
+
+## Honest limits
+
+- **The full mainnet round trip has not run yet** (fund a fresh wallet, trade, close, come home). The parts are live and
+  verified one by one above; the end-to-end run waits for test funds.
+- **The venue sees the trade.** Each wallet's orders are public on its venue; Mitoshi hides who placed them, not what was
+  traded.
+- **Funding takes minutes:** about 7.5 by 1Click's estimate, unless a wallet is kept ready.
+- **Timing analysis.** Random start times, standard amounts and rest periods make it hard, not impossible, for someone
+  holding the whole public record.
+- **One operator runs both hops and serves the app**, so keeping relay and gateway apart is a promise you can check in
+  this repository, not something the code enforces.
+- **Public light servers** serve the compact blocks; they only ever see the gateway.
+- **Web only.**
 
 ## License
 

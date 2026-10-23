@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant Y as Your shielded ZEC
+  participant N as NEAR Intents
+  participant F as Fresh wallet
+  participant V as Venue
+  Note over Y: A random moment,<br/>never at a deposit or app open
+  Y->>N: One standard amount (0.01 … 1 ZEC),<br/>fresh shielded refund address
+  N->>F: USDC, pUSD or SOL (confidential swap)
+  F->>V: One position, signed by its own key
+  V->>F: Close
+  F->>N: Proceeds
+  N->>Y: Back to a fresh shielded address
+  Note over F,V: A copy trader finds one funding,<br/>one trade, no history

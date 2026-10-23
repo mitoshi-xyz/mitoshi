@@ -1,0 +1,23 @@
+flowchart LR
+  subgraph B["Your browser"]
+    direction TB
+    UI["Mitoshi app"]
+    W["Zcash wallet<br/>(librustzcash, WASM)"]
+    K["Fresh wallet keys<br/>one per position"]
+  end
+  R["Relay · Cloudflare<br/>sees your IP, not the request"]
+  G["Gateway · Vercel, Dublin<br/>sees the request, not your IP"]
+  subgraph U["Allowlisted upstreams"]
+    direction TB
+    L["Zcash light server"]
+    N["NEAR Intents 1Click"]
+    V["Polymarket and its Perps<br/>Hyperliquid · Jupiter"]
+  end
+  UI --- W
+  UI --- K
+  B -->|"every user call:<br/>Oblivious HTTP"| R
+  R -->|"encrypted, no headers"| G
+  G --> L
+  G --> N
+  G --> V
+  R -.->|"public prices and books"| V
