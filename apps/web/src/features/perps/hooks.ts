@@ -8,7 +8,15 @@ import type { PerpDriver, PerpMarket, PerpStats, PerpVenue } from "./model";
 import { pmDriver } from "./pm-driver";
 
 const MARKETS_STALE_MS = 30_000;
-const ACCOUNT_REFRESH_MS = 5_000;
+/**
+ * Each wallet's account is read on its own random rhythm (4–8 s) after a random first delay, never on a shared clock:
+ * a venue that saw the gateway ask about several addresses at the same instant, again and again, could tie them.
+ */
+const ACCOUNT_REFRESH_MIN_MS = 4_000;
+const ACCOUNT_REFRESH_SPREAD_MS = 4_000;
+const FIRST_READ_MAX_MS = 1_500;
+const jitter = (spread: number) => (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % spread;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const MARKS_FLUSH_MS = 1_000;
 const SPARK_STALE_MS = 300_000;
 const SPARK_POINTS = 24;
@@ -68,12 +76,13 @@ export function useLiveStats(m: PerpMarket | undefined): PerpStats | null {
 export function usePerpAccount(venue: PerpVenue, w: PrivateWallet | undefined) {
   return useQuery({
     queryKey: ["perps", venue, "account", w?.id],
-    queryFn: () => {
+    queryFn: async () => {
       if (!w) throw new Error("no wallet");
+      await sleep(jitter(FIRST_READ_MAX_MS));
       return DRIVERS[venue].account(w);
     },
     enabled: Boolean(w),
-    refetchInterval: ACCOUNT_REFRESH_MS,
+    refetchInterval: () => ACCOUNT_REFRESH_MIN_MS + jitter(ACCOUNT_REFRESH_SPREAD_MS),
   });
 }
 
