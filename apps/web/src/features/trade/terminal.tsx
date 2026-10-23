@@ -45,8 +45,13 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
   );
 }
 
-/** Which wallet trades here: one already holding this market, else a fresh ready one, else the one trading. */
-function useTradingWallet(venue: PerpVenue, marketId: string) {
+/**
+ * Which wallet trades here: the trading one if it has traded this market (it may hold the position), else a fresh ready
+ * one, else the trading one. Decided from the registry's own trade records, never by reading accounts: polling a second
+ * wallet just to decide would show the venue two addresses asked about together. Nothing is chosen (so nothing is
+ * read) until the market is known.
+ */
+function useTradingWallet(venue: PerpVenue, marketName: string | undefined) {
   const driver = DRIVERS[venue];
   const registry = useRegistry();
   const mine = registry.wallets.filter(
@@ -54,11 +59,10 @@ function useTradingWallet(venue: PerpVenue, marketId: string) {
   );
   const live = mine.filter((w) => LIVE.has(w.status) && (venue === "hyperliquid" || w.perps !== undefined));
   const trading = live.find((w) => w.status === "trading");
-  const tradingAccount = usePerpAccount(venue, trading);
-  const holds = tradingAccount.data?.positions.some((p) => p.marketId === marketId) ?? false;
+  const traded = (trading?.trades ?? []).some((t) => t.asset === marketName);
   const fresh = readyWallet(registry, driver.wallet);
   const freshUnused = fresh && (fresh.trades ?? []).length === 0 ? fresh : undefined;
-  const wallet: PrivateWallet | undefined = holds ? trading : (freshUnused ?? trading);
+  const wallet: PrivateWallet | undefined = !marketName ? undefined : traded ? trading : (freshUnused ?? trading);
   const pending = registry.wallets.find(
     (w) => w.venue === driver.wallet && (w.status === "preparing" || w.status === "funding"),
   );
@@ -73,7 +77,7 @@ export function Terminal() {
   const market = markets.data?.find((m) => m.id === at.id);
   const marks = useLiveMarks(at.venue, [at.id]);
   const stats = useLiveStats(market);
-  const { wallet, pending, live } = useTradingWallet(at.venue, at.id);
+  const { wallet, pending, live } = useTradingWallet(at.venue, market?.name);
   const account = usePerpAccount(at.venue, wallet);
   const [order, setOrder] = useOrder(market);
   const phone = usePhone();

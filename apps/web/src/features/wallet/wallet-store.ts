@@ -1,6 +1,6 @@
 "use client";
 
-import { BLOCK_SECONDS, planRest, restEndsAt, restKey } from "@mitoshi/engine";
+import { BLOCK_SECONDS, between, planRest, restEndsAt, restKey } from "@mitoshi/engine";
 import {
   type EngineLoad,
   type HistoryEntry,
@@ -14,7 +14,14 @@ import {
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { useSyncExternalStore } from "react";
-import { IRONWOOD_ACTIVATION, RELAY, WALLET_SYNC_INTERVAL_MS, ZEC_NETWORK } from "@/constants";
+import {
+  IRONWOOD_ACTIVATION,
+  RELAY,
+  SEND_QUIET_MAX_MS,
+  SEND_QUIET_MIN_MS,
+  WALLET_SYNC_INTERVAL_MS,
+  ZEC_NETWORK,
+} from "@/constants";
 import { toast } from "@/kit";
 import { currentRegistry } from "../private-wallets/registry-store";
 import { vaultGet, vaultLockState, vaultPut } from "../vault/vault";
@@ -175,8 +182,11 @@ function fail(e: unknown) {
   set({ phase: "error", error: e instanceof Error ? e.message : String(e) });
 }
 
+/** No sync before this moment: it follows a broadcast (SEND_QUIET_MIN_MS). */
+let quietUntil = 0;
+
 async function sync() {
-  if (!client) return;
+  if (!client || Date.now() < quietUntil) return;
   set({ phase: state.summary ? "ready" : "syncing" });
   try {
     const c = client;
@@ -311,11 +321,14 @@ export async function previewSend(to: string, zat: number) {
   return client.propose(to, zat);
 }
 
-/** Proves, signs and broadcasts a payment, then refreshes the balance. */
+/**
+ * Proves, signs and broadcasts a payment. The engine marks the spend at once, so the balance is right without a sync,
+ * and the next sync waits a random 1–10 min instead of following the broadcast.
+ */
 export async function send(to: string, zat: number): Promise<{ txid: string; fee: number }> {
   if (!client) throw new Error("wallet is not open");
   const result = await client.send(to, zat, await seedHex());
-  void sync();
+  quietUntil = Date.now() + between(SEND_QUIET_MIN_MS, SEND_QUIET_MAX_MS);
   return result;
 }
 

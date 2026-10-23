@@ -17,6 +17,13 @@ export const ZEC_NETWORK: "main" | "test" =
 /** How often an open wallet checks for new blocks. */
 export const WALLET_SYNC_INTERVAL_MS = 30_000;
 
+/**
+ * After a broadcast the wallet does not sync for a random 1–10 min, so a broadcast and a sync never share a window
+ * (ZIP 318): the gateway sees no send followed at once by the same wallet's block reads.
+ */
+export const SEND_QUIET_MIN_MS = 60_000;
+export const SEND_QUIET_MAX_MS = 600_000;
+
 /** Ironwood (NU6.3) activation: restored wallets scan from here, since every newer shielded note lives in Ironwood. */
 export const IRONWOOD_ACTIVATION = { main: 3_428_143, test: 4_134_000 } as const;
 

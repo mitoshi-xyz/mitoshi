@@ -12,8 +12,12 @@ import { pmDriver } from "../perps/pm-driver";
 import { pmMarket } from "../polymarket/pm";
 import { solAccount, solMarket } from "../solana/sol";
 
-/** Wallets with money on a venue right now. */
-const ON_VENUE = new Set<PrivateWallet["status"]>(["ready", "trading", "returning", "failed"]);
+/**
+ * Wallets read from their venue: the ones that have traded. A ready wallet has done nothing since its funding, so its
+ * money is what the funding delivered (arrivedUsd); reading it beside the others on every visit would show the venue
+ * that it belongs with them before it has made a single trade.
+ */
+const READ = new Set<PrivateWallet["status"]>(["trading", "returning", "failed"]);
 const LAMPORTS_PER_SOL = 1_000_000_000;
 /**
  * Each wallet is read on its own random schedule (20–60 s) after its own random first delay (up to 20 s when there is
@@ -72,6 +76,16 @@ export interface WalletBook {
 
 const quoteOf = (s: SwapRecord) => (s.signedQuote as QuoteResponse | undefined)?.quote;
 const settled = (s: SwapRecord) => s.status === "SUCCESS";
+
+/** What a ready wallet holds: exactly what its funding delivered (on Solana, that SOL at today's price). */
+function arrivedUsd(w: PrivateWallet, mids: Record<string, number>): number {
+  const fund = latestSwap(w, "fund");
+  const q = fund && settled(fund) ? quoteOf(fund) : undefined;
+  if (!q) return 0;
+  const sol = mids.SOL;
+  if (w.venue === "solana" && sol) return (Number(q.amountOut) / LAMPORTS_PER_SOL) * sol;
+  return Number(q.amountOutUsd);
+}
 
 function swapsBook(w: PrivateWallet) {
   const fund = latestSwap(w, "fund");
@@ -134,11 +148,11 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
   const results = useQueries({
     queries: wallets.map((w) => ({
       queryKey: ["portfolio", w.id],
-      enabled: ON_VENUE.has(w.status),
+      enabled: READ.has(w.status),
       refetchInterval: () => POLL_MIN_MS + jitter(POLL_SPREAD_MS),
       queryFn: async () => {
         // One wallet links to nothing: read it at once. Several: each waits its own random moment.
-        if (wallets.filter((x) => ON_VENUE.has(x.status)).length > 1) await sleep(jitter(FIRST_DELAY_MAX_MS));
+        if (wallets.filter((x) => READ.has(x.status)).length > 1) await sleep(jitter(FIRST_DELAY_MAX_MS));
         return readVenue(w);
       },
     })),
@@ -149,7 +163,7 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
     const base = swapsBook(w);
     const book: WalletBook = {
       w,
-      loading: ON_VENUE.has(w.status) && Boolean(r?.isPending),
+      loading: READ.has(w.status) && Boolean(r?.isPending),
       error: r?.error ? r.error.message : null,
       valueUsd: 0,
       cashUsd: 0,
@@ -157,6 +171,11 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
       positions: [],
       ...base,
     };
+    if (w.status === "ready") {
+      book.cashUsd = arrivedUsd(w, mids);
+      book.valueUsd = book.cashUsd;
+      return book;
+    }
     const d = r?.data;
     if (!d) return book;
     if (d.venue === "polymarket") {
