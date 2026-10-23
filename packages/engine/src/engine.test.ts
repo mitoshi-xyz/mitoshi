@@ -5,7 +5,7 @@ import { LADDER_ZAT, REST_MAX_MS, REST_MIN_MS, UNKNOWN_ORIGIN_HOLD_BLOCKS } from
 import { decompose, fundableSizes, isCanonical } from "./denominations.ts";
 import { evmAddress, evmKey, slip10, solanaKey, throwawayAddress, walletAddress, walletPath } from "./keys.ts";
 import { checkFunding, checkWithdrawal } from "./leak.ts";
-import { advance, emptyRegistry, type PrivateWallet } from "./registry.ts";
+import { advance, emptyRegistry, type PrivateWallet, positionWallet } from "./registry.ts";
 import { planRest, restBlocks, restKey } from "./rest.ts";
 import { fundingTime, refillTime, retimed } from "./schedule.ts";
 
@@ -135,6 +135,47 @@ describe("registry", () => {
   });
   it("starts empty", () => {
     assert.deepEqual(emptyRegistry().nextIndex, { polymarket: 0, hyperliquid: 0, solana: 0 });
+  });
+});
+
+describe("one wallet per position", () => {
+  const trade = (asset: string) => ({
+    at: 1,
+    label: asset,
+    asset,
+    side: "buy" as const,
+    inAmount: "1",
+    outAmount: "1",
+    usd: 1,
+  });
+  const wallet = (id: string, status: PrivateWallet["status"], assets: string[] = []): PrivateWallet => ({
+    id,
+    venue: "hyperliquid",
+    index: 0,
+    address: id,
+    sizeZat: 0.01 * ZEC,
+    status,
+    createdAt: 0,
+    timeline: [],
+    swaps: [],
+    trades: assets.map(trade),
+  });
+  const registry = (...wallets: PrivateWallet[]) => ({ ...emptyRegistry(), wallets });
+  it("keeps a market on the wallet that already trades it", () => {
+    const r = registry(wallet("a", "trading", ["BTC"]), wallet("b", "ready"));
+    assert.deepEqual(positionWallet(r, "hyperliquid", "BTC"), { wallet: r.wallets[0], holds: true });
+  });
+  it("opens another market from a ready wallet, never from another position's", () => {
+    const r = registry(wallet("a", "trading", ["BTC"]), wallet("b", "ready"));
+    assert.equal(positionWallet(r, "hyperliquid", "ETH").wallet?.id, "b");
+  });
+  it("asks for a new wallet when none is ready", () => {
+    const r = registry(wallet("a", "trading", ["BTC"]));
+    assert.deepEqual(positionWallet(r, "hyperliquid", "ETH"), { wallet: undefined, holds: false });
+  });
+  it("skips wallets the venue cannot use", () => {
+    const r = registry(wallet("b", "ready"));
+    assert.equal(positionWallet(r, "hyperliquid", "ETH", (w) => w.id !== "b").wallet, undefined);
   });
 });
 

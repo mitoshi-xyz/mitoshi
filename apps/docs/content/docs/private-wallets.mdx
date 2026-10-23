@@ -20,11 +20,10 @@ address, a key or a swap.
 
 ## Which wallet an order uses
 
-| Venue | The wallet |
-| --- | --- |
-| Polymarket | One market per wallet: the wallet that holds it, otherwise a ready, never-used one |
-| Hyperliquid, Polymarket Perps | The wallet that already traded this market, otherwise a ready, unused one; with none ready, the wallet already trading |
-| Solana | The wallet already trading (it can hold several tokens until you send it home), otherwise a ready one |
+One wallet per position, on every venue: an order goes to the wallet that already trades that market or token (so you
+can add to it or close it), otherwise to a ready wallet that has never traded, otherwise to none, and the ticket offers
+to fund a new one. Another position's wallet is never used: two positions on one address would show a copy trader both
+(`positionWallet` in `packages/engine/src/registry.ts`).
 
 With **Keep one ready** on (below), a new position finds a fresh wallet waiting.
 

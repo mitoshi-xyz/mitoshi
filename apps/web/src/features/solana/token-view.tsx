@@ -1,6 +1,6 @@
 "use client";
 
-import { readyWallet } from "@mitoshi/engine";
+import { positionWallet } from "@mitoshi/engine";
 import { LAMPORTS_PER_SOL } from "@mitoshi/venues/solana";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowDownRight, ArrowUpRight, BadgeCheck } from "lucide-react";
@@ -50,8 +50,8 @@ export function TokenView() {
   const queries = useQueryClient();
   const [hidden] = useHideAmounts();
   const sol = registry.wallets.filter((w) => w.venue === "solana");
-  const trading = sol.find((w) => w.status === "trading");
-  const wallet = trading ?? readyWallet(registry, "solana");
+  // One wallet per position: the wallet that bought this token, else a ready one that has never traded.
+  const { wallet } = positionWallet(registry, "solana", mint);
   const holdings = useHoldings(wallet);
   const pending = sol.find((w) => w.status === "preparing" || w.status === "funding");
   const [home, setHome] = useState<{ busy: boolean; text: string | null }>({ busy: false, text: null });

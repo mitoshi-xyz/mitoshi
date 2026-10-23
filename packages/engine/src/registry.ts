@@ -165,6 +165,27 @@ export function readyWallet(r: Registry, venue: Venue): PrivateWallet | undefine
   return r.wallets.find((w) => w.venue === venue && w.status === "ready" && !w.swaps.some((s) => s.kind === "return"));
 }
 
+/**
+ * The wallet an order on `asset` uses, one wallet per position: the wallet already trading it (it may hold the
+ * position), else a ready wallet that has never traded, else none, and a new one has to be funded. Another position's
+ * wallet is never used: two positions on one address would show a copy trader both. `eligible` narrows the venue's
+ * wallets further (Polymarket Perps: only wallets with a Perps account or ready to open one).
+ */
+export function positionWallet(
+  r: Registry,
+  venue: Venue,
+  asset: string,
+  eligible: (w: PrivateWallet) => boolean = () => true,
+): { wallet: PrivateWallet | undefined; holds: boolean } {
+  const holder = r.wallets.find(
+    (w) =>
+      w.venue === venue && w.status === "trading" && eligible(w) && (w.trades ?? []).some((t) => t.asset === asset),
+  );
+  if (holder) return { wallet: holder, holds: true };
+  const ready = readyWallet(r, venue);
+  return { wallet: ready && eligible(ready) && (ready.trades ?? []).length === 0 ? ready : undefined, holds: false };
+}
+
 export function updateWallet(r: Registry, id: string, f: (w: PrivateWallet) => PrivateWallet): Registry {
   return { ...r, wallets: r.wallets.map((w) => (w.id === id ? f(w) : w)) };
 }

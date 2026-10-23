@@ -1,6 +1,6 @@
 "use client";
 
-import { type PrivateWallet, type Registry, readyWallet } from "@mitoshi/engine";
+import { type PrivateWallet, positionWallet, type Registry } from "@mitoshi/engine";
 import type { PmMarket } from "@mitoshi/venues/polymarket";
 import { recordTrade } from "../private-wallets/home";
 import { putWallet, walletById } from "../private-wallets/registry-store";
@@ -17,14 +17,7 @@ const CENTS = 100;
  * adding or selling stays on it), otherwise a ready, never-used wallet for a new position.
  */
 export function walletFor(r: Registry, conditionId: string): { wallet: PrivateWallet | undefined; holds: boolean } {
-  const holder = r.wallets.find(
-    (w) =>
-      w.venue === "polymarket" &&
-      (w.status === "trading" || w.status === "ready") &&
-      (w.trades ?? []).some((t) => t.asset === conditionId),
-  );
-  if (holder) return { wallet: holder, holds: true };
-  return { wallet: readyWallet(r, "polymarket"), holds: false };
+  return positionWallet(r, "polymarket", conditionId);
 }
 
 export interface PmOrder {

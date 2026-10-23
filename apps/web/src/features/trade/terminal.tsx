@@ -1,7 +1,7 @@
 "use client";
 
 import type { Levels } from "@mitoshi/chart";
-import { type PrivateWallet, readyWallet } from "@mitoshi/engine";
+import { type PrivateWallet, positionWallet } from "@mitoshi/engine";
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Layers } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cue, cx, Segmented, Sheet, Skeleton, useMedia, usePhone } from "@/kit";
@@ -46,10 +46,10 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
 }
 
 /**
- * Which wallet trades here: the trading one if it has traded this market (it may hold the position), else a fresh ready
- * one, else the trading one. Decided from the registry's own trade records, never by reading accounts: polling a second
- * wallet just to decide would show the venue two addresses asked about together. Nothing is chosen (so nothing is
- * read) until the market is known.
+ * Which wallet trades here, one wallet per position: the wallet that already traded this market (it may hold the
+ * position), else a ready wallet that has never traded, else none (the ticket offers to fund one). Another position's
+ * wallet is never used: two markets on one address would show a copy trader both. Decided from the registry's own
+ * trade records, never by reading accounts, and nothing is chosen (so nothing is read) until the market is known.
  */
 function useTradingWallet(venue: PerpVenue, marketName: string | undefined) {
   const driver = DRIVERS[venue];
@@ -58,11 +58,8 @@ function useTradingWallet(venue: PerpVenue, marketName: string | undefined) {
     (w) => w.venue === driver.wallet && (venue === "hyperliquid" || w.perps !== undefined || w.status === "ready"),
   );
   const live = mine.filter((w) => LIVE.has(w.status) && (venue === "hyperliquid" || w.perps !== undefined));
-  const trading = live.find((w) => w.status === "trading");
-  const traded = (trading?.trades ?? []).some((t) => t.asset === marketName);
-  const fresh = readyWallet(registry, driver.wallet);
-  const freshUnused = fresh && (fresh.trades ?? []).length === 0 ? fresh : undefined;
-  const wallet: PrivateWallet | undefined = !marketName ? undefined : traded ? trading : (freshUnused ?? trading);
+  const usable = (w: PrivateWallet) => venue === "hyperliquid" || w.perps !== undefined || w.status === "ready";
+  const wallet = marketName ? positionWallet(registry, driver.wallet, marketName, usable).wallet : undefined;
   const pending = registry.wallets.find(
     (w) => w.venue === driver.wallet && (w.status === "preparing" || w.status === "funding"),
   );
