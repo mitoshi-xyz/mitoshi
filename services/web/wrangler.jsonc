@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mitoshi-web",
   "main": "src/index.ts",
-  // workers.dev stays on: local development uses it as its relay (DEV_ORIGINS).
+  // workers.dev stays on as a second address for the same Worker (local development uses mitoshi.xyz/relay).
   "workers_dev": true,
   "preview_urls": false,
   // mitoshi.xyz (its zone is on Cloudflare). Zone settings that live outside this file, set 2026-10-23:
