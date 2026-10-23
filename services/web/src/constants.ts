@@ -32,10 +32,10 @@ export const DOCS_ORIGIN = "https://docs.mitoshi.xyz";
 export const DOCS_PREFIX = "/docs";
 export const DOCS_MOVED: Record<string, string> = {
   "": "/",
-  "/how-it-works": "/private-wallets",
-  "/privacy": "/privacy",
-  "/venues": "/venues/polymarket",
-  "/fees": "/fees-and-timing",
-  "/recovery": "/backup-and-recovery",
-  "/architecture": "/architecture",
+  "/how-it-works": "/docs/guide/private-wallets",
+  "/privacy": "/docs/privacy",
+  "/venues": "/docs/venues",
+  "/fees": "/docs/guide/fees-and-timing",
+  "/recovery": "/docs/guide/backup-and-recovery",
+  "/architecture": "/docs/build/architecture",
 };

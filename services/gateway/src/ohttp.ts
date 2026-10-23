@@ -14,7 +14,7 @@ import { forward, type Secrets } from "./upstream";
 const HTTP_BAD_REQUEST = 400;
 const HTTP_BAD_GATEWAY = 502;
 /** The largest inner answer sealed whole: under Vercel's 4.5 MB response limit once padded and encrypted. */
-const MAX_ANSWER_BYTES = 4 * 1024 * 1024;
+const MAX_ANSWER_BYTES = 4_194_304;
 const HTTP_UNAVAILABLE = 503;
 const HEX_RADIX = 16;
 const HEX_CHARS_PER_BYTE = 2;
