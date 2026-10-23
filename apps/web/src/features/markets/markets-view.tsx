@@ -56,10 +56,7 @@ export function MarketsView() {
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="flex flex-col gap-1">
-        <h1 className="type-headline-lg">Markets</h1>
-        <p className="text-ink-2">Trade privately from anywhere.</p>
-      </div>
+      <h1 className="type-headline-lg">Markets</h1>
       <MarketsHero />
 
       <section className="flex flex-col gap-4">

@@ -9,7 +9,7 @@ import { DRIVERS, useLiveStats, usePerpMarkets } from "../perps/hooks";
 import type { PerpVenue } from "../perps/model";
 
 const MASK_DOTS = ["a", "b", "c", "d"];
-/** "From anywhere": the hero walks through a coin, a stock and gold, each on its own venue. */
+/** The hero walks through a coin, a stock and gold, each on its own venue. */
 const SHOWN: readonly { venue: PerpVenue; id: string; label: string }[] = [
   { venue: "hyperliquid", id: "BTC", label: "BTC-PERP · Hyperliquid" },
   { venue: "pmperps", id: "NVDA-USD", label: "NVIDIA · Polymarket Perps" },

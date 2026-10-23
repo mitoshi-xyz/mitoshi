@@ -4,13 +4,18 @@ import { THEME_INIT } from "@/features/theme/theme";
 import { fontVariables } from "@/lib/fonts";
 import "./globals.css";
 
-const TITLE = "Mitoshi 見通し · Trade privately from anywhere";
+const TITLE = "Mitoshi 見通し · Trade Polymarket and Hyperliquid from shielded ZEC";
 const DESCRIPTION =
-  "Trade privately from anywhere. Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you.";
+  "Each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. US stocks, gold and Solana tokens too.";
 /** The link preview (public/og.png), made from the README banner: .github/assets/source/banner.html#og. */
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const OG_IMAGE = { url: "/og.png", width: OG_WIDTH, height: OG_HEIGHT, alt: "Mitoshi: trade privately from anywhere" };
+const OG_IMAGE = {
+  url: "/og.png",
+  width: OG_WIDTH,
+  height: OG_HEIGHT,
+  alt: "Mitoshi: trade Polymarket and Hyperliquid from shielded ZEC",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mitoshi.xyz"),

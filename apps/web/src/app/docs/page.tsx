@@ -4,11 +4,11 @@ import { H2, Lead, List, P, Steps, Title } from "@/features/docs/prose";
 export default function DocsOverview() {
   return (
     <>
-      <Title kicker="Mitoshi docs">Trade privately from anywhere</Title>
+      <Title kicker="Mitoshi docs">Trade Polymarket and Hyperliquid from shielded ZEC</Title>
       <Lead>
-        Mitoshi is a private trading app. Your balance stays shielded in Zcash, and every position you open on
-        Polymarket, Hyperliquid or Solana comes from a brand-new wallet nobody can link to you. When you close, the
-        money comes back to shielded ZEC.
+        Your balance stays shielded in Zcash. Every position you open on Polymarket, Polymarket Perps, Hyperliquid or
+        Solana comes from a brand-new wallet funded through NEAR Intents, so copy traders find one trade and no history.
+        When you close, the money comes back to shielded ZEC.
       </Lead>
       <H2>Why it exists</H2>
       <P>

@@ -11,9 +11,9 @@ export const LANDING = {
   },
   hero: {
     chip: "Live on Zcash mainnet",
-    title: ["Trade privately", "from"],
-    accent: "anywhere.",
-    line: "Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you.",
+    title: ["Trade Polymarket", "and Hyperliquid"],
+    accent: "from shielded ZEC.",
+    line: "Each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history.",
     open: "Open Mitoshi",
     how: "How it works",
     small: "No account · no sign-up · your keys stay in this browser",

@@ -30,9 +30,13 @@ function Hero() {
             <VenueMark venue="near" size={16} />
           </span>
           <h1 id="lp-h1" className="lp-h1">
-            <span className="block">{L.hero.title[0]}</span>
+            {L.hero.title.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
             <span className="block">
-              {L.hero.title[1]} <em>{L.hero.accent}</em>
+              <em>{L.hero.accent}</em>
             </span>
           </h1>
           <p className="lp-line max-w-[34rem]">{L.hero.line}</p>
