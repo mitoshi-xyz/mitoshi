@@ -2,6 +2,7 @@
 
 import { BLOCK_SECONDS, between, planRest, restEndsAt, restKey } from "@mitoshi/engine";
 import {
+  type Balance,
   type EngineLoad,
   type HistoryEntry,
   MNEMONIC_STRENGTH_BITS,
@@ -316,6 +317,29 @@ export function refreshWallet(): Promise<void> {
   return sync();
 }
 
+/**
+ * What the balance can do. A payment spends Ironwood notes only: spending Orchard notes beside them would publish the
+ * crossing's value next to the payment. Orchard value is counted apart until a ZIP 318 migration moves it across.
+ */
+export interface Money {
+  /** Ironwood, confirmed and rested: what can fund a wallet or be withdrawn. */
+  spendable: number;
+  /** Arrived from a public address and resting 2–6 h (either pool). */
+  resting: number;
+  /** In the old Orchard pool, ready to move to Ironwood. */
+  orchard: number;
+  /** Not confirmed yet (10 blocks for a deposit, 3 for change). */
+  confirming: number;
+}
+
+export function money(b: Balance | null | undefined): Money {
+  if (!b) return { spendable: 0, resting: 0, orchard: 0, confirming: 0 };
+  const spendable = b.ironwood.spendable;
+  const resting = b.ironwood.locked + b.orchard.locked;
+  const orchard = b.orchard.spendable;
+  return { spendable, resting, orchard, confirming: Math.max(0, b.total - spendable - resting - orchard) };
+}
+
 export async function previewSend(to: string, zat: number) {
   if (!client) throw new Error("wallet is not open");
   return client.propose(to, zat);
@@ -328,6 +352,17 @@ export async function previewSend(to: string, zat: number) {
 export async function send(to: string, zat: number): Promise<{ txid: string; fee: number }> {
   if (!client) throw new Error("wallet is not open");
   const result = await client.send(to, zat, await seedHex());
+  quietUntil = Date.now() + between(SEND_QUIET_MIN_MS, SEND_QUIET_MAX_MS);
+  return result;
+}
+
+/**
+ * Sends one part of a ZIP 318 migration (Orchard into Ironwood). Like any broadcast, the next sync waits a random
+ * 1–10 min, so sync and broadcast never share a window.
+ */
+export async function migrate(zat: number): Promise<{ txid: string; fee: number }> {
+  if (!client) throw new Error("wallet is not open");
+  const result = await client.migrate(zat, await seedHex());
   quietUntil = Date.now() + between(SEND_QUIET_MIN_MS, SEND_QUIET_MAX_MS);
   return result;
 }

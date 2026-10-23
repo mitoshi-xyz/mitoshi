@@ -1,5 +1,5 @@
 export { WalletClient, type WalletEvents } from "./client";
-export { BLOCK_SECONDS, MNEMONIC_STRENGTH_BITS, RECEIVED_CONFIRMATIONS, ZAT_PER_ZEC } from "./constants";
+export { MNEMONIC_STRENGTH_BITS, RECEIVED_CONFIRMATIONS, ZAT_PER_ZEC } from "./constants";
 export type {
   Balance,
   EngineLoad,

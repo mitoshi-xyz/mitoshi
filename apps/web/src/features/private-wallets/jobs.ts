@@ -27,6 +27,7 @@ import {
   VENUE_ASSET,
   venueAddress,
 } from "./funding";
+import { migrationTick } from "./migration";
 import { currentRegistry, mutate, putWallet, walletById } from "./registry-store";
 import { oneclick, withSwap } from "./swaps";
 import { VENUES } from "./venues";
@@ -307,6 +308,7 @@ function tick() {
     if (w.status === "funding" && w.venue === "polymarket") once(`${w.id}:bridge`, () => credit(w.id));
   }
   if (canFund().ok) keepReady();
+  migrationTick(now, sessionStart);
 }
 
 let started = false;

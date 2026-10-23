@@ -56,3 +56,28 @@ export const COIN_TYPE = { evm: 60, solana: 501 } as const;
 /** "MTSH" on a phone keypad, so the branch is ours and never collides with a normal wallet's. */
 export const MITOSHI_ACCOUNT = 6874;
 export const VENUE_BRANCH = { polymarket: 0, hyperliquid: 1, solana: 2 } as const;
+
+/* ZIP 318 (draft, zips.z.cash/zip-0318): moving Orchard value into Ironwood (migration.ts). */
+
+/** The ZIP 317 fee of a canonical crossing: two Orchard actions and one Ironwood action at 5,000 zat each. */
+export const CROSSING_FEE_ZAT = 15_000;
+
+/** The smallest and largest denominations (ZIP 318 MAX_RESIDUAL_VALUE and DENOM_CAP): 0.01 ZEC and 10,000 ZEC. */
+const HUNDREDTHS_PER_ZEC = 100;
+const CAP_ZEC = 10_000;
+export const MIN_DENOMINATION_ZAT = ZAT_PER_ZEC / HUNDREDTHS_PER_ZEC;
+export const MAX_DENOMINATION_ZAT = CAP_ZEC * ZAT_PER_ZEC;
+
+/**
+ * Delays between transfers, in reference blocks of 75 s (ZIP 318 TRANSFER_DELAY_MEAN and TRANSFER_DELAY_CAP): an
+ * exponential spread with a mean of 66 blocks (82.5 min), at most 576 (12 h). The wall-clock times hold after NU7.
+ */
+const REFERENCE_BLOCK_MS = 75_000;
+const TRANSFER_DELAY_MEAN_BLOCKS = 66;
+const TRANSFER_DELAY_CAP_BLOCKS = 576;
+export const TRANSFER_DELAY_MEAN_MS = TRANSFER_DELAY_MEAN_BLOCKS * REFERENCE_BLOCK_MS;
+export const TRANSFER_DELAY_CAP_MS = TRANSFER_DELAY_CAP_BLOCKS * REFERENCE_BLOCK_MS;
+
+/** ZIP 318: the leading digits a denomination may have: n × 10^k ZEC with n in {1, 2, 5}. */
+export const DENOMINATION_DIGITS = [1, 2, 5] as const;
+export const DECADE = 10;

@@ -123,12 +123,19 @@ export class WalletClient {
     return this.request({ kind: "warmProver" });
   }
 
+  /** Plans a payment (Ironwood notes only) without sending it: its fee, and whether the recipient is public. */
   propose(to: string, zat: number): Promise<Proposal> {
-    return this.request({ kind: "propose", to, zat });
+    return this.request({ kind: "propose", send: "pay", to, zat });
   }
 
+  /** Proves, signs and broadcasts a payment from Ironwood notes. */
   send(to: string, zat: number, seedHex: string): Promise<{ txid: string; fee: number }> {
-    return this.request({ kind: "send", to, zat, seedHex });
+    return this.request({ kind: "send", send: "pay", to, zat, seedHex });
+  }
+
+  /** Moves one standard amount of Orchard value into Ironwood (a ZIP 318 canonical crossing), or refuses. */
+  migrate(zat: number, seedHex: string): Promise<{ txid: string; fee: number }> {
+    return this.request({ kind: "send", send: "migrate", to: "", zat, seedHex });
   }
 
   close() {

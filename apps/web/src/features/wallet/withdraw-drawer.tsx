@@ -8,7 +8,7 @@ import { ZEC_NETWORK } from "@/constants";
 import { cue, cx, Keypad, pressKey, Sheet, SlideToConfirm, TxSteps, usePhone, Wait } from "@/kit";
 import { LeakMeter } from "../privacy/leak-meter";
 import { useRegistry } from "../private-wallets/registry-store";
-import { previewSend, send, useWallet } from "./wallet-store";
+import { money, previewSend, send, useWallet } from "./wallet-store";
 
 const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
 const ZEC_DIGITS = 8;
@@ -70,8 +70,7 @@ export function WithdrawDrawer({ open, onClose }: { open: boolean; onClose: () =
   }, [open]);
 
   const b = w.summary?.balance;
-  const spendable = b ? b.ironwood.spendable + b.orchard.spendable : 0;
-  const resting = b ? b.ironwood.locked + b.orchard.locked : 0;
+  const { spendable, resting } = money(b);
   const kind = classify(to);
   const zat = Math.round((Number(amount) || 0) * ZAT_PER_ZEC);
   const sendable = kind === "shielded" || kind === "public";

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ZEC_NETWORK } from "@/constants";
 import { CountdownRing, cx, RollingNumber, Skeleton } from "@/kit";
 import { useLiveMids } from "../hyperliquid/hooks";
-import { useWallet } from "../wallet/wallet-store";
+import { money, useWallet } from "../wallet/wallet-store";
 import { MASK, useHideAmounts } from "./prefs";
 
 const ZEC_DIGITS = 4;
@@ -18,8 +18,9 @@ export function MoneyPlate() {
   const mids = useLiveMids();
   const [hidden, setHidden] = useHideAmounts();
   const b = w.summary?.balance;
-  const spendable = b ? (b.ironwood.spendable + b.orchard.spendable) / ZAT_PER_ZEC : 0;
-  const resting = b ? (b.ironwood.locked + b.orchard.locked) / ZAT_PER_ZEC : 0;
+  const m = money(b);
+  const spendable = m.spendable / ZAT_PER_ZEC;
+  const resting = m.resting / ZAT_PER_ZEC;
   const zecUsd = mids.ZEC;
   const syncing = w.progress;
   const test = ZEC_NETWORK !== "main";

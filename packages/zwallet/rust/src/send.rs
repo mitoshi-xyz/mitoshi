@@ -1,8 +1,12 @@
 //! Sending: propose a single payment, then build (prove and sign) it.
 //!
-//! Inputs come only from the Ironwood and Orchard pools, and change always goes to Ironwood. A
-//! payment to a transparent address (a NEAR 1Click deposit) therefore publishes only that
-//! payment's amount; the change and the sender stay shielded.
+//! One pool per transaction, so no send publishes a pool crossing's value:
+//! - a payment (`kind: "pay"`) spends Ironwood notes only, with change to Ironwood. A payment to a
+//!   transparent address (a NEAR 1Click deposit) publishes only that payment's amount.
+//! - a migration (`kind: "migrate"`) moves Orchard value to Ironwood as a ZIP 318 canonical
+//!   crossing: one Orchard note in, one standard denomination out to this account's internal
+//!   address, at most one Orchard change output, the canonical fee and a bucketed anchor. A
+//!   proposal that is not exactly that shape is refused rather than sent.
 
 use std::{cell::RefCell, collections::HashMap, convert::Infallible, str::FromStr};
 
@@ -19,12 +23,15 @@ use zcash_client_backend::{
             propose_transfer,
         },
     },
-    fees::{DustOutputPolicy, SplitPolicy, zip317::MultiOutputChangeStrategy},
+    fees::{DustOutputPolicy, SplitPolicy, canonical_crossing_fee, zip317::MultiOutputChangeStrategy},
     proposal::Proposal,
     wallet::OvkPolicy,
 };
 use zcash_client_sqlite::{ReceivedNoteId, util::SystemClock};
-use zcash_keys::{address::Address, keys::UnifiedSpendingKey};
+use zcash_keys::{
+    address::{Address, UnifiedAddress},
+    keys::UnifiedSpendingKey,
+};
 use zcash_primitives::transaction::fees::zip317::FeeRule;
 use zcash_protocol::{ShieldedPool, value::Zatoshis};
 use zip321::{Payment, TransactionRequest};
@@ -48,11 +55,39 @@ fn account(state: &State) -> Result<<crate::Db as WalletRead>::AccountId, Error>
         .ok_or_else(|| Error::msg("no account yet"))
 }
 
-/// `{to, zat}` → `{id, fee, minTargetHeight}`. The proposal is kept until `build` uses it.
+/// This account's internal (change) address, as a unified address with only its Orchard-protocol
+/// receiver: since NU6.3 a payment to it lands in Ironwood. ZIP 318 sends every migration here.
+fn internal_address(state: &State, account: <crate::Db as WalletRead>::AccountId) -> Result<String, Error> {
+    let fvk = state
+        .db
+        .get_account(account)
+        .ctx("reading the account")?
+        .and_then(|a| a.ufvk().and_then(|k| k.orchard().cloned()))
+        .ok_or_else(|| Error::msg("this account has no Orchard viewing key"))?;
+    let orchard = fvk.address_at(0u32, orchard::keys::Scope::Internal);
+    let ua = UnifiedAddress::from_receivers(Some(orchard), None, None, None, None)
+        .ok_or_else(|| Error::msg("could not form the internal address"))?;
+    Ok(ua.encode(&state.network))
+}
+
+/// `{kind?, to, zat}` → `{id, fee, minTargetHeight, transparent}`. `kind` is "pay" (the default) or
+/// "migrate" (no `to`: the crossing goes to this account's internal address). The proposal is kept
+/// until `build` uses it.
 pub fn propose(state: &mut State, args: &Value) -> Result<Value, Error> {
-    let to = args.get("to").and_then(Value::as_str).ok_or_else(|| Error::msg("missing to"))?;
+    let migrate = match args.get("kind").and_then(Value::as_str).unwrap_or("pay") {
+        "pay" => false,
+        "migrate" => true,
+        other => return Err(Error::msg(format!("unknown send kind {other}"))),
+    };
     let zat = args.get("zat").and_then(Value::as_u64).ok_or_else(|| Error::msg("missing zat"))?;
     let network = state.network;
+    let account = account(state)?;
+    let to = if migrate {
+        internal_address(state, account)?
+    } else {
+        args.get("to").and_then(Value::as_str).ok_or_else(|| Error::msg("missing to"))?.to_owned()
+    };
+    let to = to.as_str();
     let transparent = match Address::decode(&network, to) {
         Some(Address::Transparent(_)) | Some(Address::Tex(_)) => true,
         Some(Address::Unified(ua)) if ua.has_orchard() => false,
@@ -64,15 +99,17 @@ pub fn propose(state: &mut State, args: &Value) -> Result<Value, Error> {
     // No memos, ever: a transparent output cannot carry one, and a shielded memo is a fingerprint.
     let payment = Payment::new(recipient, Some(amount), None, None, None, vec![]).ctx("payment")?;
     let request = TransactionRequest::new(vec![payment]).ctx("payment request")?;
+    // The pool spent from is the pool change returns to: a payment never touches Orchard, and a
+    // migration's only Ironwood output is the denomination itself.
+    let pool = if migrate { ShieldedPool::Orchard } else { ShieldedPool::Ironwood };
     let change = MultiOutputChangeStrategy::new(
         FeeRule::standard(),
         None,
-        ShieldedPool::Ironwood,
+        pool,
         DustOutputPolicy::default(),
         SplitPolicy::single_output(),
     );
-    let spend_policy = SpendPolicy::shielded_pools([ShieldedPool::Ironwood, ShieldedPool::Orchard]);
-    let account = account(state)?;
+    let spend_policy = SpendPolicy::shielded_pools([pool]);
     let proposal: Pending = propose_transfer::<_, _, _, _, Infallible>(
         &mut state.db,
         &network,
@@ -88,6 +125,17 @@ pub fn propose(state: &mut State, args: &Value) -> Result<Value, Error> {
     .map_err(|e| Error::msg(format!("proposal: {e}")))?;
     let fee: u64 = proposal.steps().iter().map(|s| s.balance().fee_required().into_u64()).sum();
     let min_target = u32::from(proposal.min_target_height());
+    if migrate {
+        let canonical_fee = canonical_crossing_fee(&network, proposal.min_target_height().into())
+            .map_err(|e| Error::msg(format!("canonical crossing fee: {e:?}")))?;
+        let params = state.db.pool_migration_params(&network);
+        let steps = proposal.steps();
+        if steps.len() != 1 || !steps.first().is_canonical_crossing(&params, canonical_fee) {
+            return Err(Error::msg(
+                "no single Orchard note can make this a canonical ZIP 318 crossing; nothing was sent",
+            ));
+        }
+    }
     let id = NEXT_ID.with(|n| {
         let mut n = n.borrow_mut();
         let id = *n;

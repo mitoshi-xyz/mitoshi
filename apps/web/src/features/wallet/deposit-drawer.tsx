@@ -1,6 +1,7 @@
 "use client";
 
-import { BLOCK_SECONDS, type HistoryEntry, RECEIVED_CONFIRMATIONS, ZAT_PER_ZEC } from "@mitoshi/zwallet";
+import { BLOCK_SECONDS as SPACING } from "@mitoshi/engine";
+import { type HistoryEntry, RECEIVED_CONFIRMATIONS, ZAT_PER_ZEC } from "@mitoshi/zwallet";
 import { Check, Copy, ExternalLink, RefreshCw, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
@@ -11,7 +12,8 @@ const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
 const GROUP = 6;
 const ZEC_DIGITS = 8;
 const SECONDS_PER_MINUTE = 60;
-/** Ten blocks at 75 s, rounded: what the copy promises before a deposit is spendable. */
+const BLOCK_SECONDS = SPACING[ZEC_NETWORK];
+/** Ten blocks at the network's spacing, rounded: what the copy promises before a deposit is spendable. */
 const SPENDABLE_MINUTES = Math.round((RECEIVED_CONFIRMATIONS * BLOCK_SECONDS) / SECONDS_PER_MINUTE);
 
 const grouped = (a: string) => a.match(new RegExp(`.{1,${GROUP}}`, "g"))?.join(" ") ?? a;

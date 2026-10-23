@@ -120,6 +120,19 @@ export interface Registry {
   wallets: PrivateWallet[];
   /** "Keep one ready": the size (zatoshis) of a funded wallet to hold per venue while the app is open. */
   keepReady: Record<Venue, number | null>;
+  /** A ZIP 318 move of Orchard value into Ironwood the user agreed to, one part at a time. */
+  migration?: MigrationPart[];
+}
+
+/** One crossing of a migration: a standard amount, sent alone at its own random time. */
+export interface MigrationPart {
+  zat: number;
+  at: number;
+  status: "waiting" | "sent" | "failed";
+  txid?: string;
+  error?: string;
+  /** Tries so far: a part whose change isn't confirmed yet, or whose note is resting, waits for a new time. */
+  attempts?: number;
 }
 
 export function emptyRegistry(): Registry {

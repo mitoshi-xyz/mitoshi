@@ -10,7 +10,8 @@ import { Mark } from "../marks/mark";
 import { openDeposit, openFund, openWithdraw } from "../private-wallets/drawers";
 import { useRegistry } from "../private-wallets/registry-store";
 import { MASK, useHideAmounts } from "../shell/prefs";
-import type { WalletState } from "../wallet/wallet-store";
+import { OrchardMove } from "../wallet/orchard-move";
+import { money, type WalletState } from "../wallet/wallet-store";
 
 const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
 const ZEC_DIGITS = 4;
@@ -44,9 +45,7 @@ export function MoneyCard({ state }: { state: WalletState }) {
   const registry = useRegistry();
   const [hidden, setHidden] = useHideAmounts();
   const b = state.summary?.balance;
-  const spendable = b ? b.ironwood.spendable + b.orchard.spendable : 0;
-  const resting = b ? b.ironwood.locked + b.orchard.locked : 0;
-  const pending = b ? Math.max(0, b.total - spendable - resting) : 0;
+  const { spendable, resting, orchard, confirming: pending } = money(b);
   const inWallets = registry.wallets.filter((w) => LIVE_WALLETS.includes(w.status)).reduce((n, w) => n + w.sizeZat, 0);
   const zecUsd = ZEC_NETWORK === "main" ? mids.ZEC : undefined;
   const total = spendable / ZAT_PER_ZEC;
@@ -110,6 +109,7 @@ export function MoneyCard({ state }: { state: WalletState }) {
         <Pocket label="Confirming" value={show(pending)} />
         <Pocket label="In wallets" value={show(inWallets)} />
       </div>
+      <OrchardMove orchardZat={orchard} hidden={hidden} />
       <div className="mt-4 grid grid-cols-3 gap-2">
         {(
           [

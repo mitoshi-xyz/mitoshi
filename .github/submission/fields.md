@@ -27,6 +27,6 @@ Why it does not leak:
 - No server holds keys, wallets or positions. Pages and workers load nothing third-party (strict CSP, no-transform). No builder tag on orders.
 - A leak meter on every send; "What the public sees" shows each wallet as a copy trader would.
 
-What is real: the browser wallet proved and broadcast Ironwood spends on NU7 testnet (txids in the README); production runs on mainnet with live venue data; confidential 1Click quotes and Polymarket's builder signing verified through the gateway; 37 unit tests. Not yet: the full mainnet round trip on each venue.
+What is real: the browser wallet proved and broadcast Ironwood spends on NU7 testnet (txids in the README); production runs on mainnet with live venue data; confidential 1Click quotes and Polymarket's builder signing verified through the gateway; 40 unit tests. Not yet: the full mainnet round trip on each venue.
 Mock: none in the product. The landing's copy-trader feed and sample wallets are labelled illustrations.
 ```

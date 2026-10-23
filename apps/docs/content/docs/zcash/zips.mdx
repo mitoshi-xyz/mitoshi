@@ -4,14 +4,15 @@ description: The Zcash Improvement Proposals Mitoshi follows, and the exact plac
 icon: FileText
 ---
 
-{/* Sources: packages/zwallet/rust/Cargo.toml:24; packages/zwallet/rust/src/send.rs:22-30,65-73; notes.rs:24,96;
+{/* Sources: packages/zwallet/rust/Cargo.toml:24; packages/zwallet/rust/src/send.rs (pay and migrate); notes.rs:24,96;
+   packages/engine/src/migration.ts; apps/web/src/features/private-wallets/migration.ts;
    packages/engine/src/constants.ts:4-9,31-39; packages/engine/src/schedule.ts; apps/web/src/constants.ts:20-25. */}
 
 | ZIP | What it says | How Mitoshi uses it | Code |
 | --- | --- | --- | --- |
 | **ZIP 32** | Shielded hierarchical deterministic wallets | The Zcash account and its spending key come from the 24 words through librustzcash's ZIP 32 derivation | `packages/zwallet/rust/src/wallet.rs`, `send.rs` |
 | **ZIP 317** | Proportional transfer fee | Every payment pays the standard ZIP 317 fee (`FeeRule::standard()`), computed by the wallet before it sends | `send.rs` |
-| **ZIP 318** (draft) | Migrating funds between pools; Mitoshi borrows its standard amounts and timing | Fundings use only its denominations (n × 10^k ZEC, n ∈ {1, 2, 5}), start at random times, keep-ready refills wait an exponential delay, and a broadcast and a sync never share a window | `packages/engine/src/constants.ts`, `schedule.ts`, `apps/web/src/constants.ts` |
+| **ZIP 318** (draft) | Migrating funds between pools | Orchard value moves to Ironwood as canonical crossings (below). Mitoshi also borrows its standard amounts and timing: fundings use only its denominations (n × 10^k ZEC, n ∈ {1, 2, 5}), start at random times, keep-ready refills wait an exponential delay, and a broadcast and a sync never share a window | `packages/engine/src/constants.ts`, `schedule.ts`, `apps/web/src/constants.ts` |
 | **ZIP 321** | Payment request URIs | Each send is built as a ZIP 321 transaction request | `send.rs` |
 
 ## The standard amounts
@@ -37,3 +38,17 @@ them, and the leak meter blocks any other amount. Amounts above 1 ZEC are not sp
 | A keep-ready refill | waits an exponential delay, 90 min on average, between 20 s and 12 h (the first wallet after the switch goes on starts like one you asked for) | `refillTime`, same file; `setKeepReady`, `apps/web/src/features/private-wallets/jobs.ts` |
 | A funding due while the app was closed | gets a new random start instead of going out when the app opens | `retimed`, same file |
 | After a broadcast | no sync for a random 1 to 10 min | `SEND_QUIET_MIN_MS`, `apps/web/src/constants.ts` |
+
+## Moving Orchard to Ironwood
+
+A payment spends Ironwood notes only. ZEC still in the old Orchard pool moves across the way ZIP 318 specifies, using
+librustzcash's own canonical-crossing check:
+
+| Rule | Value | Code |
+| --- | --- | --- |
+| Parts | the Orchard value split into n × 10^k ZEC (n ∈ {1, 2, 5}, 0.01 to 10,000 ZEC); each part pays its own fee from one note; under 0.01 ZEC stays | `migrationParts`, `packages/engine/src/migration.ts` |
+| Each crossing | one Orchard note in, one standard amount out to the account's internal address, at most one Orchard change output, the canonical fee, an anchor on the ZIP 318 grid; anything else is refused unsent | `propose` with `kind: "migrate"`, `packages/zwallet/rust/src/send.rs` (`is_canonical_crossing`) |
+| Order and timing | parts shuffled, each an exponential delay after the one before: 66 blocks (82.5 min) on average, at most 576 (12 h) | `migrationSchedule`, same file |
+| Consent | nothing is sent until you agree to the whole schedule on Portfolio | `apps/web/src/features/wallet/orchard-move.tsx` |
+| Due while closed | a part that came due while the app was closed gets a new random time; none goes out because the app opened | `migrationTick`, `apps/web/src/features/private-wallets/migration.ts` |
+| Sync and broadcast | never in the same window: after each part, no sync for a random 1 to 10 min | `migrate`, `apps/web/src/features/wallet/wallet-store.ts` |

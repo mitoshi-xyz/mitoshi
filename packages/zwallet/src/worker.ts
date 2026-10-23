@@ -110,10 +110,10 @@ async function handle(req: Request): Promise<unknown> {
     case "warmProver":
       return ready().core.call<{ ms: number }>("warmProver");
     case "propose":
-      return ready().core.call<Proposal>("propose", { to: req.to, zat: req.zat });
+      return ready().core.call<Proposal>("propose", { kind: req.send, to: req.to, zat: req.zat });
     case "send": {
       const w = ready();
-      const proposal = w.core.call<Proposal>("propose", { to: req.to, zat: req.zat });
+      const proposal = w.core.call<Proposal>("propose", { kind: req.send, to: req.to, zat: req.zat });
       const built = w.core.call<Built>("build", { id: proposal.id, seed: req.seedHex });
       persist();
       await w.lwd.broadcast(hexToBytes(built.raw));

@@ -99,8 +99,14 @@ export type Request =
   | { id: number; kind: "lockNotes"; notes: NoteRef[]; untilHeight: number }
   | { id: number; kind: "unlockNotes"; notes: NoteRef[] }
   | { id: number; kind: "history"; limit: number }
-  | { id: number; kind: "send"; to: string; zat: number; seedHex: string }
-  | { id: number; kind: "propose"; to: string; zat: number };
+  | { id: number; kind: "send"; send: SendKind; to: string; zat: number; seedHex: string }
+  | { id: number; kind: "propose"; send: SendKind; to: string; zat: number };
+
+/**
+ * A payment spends Ironwood only. A migration moves one standard amount of Orchard value into Ironwood as a ZIP 318
+ * canonical crossing, to this account's own internal address (its `to` is ignored).
+ */
+export type SendKind = "pay" | "migrate";
 
 /** Messages from the worker back to the main thread. */
 export type Response =

@@ -38,8 +38,9 @@ The wallet reads the chain through six lightwalletd methods: `GetLatestBlock`, `
 message, because even a block range says something about a wallet (where its scan starts is its birthday). The
 compact blocks come from ChainSafe's public gRPC-web servers, which only ever see Mitoshi's gateway.
 
-<Callout type="warn" title="One residual, written down">
-Sends may spend Orchard and Ironwood notes together, with change to Ironwood. If a wallet holds Orchard notes, a send
-can cross from Orchard to Ironwood, and a pool crossing makes that value public (librustzcash's own input-selection
-notes say so).
+<Callout title="One pool per transaction">
+A payment spends Ironwood notes only, with change to Ironwood, so no payment publishes a pool crossing's value beside
+it. ZEC in the old Orchard pool (a note from before Ironwood, or from a wallet that still builds older transactions)
+shows on Portfolio as **in the old Orchard pool**. **Move to Ironwood** moves it the [ZIP 318](/docs/zcash/zips#moving-orchard-to-ironwood)
+way, after you agree to the schedule.
 </Callout>

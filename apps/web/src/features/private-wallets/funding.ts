@@ -12,7 +12,7 @@ import { ASSETS, type AssetKey, formatUnits, OneClickError, type QuoteResponse, 
 import { BRIDGE_SOURCES, depositWalletAddress, PUSD_DECIMALS } from "@mitoshi/venues/polymarket";
 import { ZEC_NETWORK } from "@/constants";
 import { pmBridge } from "../polymarket/pm";
-import { freshAddress, walletState } from "../wallet/wallet-store";
+import { freshAddress, money, walletState } from "../wallet/wallet-store";
 import { quote } from "./swaps";
 
 /** Funding routes, previews and addresses: what a new private wallet would get, and where it is sent. */
@@ -66,11 +66,8 @@ export function canFund(): { ok: boolean; why?: string } {
 
 /** What the rested, spendable balance allows. */
 export function balances() {
-  const b = walletState().summary?.balance;
-  return {
-    spendable: b ? b.ironwood.spendable + b.orchard.spendable : 0,
-    resting: b ? b.ironwood.locked + b.orchard.locked : 0,
-  };
+  const { spendable, resting } = money(walletState().summary?.balance);
+  return { spendable, resting };
 }
 
 export interface FundingPreview {

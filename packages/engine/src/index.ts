@@ -18,6 +18,7 @@ export {
   type Payout,
   type WithdrawalCheck,
 } from "./leak.ts";
+export { canonicalParts, migrationParts, migrationSchedule, transferDelay } from "./migration.ts";
 export { between, cryptoRandom } from "./random.ts";
 export * from "./registry.ts";
 export { planRest, type RestNote, type RestPlan, type RestRef, restBlocks, restEndsAt, restKey } from "./rest.ts";

@@ -39,8 +39,8 @@ route line and the Privacy screen show the mode NEAR **granted**, read back from
 - **Timing analysis.** Random starts and rests make it hard, not impossible, for someone with the whole public record.
 - **The recovery scan** asks about one derived address at a time, 3–9 s apart. Someone watching the gateway during a
   restore could still group them, so it runs only after a restore from words or when you ask for it.
-- **Pool crossings.** Sends may spend Orchard notes with change to Ironwood; if a wallet holds Orchard notes, that
-  crossing's value is public.
+- **Moving Orchard to Ironwood.** Each part of a migration publishes one standard amount crossing pools at a random
+  time, the same shape as every other ZIP 318 migration; payments never cross.
 - **Block explorers.** Opening one for your wallet from your own browser shows it your IP. Mitoshi's "What the public
   sees" reads the same data through the gateway; use Tor or a VPN for explorers.
 - **Light servers.** Compact blocks come from ChainSafe's public servers, which only ever see the gateway, until Mitoshi

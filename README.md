@@ -129,12 +129,14 @@ Follow the proof on the live app:
   public address rests 2–6 hours first.
 - **Two hops, nothing third-party.** Every page and every worker may reach mitoshi.xyz only (CSP with per-page script
   hashes), and pages are sent `no-transform`, so no proxy can add a script. Pictures of what you hold come over OHTTP too.
+- **One pool per transaction.** Payments spend Ironwood notes only, so no send publishes a pool crossing beside it; ZEC
+  in the old Orchard pool moves across as ZIP 318 canonical crossings, after you agree to the schedule.
 - **A leak meter on every send** flags a withdrawal that matches a recent payout in amount or timing.
 
 | Built on | What it does | Where |
 | --- | --- | --- |
 | **Zcash** · librustzcash | `zcash_client_sqlite` 0.23 and `zcash_client_backend` 0.25 (`zcash_protocol` 0.11, NU7-ready), compiled to `wasm32-wasip1`: sync, Ironwood and Orchard notes, proofs and sends in a Web Worker, encrypted into IndexedDB | [packages/zwallet](packages/zwallet) |
-| **Zcash** · ZIPs 32, 317, 318 | Keys from the 24 words; fees; canonical amounts and timing | [packages/engine](packages/engine) |
+| **Zcash** · ZIPs 32, 317, 318 | Keys from the 24 words; fees; canonical amounts and timing; Orchard moved to Ironwood as canonical crossings | [packages/engine](packages/engine) · [send.rs](packages/zwallet/rust/src/send.rs) |
 | **NEAR Intents** · 1Click | Every rail in and out of the shielded pool, in confidential mode, with signed quotes checked before any deposit and the granted mode and fees read back from them | [packages/rails](packages/rails) |
 | **Oblivious HTTP** (RFC 9458) | The client, the relay and the gateway with its upstream allowlist | [packages/net](packages/net) · [services/web](services/web) · [services/gateway](services/gateway) |
 | **Venues** | Polymarket (Deposit Wallets, CLOB), Polymarket Perps, Hyperliquid, Solana through Jupiter | [packages/venues](packages/venues) |
@@ -147,7 +149,7 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 | --- | --- | --- |
 | **Privacy:** "Does it actually preserve privacy, or does it only look like it does? Leaks are disqualifying, not deductions." | Shielded balance in the browser, one fresh wallet per position, standard amounts at random times, confidential NEAR swaps, every call over Oblivious HTTP, no server-side state. Residuals are written down, not hidden | [Who sees what](#who-sees-what) · [threat model](https://docs.mitoshi.xyz/docs/privacy) · [gateway allowlist](services/gateway/src/constants.ts) |
 | **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet, in their own words; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [Why traders need it](#why-traders-need-it) · [mitoshi.xyz](https://mitoshi.xyz) |
-| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 37 unit tests | [Proof and evidence](#proof-and-evidence) |
+| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 40 unit tests | [Proof and evidence](#proof-and-evidence) |
 | **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
 | **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
 | "All code written during the build window. Libraries are fine; existing products are not." | The repository's history starts on 2026-10-22; libraries are listed above and in the lockfile | [Prior work](#prior-work) |
@@ -165,7 +167,7 @@ Dated; re-checked on 2026-10-23.
 | Confidential swaps on NEAR | A dry 1Click quote over OHTTP accepted in confidential mode: 0.01 ZEC → 11.86 USDC on HyperCore, about 465 s |
 | Polymarket over OHTTP | Market lookup, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and the gateway's builder signer returning signed relayer headers |
 | Gateway egress | Ireland (Vercel dub1) for every visitor, so no venue learns a user's country |
-| Unit tests | 37 passing: engine 22 (denominations, rest rules, scheduling, one wallet per position, registry, keys, leak meter), rails 8 (1Click quotes, the signature check, the mode and fees read back), venues 7 (4 Polymarket Perps signing, 3 Solana transactions) |
+| Unit tests | 40 passing: engine 25 (denominations, rest rules, scheduling, one wallet per position, registry, keys, leak meter, ZIP 318 migration), rails 8 (1Click quotes, the signature check, the mode and fees read back), venues 7 (4 Polymarket Perps signing, 3 Solana transactions) |
 
 The testnet transactions were read back with `GetTransaction` from the light server the wallet syncs from; public
 testnet explorers follow an older testnet chain and do not show them.

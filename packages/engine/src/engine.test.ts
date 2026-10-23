@@ -1,10 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
-import { LADDER_ZAT, REST_MAX_MS, REST_MIN_MS, UNKNOWN_ORIGIN_HOLD_BLOCKS } from "./constants.ts";
+import {
+  CROSSING_FEE_ZAT,
+  LADDER_ZAT,
+  REST_MAX_MS,
+  REST_MIN_MS,
+  TRANSFER_DELAY_CAP_MS,
+  UNKNOWN_ORIGIN_HOLD_BLOCKS,
+} from "./constants.ts";
 import { decompose, fundableSizes, isCanonical } from "./denominations.ts";
 import { evmAddress, evmKey, slip10, solanaKey, throwawayAddress, walletAddress, walletPath } from "./keys.ts";
 import { checkFunding, checkWithdrawal } from "./leak.ts";
+import { canonicalParts, migrationParts, migrationSchedule, transferDelay } from "./migration.ts";
 import { advance, emptyRegistry, type PrivateWallet, positionWallet } from "./registry.ts";
 import { planRest, restBlocks, restKey } from "./rest.ts";
 import { fundingTime, refillTime, retimed } from "./schedule.ts";
@@ -238,5 +246,39 @@ describe("leak meter", () => {
     assert.equal(checkWithdrawal({ amountZat: 4_000_000, shielded: false, now, payouts }).level, "amber");
     assert.equal(checkWithdrawal({ amountZat: 4_012_345, shielded: true, now, payouts }).level, "green");
     assert.equal(checkWithdrawal({ amountZat: 0.5 * ZEC, shielded: false, now, payouts }).level, "green");
+  });
+});
+
+describe("ZIP 318 migration", () => {
+  it("splits like the ZIP's digit expansion", () => {
+    // ZIP 318's own example: 123.45 ZEC → [100, 20, 2, 1, 0.2, 0.2, 0.05].
+    assert.deepEqual(
+      canonicalParts(12_345_000_000).map((z) => z / ZEC),
+      [100, 20, 2, 1, 0.2, 0.2, 0.05],
+    );
+    assert.deepEqual(canonicalParts(999_999), [], "under 0.01 ZEC is the residual");
+  });
+
+  it("gives every part one note and its own fee", () => {
+    const { parts, residual } = migrationParts([0.35 * ZEC + 3 * CROSSING_FEE_ZAT]);
+    assert.deepEqual(parts, [0.2 * ZEC, 0.1 * ZEC, 0.05 * ZEC]);
+    assert.equal(residual, 0);
+    const tiny = migrationParts([0.01 * ZEC]);
+    assert.deepEqual(tiny.parts, [], "0.01 ZEC can't also pay its fee");
+    assert.equal(tiny.residual, 0.01 * ZEC);
+  });
+
+  it("shuffles the parts and spaces them by capped exponential delays", () => {
+    let i = 0;
+    const seq = [0.9, 0.1, 0.5, 0.999_999_999, 0.2];
+    const rand = () => seq[i++ % seq.length] as number;
+    const plan = migrationSchedule([1, 2, 3], 0, rand);
+    assert.equal(plan.length, 3);
+    assert.deepEqual(plan.map((p) => p.zat).sort(), [1, 2, 3]);
+    for (let k = 1; k < plan.length; k++) assert.ok((plan[k]?.at ?? 0) > (plan[k - 1]?.at ?? 0));
+    assert.equal(
+      transferDelay(() => 0.999_999_999),
+      TRANSFER_DELAY_CAP_MS,
+    );
   });
 });

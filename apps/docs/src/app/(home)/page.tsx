@@ -15,7 +15,7 @@ const PROOF = [
   { figure: "1 host", line: "in the browser's resource list on mitoshi.xyz", href: "/docs/privacy/verify" },
   { figure: "14 hosts", line: "on the gateway's API allowlist, nothing else", href: "/docs/privacy/oblivious-http" },
   { figure: "3 sends", line: "proved in the browser, mined on Zcash testnet", href: "/docs/zcash/testnet-proof" },
-  { figure: "37 tests", line: "engine 22, rails 8, venues 7, all passing", href: "/docs/build/code-map" },
+  { figure: "40 tests", line: "engine 25, rails 8, venues 7, all passing", href: "/docs/build/code-map" },
 ] as const;
 
 const ZCASH = [

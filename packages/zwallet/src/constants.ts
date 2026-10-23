@@ -42,8 +42,5 @@ export const ZAT_PER_ZEC = 100_000_000;
  */
 export const RECEIVED_CONFIRMATIONS = 10;
 
-/** Zcash's target block spacing since Blossom (ZIP 208), in seconds. */
-export const BLOCK_SECONDS = 75;
-
 /** The worker reports the engine download at most once per this many bytes (256 KiB). */
 export const LOAD_REPORT_BYTES = 262_144;
