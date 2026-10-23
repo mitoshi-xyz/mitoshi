@@ -144,8 +144,15 @@ function toMarket(m: Json): PmMarket {
   };
 }
 
+/**
+ * Markets Polymarket itself lists: an event can carry archived or inactive placeholders (a candidate added twice,
+ * never traded, frozen at 49¢) that its site hides and nobody can trade.
+ */
+const listed = (m: Json) => m.archived !== true && m.active !== false;
+
 function toEvent(e: Json): PmEvent {
-  const markets = (Array.isArray(e.markets) ? (e.markets as Json[]) : []).map(toMarket);
+  const raw = Array.isArray(e.markets) ? (e.markets as Json[]) : [];
+  const markets = (raw.some(listed) ? raw.filter(listed) : raw).map(toMarket);
   return {
     id: str(e.id),
     slug: str(e.slug),
