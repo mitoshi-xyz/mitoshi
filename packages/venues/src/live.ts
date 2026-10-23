@@ -16,7 +16,8 @@ export type LiveStatus = "connecting" | "live" | "reconnecting";
 
 const PING_MS = 25_000;
 const BACKOFF_START_MS = 500;
-const BACKOFF_MAX_MS = 10_000;
+/** A feed that keeps failing is retried at most once a minute, so an outage does not turn every tab into a request loop. */
+const BACKOFF_MAX_MS = 60_000;
 
 /** Same key the relay routes by: type, then coin (or outcome id), then interval. */
 export function liveKey(s: LiveSub): string {

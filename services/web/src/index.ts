@@ -32,6 +32,9 @@ const HTTP_FORBIDDEN = 403;
 const HTTP_NOT_FOUND = 404;
 const HTTP_METHOD_NOT_ALLOWED = 405;
 const HTTP_TOO_LARGE = 413;
+const HTTP_UNAVAILABLE = 503;
+/** How long a browser should wait before asking for an unavailable live feed again. */
+const LIVE_RETRY_AFTER_S = 60;
 
 type Route = { gateway: string; method: "GET" | "POST"; contentType?: string; cacheable?: boolean };
 
@@ -101,7 +104,16 @@ export default {
         return new Response("forbidden", { status: HTTP_FORBIDDEN });
       }
       if (!PROTOCOLS[feed]) return new Response("unknown feed", { status: HTTP_NOT_FOUND });
-      return env.LIVE.get(env.LIVE.idFromName(feed), { locationHint: "weur" }).fetch(request);
+      try {
+        return await env.LIVE.get(env.LIVE.idFromName(feed), { locationHint: "weur" }).fetch(request);
+      } catch {
+        // The feed's object is unavailable (for one, the account's Durable Object quota is spent): say so plainly and
+        // ask for a wait, instead of failing the request. Prices still load over OHTTP; only live ticks pause.
+        return new Response("live feed unavailable", {
+          status: HTTP_UNAVAILABLE,
+          headers: { "retry-after": String(LIVE_RETRY_AFTER_S) },
+        });
+      }
     }
     if (url.pathname.startsWith(`${RELAY_PREFIX}/`)) {
       if (request.method === "OPTIONS") {
