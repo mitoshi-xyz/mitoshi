@@ -15,7 +15,7 @@ icon: Timer
 | Trading | Mitoshi | **None added.** No fee and no builder code on any order |
 | Funding | Mitoshi | **None added.** A funding fee exists in the code but is off: no fee recipient is set (`APP_FEE_RECIPIENT` is `null`), so the funding sheet shows "Mitoshi fee: none", read from the quote |
 | Venue fees | Polymarket, Hyperliquid, Jupiter | Each venue's own; the perps ticket shows its fee before you trade |
-| The swaps | NEAR Intents | **0.2% of each swap** (1Click's platform fee for a partner key with no app fee of its own), plus the spread. The funding sheet's **Swap cost** is the whole of it in dollars, read from the signed quote: $0.44 on a 0.05 ZEC Hyperliquid funding on 2026-10-23, of which 0.2% is NEAR's fee. The cost has a fixed part, so it weighs more on 0.01 ZEC |
+| The swaps | NEAR Intents | **0.2% of each swap** (1Click's platform fee for a partner key with no app fee of its own), plus the spread. The funding sheet's **Swap cost** is the whole of it in dollars, read from the signed quote: $0.44 to $0.55 on 0.05 ZEC Hyperliquid fundings quoted on 2026-10-23, of which 0.2% is NEAR's fee. The cost has a fixed part, so it weighs more on 0.01 ZEC |
 | Zcash network fee | Zcash miners | The ZIP 317 fee; the funding sheet reserves 0.00015 ZEC for it |
 | Polymarket bridge | Polymarket's bridge | Shown in the funding sheet for Polymarket |
 
