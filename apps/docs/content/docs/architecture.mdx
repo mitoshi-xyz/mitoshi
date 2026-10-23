@@ -1,0 +1,62 @@
+---
+title: Architecture
+description: The system maps. A static app, a relay and a gateway that each see half, and an allowlist of upstreams.
+---
+
+{/* Sources: README.md (Architecture); apps/web/next.config.ts; packages/*; services/web (wrangler.jsonc, src/index.ts,
+   src/live.ts); services/gateway/src (constants.ts, builder.ts, img.ts, ohttp.ts). */}
+
+Mitoshi is a **static web app**. No Mitoshi server holds keys, balances or the map of your wallets: there is only a
+relay and a gateway that pass sealed requests, and neither sees both ends.
+
+## The system map
+
+<SystemMap />
+
+## The two hops
+
+<OhttpHops />
+
+- **The relay** is a Cloudflare Worker (`services/web`), placed in AWS eu-west-1 so the address the gateway sees says
+  nothing about where you are. It forwards only the sealed body: no IP, cookies, user agent, referrer or language.
+  Its Worker logs are off.
+- **The gateway** is a Vercel Function in Dublin (`services/gateway`). It opens each message, calls only allowlisted
+  hosts and paths with a fixed header set, and seals the answer. It writes no logs of its own; Vercel's request log sees
+  only the relay's address and the gateway's path.
+- **Why not Cloudflare for the gateway?** Tests on 2026-10-22 showed a Cloudflare Worker passes the visitor's country to
+  Cloudflare-hosted sites it calls, Polymarket, 1Click and Jupiter among them. From Vercel's Dublin region every request
+  leaves from Ireland.
+
+## The money's route
+
+<FundingFlow />
+
+## In the browser
+
+| Piece | Package | What it does |
+| --- | --- | --- |
+| Wallet worker | `packages/zwallet` | Zcash's `zcash_client_sqlite` 0.23 on `wasm32-wasip1`, in a Web Worker: sync, notes, proofs, sends |
+| Vault | `apps/web` | IndexedDB, every record AES-GCM encrypted under a non-extractable key, optionally wrapped by a passphrase |
+| Engine | `packages/engine` | Standard sizes, rest rules, random scheduling, wallet registry, leak meter, key paths |
+| Rails | `packages/rails` | NEAR 1Click quotes, deposits and status; every quote's signature checked |
+| Venues | `packages/venues` | Polymarket (official SDK, own worker), Polymarket Perps, Hyperliquid (official SDK), Solana (Jupiter Ultra) |
+| OHTTP | `packages/net` | The RFC 9458 client and the gateway's pinned key |
+| Chart | `packages/chart` | A canvas engine for live lines and candles |
+
+## Built on Zcash
+
+- **Zcash's own wallet code** in the browser: `zcash_client_sqlite` 0.23 and `zcash_client_backend` 0.25, scanning and
+  spending Ironwood (NU6.3) and Orchard notes. Sapling is never spent.
+- **ZIP 32** keys from the 24 words; venue keys on Mitoshi's own hardened path (BIP 32 for EVM, SLIP-0010 for Solana).
+- **ZIP 318** (draft): the standard amounts (n × 10^k ZEC, n ∈ 1, 2, 5) and the timing rules, including never syncing
+  and broadcasting in the same window.
+- **ZIP 315** rest periods and **ZIP 317** fees.
+- **A light client over OHTTP**: every lightwalletd call is sealed.
+
+## Pages arrive as built
+
+Every page of mitoshi.xyz, and of this site, carries a Content-Security-Policy that allows its own inline scripts by
+SHA-256 hash and nothing else, plus `Cache-Control: no-transform`, so Cloudflare cannot inject analytics or rewrite a
+page. The 404 page carries its own policy in a meta tag. On mitoshi.xyz, the build files under `/_next/static/` get a
+policy of their own that applies when they run as workers: the wallet and Polymarket workers can reach this origin and
+nothing else (`services/web/src/constants.ts`, `WORKER_CSP`).

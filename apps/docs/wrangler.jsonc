@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // docs.mitoshi.xyz: the docs' static export as an assets-only Worker (no script runs per request).
+  "name": "mitoshi-docs",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "docs.mitoshi.xyz", "custom_domain": true }],
+  "compatibility_date": "2026-10-01",
+  // Headers (a CSP with per-page script hashes, no-transform) come from out/_headers (scripts/headers.mjs).
+  "assets": {
+    "directory": "./out",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  // No request logs, like the app and the relay.
+  "observability": { "enabled": false }
+}

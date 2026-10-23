@@ -1,0 +1,60 @@
+---
+title: Polymarket
+description: Prediction markets, from a fresh Deposit Wallet per market.
+---
+
+{/* Sources: packages/venues/src/polymarket (wallet.ts, account.ts, bridge.ts, trading.ts); apps/web/src/features/polymarket
+   (pm-trade.ts walletFor); apps/web/src/features/private-wallets (funding.ts FUNDING_ROUTES, home.ts);
+   services/gateway/src/builder.ts. */}
+
+| | |
+| --- | --- |
+| **You trade** | Any outcome on Polymarket's book: Yes/No and multi-outcome events |
+| **Wallet** | A Polymarket Deposit Wallet for a fresh signer key, one market per wallet |
+| **Funded with** | USDC, credited as pUSD by Polymarket's bridge |
+| **Code** | `packages/venues/src/polymarket` |
+
+## Set up
+
+Polymarket's official TypeScript SDK runs in its own Web Worker, and every call it makes is sealed with Oblivious
+HTTP. The wallet's **Deposit Wallet** is deployed and approved **gasless** through Polymarket's relayer. The Builder
+secret that authorises those relayer calls stays on Mitoshi's gateway, which signs **only Deposit Wallet requests**
+(`services/gateway/src/builder.ts`).
+
+## Funding
+
+<Steps>
+<Step>
+One standard amount of ZEC goes to a NEAR Intents deposit address.
+</Step>
+<Step>
+NEAR delivers USDC to the wallet's **Polymarket bridge address**: on Polygon, or on Arbitrum or Base when NEAR has no
+Polygon route at that moment. The bridge takes either.
+</Step>
+<Step>
+The bridge credits **pUSD** to the Deposit Wallet, in about 30 seconds.
+</Step>
+</Steps>
+
+## Trading
+
+- Buy or sell any outcome **at market** (fill-and-kill, with a price guard) or with a **limit**.
+- Cancel open orders; **redeem** winning shares after the market resolves.
+- Adding to a position or selling it stays on the wallet that holds it. A new market takes a ready, never-used wallet.
+- Orders carry **no builder code**: Polymarket publishes the builder field when it is set.
+
+## Coming home
+
+Open orders are cancelled, resolved shares redeemed, the rest sold. The pUSD leaves through a **bridge withdrawal** that
+pays a NEAR deposit address in USDC, and NEAR swaps it to ZEC at a fresh shielded address. Under 1 pUSD stays behind as
+dust.
+
+<Callout title="Not in NEAR's confidential mode">
+This trip home is the one swap Mitoshi cannot quote in NEAR's confidential mode: the bridge pays out whatever arrives,
+which needs a flexible-input quote, and 1Click offers no confidential mode for those.
+</Callout>
+
+## Public on purpose
+
+Each wallet's **relayer calls** (creating it, its approvals, redeeming, moving pUSD into Perps, the trip home) are
+attributed to Mitoshi's builder profile. Polymarket can tell these come from Mitoshi users, and when, not which user.

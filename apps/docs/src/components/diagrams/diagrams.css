@@ -1,0 +1,165 @@
+/*
+ * The system maps' colours, from the site's tokens (global.css), so each drawing follows the theme. Vermilion marks the
+ * sealed (OHTTP) path and the money's own route; everything public is drawn quieter and dashed.
+ */
+.dg {
+  --dg-bg: var(--mt-surface-1);
+  --dg-box: var(--mt-bg);
+  --dg-ink: var(--mt-ink);
+  --dg-ink-2: var(--mt-ink-2);
+  --dg-muted: var(--mt-muted);
+  --dg-line: var(--mt-strong);
+  --dg-accent: var(--mt-accent);
+  --dg-accent-text: var(--mt-accent-text);
+  --dg-accent-wash: color-mix(in srgb, var(--mt-accent) 9%, var(--mt-bg));
+
+  container-type: inline-size;
+  margin: 1.75rem 0;
+  padding: 8px;
+  border: 1px solid var(--mt-hairline);
+  border-radius: 14px;
+  background: var(--dg-bg);
+}
+
+.dg-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.dg-wide {
+  display: none;
+}
+
+/* The tall drawing is for phones; on a mid-size column it stays phone-sized rather than growing huge. */
+.dg-tall {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+@container (min-width: 760px) {
+  .dg-wide {
+    display: block;
+  }
+  .dg-tall {
+    display: none;
+  }
+}
+
+.dg figcaption {
+  margin: 10px 4px 2px;
+  color: var(--mt-ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dg text {
+  font-family: var(--font-sans);
+  fill: var(--dg-ink);
+}
+
+.dg .dg-title {
+  font-family: var(--font-heading);
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.dg .dg-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  fill: var(--dg-muted);
+}
+
+.dg .dg-body {
+  font-size: 13px;
+  fill: var(--dg-ink-2);
+}
+
+.dg .dg-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--dg-ink-2);
+}
+
+.dg .dg-note-accent {
+  fill: var(--dg-accent-text);
+  font-weight: 500;
+}
+
+.dg .dg-note-quiet {
+  fill: var(--dg-muted);
+}
+
+.dg .dg-pill-text {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.dg-box {
+  fill: var(--dg-box);
+  stroke: var(--dg-line);
+  stroke-width: 1;
+}
+
+.dg-box-accent {
+  fill: var(--dg-accent-wash);
+  stroke: var(--dg-accent);
+  stroke-width: 1.5;
+}
+
+.dg-box-quiet {
+  fill: transparent;
+  stroke-dasharray: 5 4;
+}
+
+.dg-zone {
+  fill: none;
+  stroke: var(--dg-line);
+  stroke-dasharray: 6 5;
+}
+
+.dg-wire {
+  fill: none;
+  stroke-width: 1.5;
+  stroke: var(--dg-ink-2);
+}
+
+.dg-wire-accent {
+  stroke: var(--dg-accent);
+  stroke-width: 2.25;
+}
+
+.dg-wire-quiet {
+  stroke: var(--dg-muted);
+  stroke-dasharray: 5 4;
+}
+
+.dg-head-plain {
+  fill: var(--dg-ink-2);
+}
+
+.dg-head-accent {
+  fill: var(--dg-accent);
+}
+
+.dg-head-quiet {
+  fill: var(--dg-muted);
+}
+
+.dg-pill {
+  fill: var(--dg-bg);
+  stroke: var(--dg-line);
+}
+
+.dg-pill-accent {
+  stroke: var(--dg-accent);
+}
+
+.dg-life {
+  fill: none;
+  stroke: var(--dg-line);
+  stroke-dasharray: 2 4;
+}

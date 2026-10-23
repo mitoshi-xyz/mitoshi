@@ -1,0 +1,58 @@
+---
+title: Backup and recovery
+description: The 24 words, the backup file and the passphrase lock, and what happens if something stops halfway.
+---
+
+{/* Sources: apps/web/src/app/docs/recovery/page.tsx; apps/web/src/features/settings (security.tsx, settings.tsx);
+   apps/web/src/features/private-wallets/recover.ts (GAP = 5, DELAY 3–9 s); apps/web/src/constants.ts (LOCK_*,
+   IRONWOOD_ACTIVATION). */}
+
+Mitoshi keeps nothing for you on a server, so recovery is yours.
+
+| Way back | Restores | Speed |
+| --- | --- | --- |
+| **24 words** | The balance and every private wallet | Slow: a private scan of the chain, then of each venue |
+| **Backup file** | Words and the wallet list, with each wallet's funding record | At once, no scan |
+
+## The 24 words
+
+The words restore the shielded balance with a private scan from the Ironwood upgrade, and every private wallet,
+because each wallet's key comes from them. After a restore from words alone, Mitoshi asks each venue about one derived
+address at a time, 3–9 seconds apart, until it meets five unused ones in a row. **Settings → Find my wallets** runs the
+scan again.
+
+## The backup file
+
+**Settings → Download the backup** makes one file with your words and your private-wallet list, locked with a
+passphrase you choose (PBKDF2-SHA-256, 600,000 iterations, then AES-GCM). Restoring from it brings every wallet back
+with no scan.
+
+## The passphrase lock
+
+**Settings → Passphrase lock** asks for a passphrase each time Mitoshi opens in this browser. The vault key is then
+kept only wrapped under the passphrase, and a locked vault opens nothing, not even the wallet engine. There is no
+reset: if the passphrase is lost, only the 24 words get you back in.
+
+## Starting over
+
+<Steps>
+<Step>
+**Settings → Forget this browser**, behind a typed confirmation, erases the vault here. Your money stays on the chains.
+</Step>
+<Step>
+Restore from the 24 words or the backup file, in any browser.
+</Step>
+</Steps>
+
+<Callout type="warn">
+Anyone with your 24 words can move your money. Keep them offline and never type them into a website.
+</Callout>
+
+## If something stops halfway
+
+| What stopped | What happens |
+| --- | --- |
+| A funding failed before anything was sent | It says so; Try again waits for a new random start |
+| A funding's ZEC was sent | It goes back to following the swap; NEAR refunds to a fresh shielded address if it cannot complete |
+| NEAR refunded a trip home | The money is back in the venue wallet, ready to send home again |
+| The tab closed while a wallet was being set up | It finishes the next time Mitoshi opens |

@@ -1,0 +1,33 @@
+{
+  "name": "@mitoshi/docs",
+  "private": true,
+  "type": "module",
+  "description": "docs.mitoshi.xyz: Mitoshi's documentation, a static Fumadocs site with hand-drawn system maps and strict headers.",
+  "scripts": {
+    "dev": "next dev --port 3302",
+    "build": "next build && node scripts/headers.mjs",
+    "postinstall": "fumadocs-mdx",
+    "typecheck": "fumadocs-mdx && next typegen && tsc --noEmit",
+    "diagrams": "node scripts/export-diagrams.mjs",
+    "preview": "wrangler dev --port 3303",
+    "deploy": "pnpm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "fumadocs-core": "16.17.5",
+    "fumadocs-mdx": "15.4.7",
+    "fumadocs-ui": "16.17.5",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@types/mdx": "2.0.14",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "^4.100.0"
+  }
+}

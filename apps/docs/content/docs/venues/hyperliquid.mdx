@@ -1,0 +1,36 @@
+---
+title: Hyperliquid
+description: Crypto perps from a fresh key, funded with USDC on HyperCore.
+---
+
+{/* Sources: packages/venues/src/hyperliquid (account.ts, constants.ts HL_ACTIVATION_FEE_USDC, DUST_USDC, transport.ts);
+   apps/web/src/features/hyperliquid; apps/web/src/features/private-wallets/home.ts. */}
+
+| | |
+| --- | --- |
+| **You trade** | Crypto perps on Hyperliquid's live terminal |
+| **Wallet** | A fresh EVM key |
+| **Funded with** | USDC on HyperCore |
+| **Code** | `packages/venues/src/hyperliquid` |
+
+## Funding
+
+NEAR delivers **USDC on HyperCore** straight to the fresh address. Mitoshi moves it from spot to perps when a trade
+needs it. A brand-new Hyperliquid account pays Hyperliquid's one-time **1 USDC activation fee**.
+
+## Trading
+
+- Long or short with **leverage**, **take-profit** and **stop-loss**, and close, from the live terminal.
+- Orders go through Hyperliquid's API, signed by the wallet's own key, with the official SDK's transport replaced by
+  Oblivious HTTP.
+- The terminal trades from the wallet that already traded this market; otherwise from a ready, unused wallet.
+
+## Coming home
+
+Positions are closed, the USDC is gathered in spot and sent to a NEAR deposit address, and NEAR swaps it to ZEC at a
+fresh shielded address. Under 1 USDC stays behind as dust.
+
+## Live data
+
+Mids, candles, books and trades come from one shared WebSocket the relay keeps open to Hyperliquid. Only market
+channels are allowed: anything that names a user is refused, so the relay never learns which address is yours.

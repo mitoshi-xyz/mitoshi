@@ -1,0 +1,30 @@
+---
+title: Solana
+description: Solana tokens through Jupiter, from a fresh ed25519 key.
+---
+
+{/* Sources: packages/venues/src/solana (account.ts, tx.ts, constants.ts DUST_LAMPORTS); apps/web/src/features/solana
+   (token-view.tsx); services/gateway/src/constants.ts (lite-api.jup.ag, api.geckoterminal.com, Solana RPC). */}
+
+| | |
+| --- | --- |
+| **You trade** | Any token Jupiter routes |
+| **Wallet** | A fresh ed25519 key (SLIP-0010) |
+| **Funded with** | SOL, which also pays the fees |
+| **Code** | `packages/venues/src/solana` |
+
+## Funding
+
+NEAR delivers **SOL** to the fresh address. The same SOL pays the wallet's transaction fees.
+
+## Trading
+
+- Swaps go through **Jupiter Ultra**: Jupiter routes the swap and broadcasts the transaction this wallet signed.
+- One Solana wallet trades until you send it home, so it can hold several tokens. A new one is used when none is
+  trading.
+- Charts and prices come from Jupiter and GeckoTerminal through the gateway.
+
+## Coming home
+
+Every token is sold back to SOL, then one transfer goes to a NEAR deposit address, and NEAR swaps it to ZEC at a fresh
+shielded address. Under 0.005 SOL stays behind as dust.

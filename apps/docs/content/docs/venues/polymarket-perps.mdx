@@ -1,0 +1,44 @@
+---
+title: Polymarket Perps
+description: Perpetuals on US stocks, indices, gold and oil, margined in pUSD.
+---
+
+{/* Sources: packages/venues/src/pmperps (account.ts, signing.ts, constants.ts PROXY_LIFETIME_MS, MARKET_SLIPPAGE,
+   DUST_PUSD); apps/web/src/features/pmperps; apps/web/src/features/trade/terminal.tsx (useTradingWallet). */}
+
+| | |
+| --- | --- |
+| **You trade** | NVIDIA and other US stocks, indices, gold, oil and crypto, with leverage |
+| **Wallet** | A fresh Polymarket wallet; its own key owns the Perps account |
+| **Funded with** | pUSD, at least 10, moved in from the wallet's Deposit Wallet |
+| **Code** | `packages/venues/src/pmperps` |
+
+## Set up
+
+Perps uses the same kind of fresh Polymarket wallet as [Polymarket](/venues/polymarket). The wallet's own key owns
+the Perps account and authorises a **proxy key for 7 days**, which signs each order. A new proxy is authorised when one
+expires or is lost. Every request is a signed command over Polymarket's REST API, so it goes through Oblivious HTTP
+like everything else.
+
+## Funding
+
+1. The wallet is funded with pUSD, as on [Polymarket](/venues/polymarket#funding).
+2. Its pUSD moves from the Deposit Wallet into Perps, **gasless**. That first deposit, at least **10 pUSD**, opens the
+   Perps account.
+
+## Trading
+
+- **Long or short** at market (an IOC limit at most 1% through the mark) or with a limit.
+- **Leverage**, and **take-profit** and **stop-loss** exits.
+- The terminal trades from the wallet that already traded this market; otherwise from a ready, unused wallet.
+
+## Coming home
+
+Orders are cancelled and positions closed. The withdrawable pUSD goes back to the Deposit Wallet, signed by the
+wallet's own key, and then takes [Polymarket's route home](/venues/polymarket#coming-home). Under 1 pUSD stays behind as
+dust.
+
+## Live data
+
+Prices, candles and books come from Polymarket Perps' public feed through the relay's live feed. The relay skips the
+`tickers` channel: it pushes about 700 updates a second for every market at once, and `statistics` gives the price.

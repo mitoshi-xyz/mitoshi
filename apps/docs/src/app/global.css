@@ -1,0 +1,95 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@import "../components/diagrams/diagrams.css";
+
+/*
+ * Mitoshi's tokens (the app's apps/web/src/styles/tokens.css): dark is the ground (#050505), light is the cream world.
+ * Vermilion is the only brand colour. As text it uses a deeper shade on cream (#B83214), so links stay above 4.5:1.
+ */
+:root {
+  --mt-bg: #f4eee3;
+  --mt-ink: #141210;
+  --mt-ink-2: #5e574b;
+  --mt-muted: #7c7466;
+  --mt-surface-1: #fbf7ee;
+  --mt-surface-2: #ece3d2;
+  --mt-hairline: rgb(20 18 16 / 0.12);
+  --mt-strong: rgb(20 18 16 / 0.26);
+  --mt-accent: #d93e1f;
+  --mt-accent-text: #b83214;
+  --mt-accent-ink: #fbf7ee;
+}
+
+.dark {
+  --mt-bg: #050505;
+  --mt-ink: #ffffff;
+  --mt-ink-2: #a3a3a3;
+  --mt-muted: #8a8a8a;
+  --mt-surface-1: #111111;
+  --mt-surface-2: #1c1c1c;
+  --mt-hairline: rgb(255 255 255 / 0.1);
+  --mt-strong: rgb(255 255 255 / 0.24);
+  --mt-accent: #e04d26;
+  --mt-accent-text: #e04d26;
+  --mt-accent-ink: #141210;
+}
+
+:root,
+.dark {
+  --color-fd-background: var(--mt-bg);
+  --color-fd-foreground: var(--mt-ink);
+  --color-fd-muted: var(--mt-surface-2);
+  --color-fd-muted-foreground: var(--mt-ink-2);
+  --color-fd-popover: var(--mt-surface-1);
+  --color-fd-popover-foreground: var(--mt-ink);
+  --color-fd-card: var(--mt-surface-1);
+  --color-fd-card-foreground: var(--mt-ink);
+  --color-fd-border: var(--mt-hairline);
+  --color-fd-primary: var(--mt-accent-text);
+  --color-fd-primary-foreground: var(--mt-accent-ink);
+  --color-fd-secondary: var(--mt-surface-2);
+  --color-fd-secondary-foreground: var(--mt-ink);
+  --color-fd-accent: color-mix(in srgb, var(--mt-ink) 6%, transparent);
+  --color-fd-accent-foreground: var(--mt-ink);
+  --color-fd-ring: var(--mt-accent);
+}
+
+.dark #nd-sidebar {
+  --color-fd-muted: var(--mt-surface-2);
+  --color-fd-secondary: var(--mt-surface-2);
+  --color-fd-muted-foreground: var(--mt-ink-2);
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+  --font-heading: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-stamp: var(--font-noto-serif-jp), serif;
+}
+
+body {
+  background: var(--mt-bg);
+  font-family: var(--font-sans);
+  overflow-wrap: anywhere;
+}
+
+#nd-page h1,
+.prose :is(h2, h3, h4) {
+  font-family: var(--font-heading);
+  letter-spacing: -0.015em;
+}
+
+.prose :is(td, th) {
+  overflow-wrap: normal;
+}
+
+.prose td code {
+  white-space: nowrap;
+}
+
+/* Figures and hashes read as data. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
