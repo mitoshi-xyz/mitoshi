@@ -113,6 +113,9 @@ export function HeroVisual() {
           <dt className="text-[var(--lp-ink-3)]">Links to others</dt>
           <dd className="text-right text-[var(--up)]">none</dd>
         </dl>
+        <p className="mt-2 text-right font-mono text-[9px] text-[var(--lp-ink-3)] uppercase tracking-[0.12em]">
+          Example
+        </p>
       </div>
 
       <div className="lp-rise absolute bottom-[6%] left-0 w-[40%] max-w-[230px] sm:w-[46%] rounded-[20px] bg-[#141210] p-4 shadow-[0_30px_60px_-30px_#000,inset_0_0_0_1px_rgb(244_238_227/0.08)] [animation-delay:350ms]">
