@@ -3,12 +3,12 @@ export const LANDING = {
   nav: { how: "How it works", venues: "Venues", privacy: "Privacy", docs: "Docs", open: "Open Mitoshi" },
   hero: {
     chip: "Live on Zcash mainnet",
-    title: ["Trade anywhere.", "Nobody can"],
-    accent: "follow you.",
-    line: "Hold shielded ZEC in your browser. Every position on Polymarket, Hyperliquid and Solana opens from a wallet that has never existed before, and the money comes home shielded.",
+    title: ["Trade privately", "from"],
+    accent: "anywhere.",
+    line: "Predictions, perps, US stocks, gold and Solana tokens, all from shielded ZEC. Every trade opens a wallet nobody has ever seen.",
     open: "Open Mitoshi",
     how: "How it works",
-    small: "No account · no sign-up · your keys never leave this browser",
+    small: "No account · no sign-up · your keys stay in this browser",
   },
   problem: {
     kicker: "The problem",
@@ -66,22 +66,32 @@ export const LANDING = {
   },
   venues: {
     kicker: "Venues",
-    title: "One private balance. Three venues.",
+    title: "One private balance. Every market.",
     items: [
       {
         venue: "polymarket",
+        href: "/predict",
         name: "Polymarket",
         what: "Predictions",
         body: "Buy Yes or No on any event, at market or with a limit, and redeem when it resolves.",
       },
       {
+        venue: "polymarket",
+        href: "/trade#pm/NVDA-USD",
+        name: "Polymarket Perps",
+        what: "Stocks · gold · oil",
+        body: "NVDA, Tesla, the S&P 500, gold and oil, long or short with leverage.",
+      },
+      {
         venue: "hyperliquid",
+        href: "/trade#BTC",
         name: "Hyperliquid",
-        what: "Perps",
+        what: "Crypto perps",
         body: "Long or short with leverage, TP and SL, on a live terminal.",
       },
       {
         venue: "solana",
+        href: "/tokens",
         name: "Solana",
         what: "Tokens",
         body: "Any token Jupiter routes, from a wallet funded in SOL.",

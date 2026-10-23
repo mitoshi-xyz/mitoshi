@@ -8,6 +8,7 @@ import { HeroVisual } from "./hero-visual";
 import { Tape } from "./tape";
 import "@/styles/landing.css";
 import "@/styles/welcome.css";
+import { LandingQueries } from "./queries";
 
 function Nav() {
   return (
@@ -190,11 +191,11 @@ function Sees() {
 function Venues() {
   return (
     <Section id="venues" kicker={L.venues.kicker} title={L.venues.title}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {L.venues.items.map((v) => (
           <Link
-            key={v.venue}
-            href={v.venue === "polymarket" ? "/predict" : v.venue === "hyperliquid" ? "/trade" : "/tokens"}
+            key={v.name}
+            href={v.href}
             className="lp-card group flex flex-col gap-4 p-6 transition-transform duration-300 hover:-translate-y-1"
           >
             <VenueMark venue={v.venue} size={44} />
@@ -326,18 +327,20 @@ function Footer() {
 /** The landing: one dark world, the live product in the hero, then how it works, what's public, venues, privacy. */
 export function Landing() {
   return (
-    <main className="lp">
-      <Hero />
-      <Tape />
-      <Problem />
-      <How />
-      <Sees />
-      <Venues />
-      <Privacy />
-      <Built />
-      <Faq />
-      <Final />
-      <Footer />
-    </main>
+    <LandingQueries>
+      <main className="lp">
+        <Hero />
+        <Tape />
+        <Problem />
+        <How />
+        <Sees />
+        <Venues />
+        <Privacy />
+        <Built />
+        <Faq />
+        <Final />
+        <Footer />
+      </main>
+    </LandingQueries>
   );
 }

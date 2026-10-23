@@ -39,7 +39,7 @@ function useDebounced(value: string, ms: number) {
 
 const venueTag = (venue: Venue) => <VenueMark venue={venue} size={14} className="opacity-80" />;
 
-/** ⌘K: every page and every market on all three venues, one list. Remote searches go over OHTTP. */
+/** ⌘K: every page and every market on every venue, one list. Remote searches go over OHTTP. */
 export function Palette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);

@@ -4,7 +4,7 @@ import { H2, Lead, List, P, Steps, Title } from "@/features/docs/prose";
 export default function DocsOverview() {
   return (
     <>
-      <Title kicker="Mitoshi docs">Trade anywhere, and nobody can follow you</Title>
+      <Title kicker="Mitoshi docs">Trade privately from anywhere</Title>
       <Lead>
         Mitoshi is a private trading app. You hold shielded ZEC in your browser, and every position you open on
         Polymarket, Hyperliquid or Solana comes from a wallet that has never existed before. When you close, the money
@@ -37,7 +37,7 @@ export default function DocsOverview() {
       <List
         items={[
           "Self-custody with no account: the keys, the balance and the list of your wallets never leave the browser.",
-          "One fresh wallet per position, on three venues, from one private balance.",
+          "One fresh wallet per position, on every venue, from one private balance.",
           "Every request is sealed with Oblivious HTTP, so no server sees both who you are and what you ask.",
           <>
             A leak meter on every send, and a <Link href="/docs/privacy">threat model</Link> that says plainly what

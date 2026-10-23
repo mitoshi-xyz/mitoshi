@@ -5,9 +5,9 @@ import { fontVariables } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mitoshi 見通し",
+  title: "Mitoshi 見通し · Trade privately from anywhere",
   description:
-    "Hold private ZEC. Trade Polymarket, Hyperliquid and Solana from wallets that have never existed before. Nobody can follow you.",
+    "Trade privately from anywhere: Polymarket predictions, perps, US stocks, gold and Solana tokens from shielded ZEC, each trade from a wallet nobody has ever seen.",
   referrer: "no-referrer",
 };
 

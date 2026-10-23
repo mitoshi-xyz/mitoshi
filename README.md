@@ -1,6 +1,6 @@
 # Mitoshi 見通し
 
-**Hold private ZEC. Trade Polymarket, Hyperliquid and Solana from wallets that have never existed before. Nobody can follow you.**
+**Trade privately from anywhere. Polymarket predictions, perps, US stocks, gold and Solana tokens from shielded ZEC, each trade from a wallet that has never existed before.**
 
 Copy-traders watch every public wallet. Mitoshi keeps your money in Zcash's shielded pool, the largest privacy crowd in
 crypto, and opens every position from a brand-new single-use wallet funded from that pool in standard amounts at random
