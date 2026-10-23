@@ -172,12 +172,13 @@ pnpm --filter @mitoshi/web dev
 That serves `localhost:3300` on Zcash testnet through the deployed relay; `dev:main` serves mainnet on port 3301.
 Checks: `pnpm lint && pnpm typecheck && pnpm test`. Rebuild the wallet WASM with
 `pnpm --filter @mitoshi/zwallet build:wasm` (Rust, LLVM clang and the wasi-libc sysroot). Deploy with
-`pnpm --filter @mitoshi/web-worker deploy` (app and relay) and `pnpm --filter @mitoshi/gateway deploy` (gateway); its
-secrets are set on the host, never in the repository.
+`pnpm --filter @mitoshi/web-worker run deploy` (app and relay), `pnpm --filter @mitoshi/docs run deploy` (docs) and
+`pnpm --filter @mitoshi/gateway run deploy` (gateway); its secrets are set on the host, never in the repository.
 
 | Area | Where |
 | --- | --- |
 | Screens, flows and states | [apps/web/src/features](apps/web/src/features) |
+| Docs site and its system maps | [apps/docs](apps/docs) |
 | Zcash wallet (Rust → WASM) and its worker | [packages/zwallet](packages/zwallet) |
 | Amounts, timing, registry, leak meter | [packages/engine](packages/engine) |
 | NEAR Intents 1Click | [packages/rails](packages/rails) |
