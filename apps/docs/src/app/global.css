@@ -93,3 +93,53 @@ body {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
+
+/* A phone around a real capture: a dark bezel in both themes, like the device itself. */
+.mt-phone {
+  background: linear-gradient(135deg, #262626 0%, #1a1a1a 45%, #141414 100%);
+  box-shadow:
+    0 24px 60px -18px rgb(0 0 0 / 0.55),
+    0 2px 6px rgb(0 0 0 / 0.25),
+    inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+/* The same screen on desktop and phone: the window on wide screens, the phone below 640 px. */
+.mt-screen-phone {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .mt-screen-wide {
+    display: none;
+  }
+  .mt-screen-phone {
+    display: block;
+  }
+}
+
+/* The logo row drifts on one keyframe and stops for people who ask for less motion. */
+@keyframes mt-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.mt-marquee {
+  animation: mt-marquee var(--marquee, 40s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-marquee {
+    animation: none;
+  }
+}
+
+/* The front page's hero: the vermilion glow the app's landing uses, on the page ground. */
+.mt-hero {
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--mt-accent) 16%, transparent), transparent 70%),
+    var(--mt-bg);
+}

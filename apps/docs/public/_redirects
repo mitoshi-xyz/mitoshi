@@ -1,0 +1,18 @@
+# Pages that moved when the docs grew a home page and five sections. The README and mitoshi.xyz/docs/* link to the old
+# paths; each keeps working with a 301 (a #fragment such as #who-sees-what carries over).
+/docs /docs/guide 301
+/docs/build /docs/build/architecture 301
+/getting-started /docs/guide/getting-started 301
+/private-wallets /docs/guide/private-wallets 301
+/fees-and-timing /docs/guide/fees-and-timing 301
+/backup-and-recovery /docs/guide/backup-and-recovery 301
+/faq /docs/guide/faq 301
+/troubleshooting /docs/guide/troubleshooting 301
+/privacy /docs/privacy 301
+/verify /docs/privacy/verify 301
+/architecture /docs/build/architecture 301
+/venues /docs/venues 301
+/venues/polymarket /docs/venues/polymarket 301
+/venues/polymarket-perps /docs/venues/polymarket-perps 301
+/venues/hyperliquid /docs/venues/hyperliquid 301
+/venues/solana /docs/venues/solana 301

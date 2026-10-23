@@ -1,0 +1,72 @@
+---
+title: Testnet proof
+description: Three shielded transactions the browser wallet built, proved and broadcast on Zcash testnet, and a script to check them yourself.
+icon: BadgeCheck
+---
+
+{/* Sources: README.md "Proof and evidence"; checked by the docs author on 2026-10-23 with GetTransaction against
+   zcash-testnet.chainsafe.dev (heights 4,529,708 / 4,529,789 / 4,529,846, 9,166 bytes each). */}
+
+The browser wallet built, proved and broadcast these Ironwood spends on Zcash testnet (NU7 is active there). Each one
+was read back from the same light server the wallet syncs from.
+
+<Receipt
+  kicker="Zcash testnet · GetTransaction"
+  title="Three sends from the browser wallet"
+  rows={[
+    [<TxId id="ceb45a85df00f55d8a7b6c4318c65aa22c33c702a4bff476c2feef0dee7d4e5d" />, "block 4,529,708"],
+    [<TxId id="c1569f9f34a75c6896b272f7804ed501285acbfb472ce1dcf53fc869fa6938e2" />, "block 4,529,789"],
+    [<TxId id="8a14a08bc1af88c6b8f644fdc22d11731e431a8b2257fccac4a3768430981b86" />, "block 4,529,846"],
+  ]}
+  source="Read back on 2026-10-23 from zcash-testnet.chainsafe.dev: each transaction is 9,166 bytes. The first was sent directly, the other two from the app, one of them over Oblivious HTTP."
+/>
+
+Public testnet explorers follow an older testnet chain, so they don't show these. The light server does.
+
+## Check them yourself
+
+`GetTransaction` takes the transaction id with its bytes reversed. This asks the light server for each one and prints
+the block height and the size; it needs only Python.
+
+```python title="check_txids.py"
+import struct, urllib.request
+
+URL = "https://zcash-testnet.chainsafe.dev/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTransaction"
+TXIDS = [
+    "ceb45a85df00f55d8a7b6c4318c65aa22c33c702a4bff476c2feef0dee7d4e5d",
+    "c1569f9f34a75c6896b272f7804ed501285acbfb472ce1dcf53fc869fa6938e2",
+    "8a14a08bc1af88c6b8f644fdc22d11731e431a8b2257fccac4a3768430981b86",
+]
+
+def varint(buf, i):
+    value = shift = 0
+    while True:
+        byte = buf[i]; i += 1
+        value |= (byte & 0x7F) << shift; shift += 7
+        if byte < 0x80:
+            return value, i
+
+for txid in TXIDS:
+    filt = bytes([0x1A, 32]) + bytes.fromhex(txid)[::-1]  # TxFilter.hash, reversed
+    frame = b"\x00" + struct.pack(">I", len(filt)) + filt  # one gRPC-web frame
+    req = urllib.request.Request(URL, data=frame, method="POST", headers={
+        "content-type": "application/grpc-web+proto", "x-grpc-web": "1"})
+    body = urllib.request.urlopen(req, timeout=30).read()
+    msg = body[5:5 + struct.unpack(">I", body[1:5])[0]]  # RawTransaction
+    i = size = height = 0
+    while i < len(msg):
+        tag = msg[i]; i += 1
+        if tag >> 3 == 1:  # data
+            size, i = varint(msg, i); i += size
+        else:              # height
+            height, i = varint(msg, i)
+    print(txid[:16], "block", height, size, "bytes")
+```
+
+## Timings measured on testnet
+
+| Step | Time | Source |
+| --- | --- | --- |
+| Orchard proving key warm-up | 11.8 s | README evidence table, 2026-10-23 |
+| One proof, single-threaded | about 17.5 s | README evidence table |
+| Testnet block spacing | about 22–25 s | `packages/engine/src/constants.ts` |

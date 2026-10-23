@@ -1,0 +1,53 @@
+---
+title: FAQ
+description: Short answers to the questions people ask first about Mitoshi, its privacy and its limits.
+icon: MessageCircleQuestion
+---
+
+{/* Sources: README.md; the pages of this site and the code they cite. */}
+
+<Accordions type="multiple">
+<Accordion title="Is Mitoshi custodial?">
+No. The keys come from 24 words made in your browser and stay there, encrypted. Mitoshi's servers are a relay and a
+gateway that pass sealed requests; there is no database and no account.
+</Accordion>
+<Accordion title="Why a new wallet for every trade?">
+On a public venue a wallet is a track record. Copy-trading bots follow winning addresses, mirror entries and crowd
+exits, and a new wallet is usually found again through the money that funds it. Mitoshi funds each one from the
+shielded pool through NEAR Intents, at a standard size and a random moment, so the trail stops at the pool.
+</Accordion>
+<Accordion title="What can someone watching the venue see?">
+That wallet's own trades, its one funding from a NEAR swap and its one trip home. Not your other wallets, your balance
+or your IP. See [What stays public](/docs/privacy/what-stays-public).
+</Accordion>
+<Accordion title="Does Mitoshi take a fee?">
+No. A 0.2% funding fee exists in the code but is switched off. You pay the venues' own fees, the swap spread and the
+Zcash network fee. See [Fees and timing](/docs/guide/fees-and-timing).
+</Accordion>
+<Accordion title="Why does funding take minutes?">
+The swap through NEAR Intents takes about 8 minutes by its own estimate, and the funding starts at a random moment 20
+seconds to 3 minutes after you ask. Turn on **Keep one ready** to have a funded wallet waiting.
+</Accordion>
+<Accordion title="Why does my ZEC have to rest?">
+ZEC that arrives from a public address, including NEAR's payouts when a wallet comes home, rests 2–6 hours before it can
+fund a wallet. Otherwise its arrival could be matched to your next trade. A deposit from a shielded wallet doesn't rest.
+</Accordion>
+<Accordion title="Can I try it on testnet?">
+The app runs on Zcash testnet locally (`pnpm --filter @mitoshi/web dev`), but private wallets need mainnet ZEC: NEAR
+Intents only takes mainnet ZEC.
+</Accordion>
+<Accordion title="Has a full mainnet trade run yet?">
+Not yet. The browser wallet's sends are verified on testnet, and each venue's reads and quotes over Oblivious HTTP are
+verified; the full round trip on mainnet waits for test funds. See [Verify it yourself](/docs/privacy/verify).
+</Accordion>
+<Accordion title="Is there a demo video?">
+Not yet: [mitoshi.xyz/demo](https://mitoshi.xyz/demo) says "Recording soon" and links to the live screens.
+</Accordion>
+<Accordion title="Is there a phone app?">
+No. Mitoshi is a web app, built for phones first, at [mitoshi.xyz](https://mitoshi.xyz).
+</Accordion>
+<Accordion title="Where is the code?">
+[github.com/mitoshi-xyz/mitoshi](https://github.com/mitoshi-xyz/mitoshi), MIT licensed. Start with the
+[code map](/docs/build/code-map).
+</Accordion>
+</Accordions>

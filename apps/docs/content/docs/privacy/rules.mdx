@@ -1,0 +1,39 @@
+---
+title: The rules and the leak meter
+description: Standard sizes, random starts, rests and a leak meter on every send keep the one public hop from pointing back at you.
+icon: ListChecks
+---
+
+{/* Sources: packages/engine/src (constants.ts:4-48, schedule.ts, rest.ts, leak.ts, registry.ts:168-187, keys.ts);
+   apps/web/src/constants.ts:17-25; apps/web/src/features/private-wallets (jobs.ts:53-150,274-295; fund-drawer.tsx:252);
+   apps/web/src/features/wallet/withdraw-drawer.tsx:32-46,144,220; packages/zwallet/rust/src/send.rs:64-65,127. */}
+
+## Rules that keep wallets apart
+
+| Rule | Value | Why |
+| --- | --- | --- |
+| A new key per wallet | `m/44'/coin'/6874'/venue'/index'`, every level hardened | No two wallets share an address or a key |
+| One wallet per position | the wallet that holds the market, else a never-used ready one, else a new funding | Positions never share a wallet |
+| Standard sizes only | 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 or 1 ZEC | The one public hop looks like many others |
+| A random start | 20 s to 3 min after you ask | The hop is not timed to your tap |
+| Keep-ready refills | exponential, 90 min on average, at most 12 h | A new wallet never shows up right after your trade |
+| Due while closed | a new random start when the app opens | The hop is not timed to the app opening |
+| Rest after a public arrival | 2–6 h, picked per note | An arrival can't be matched to your next trade |
+| Fresh addresses | a fresh shielded refund address for every funding, a fresh shielded payout address for every trip home | Swaps share no Zcash address |
+| No memos | never, on any send; the outgoing viewing key is discarded | Nothing marks or reveals the payment |
+| Quiet after a send | no sync for a random 1–10 min | A broadcast and the same wallet's reads never share a window |
+| No builder code | on any order, on any venue | Orders don't name Mitoshi |
+
+## The leak meter
+
+<Screen name="fund" alt="The New private wallet sheet on mitoshi.xyz with an empty balance: the Hyperliquid tab, 0.05 ZEC chosen, a NEAR Intents quote, and the leak meter blocking the funding because no ZEC is ready." caption="With nothing to spend, the meter blocks the funding and says why; the funding button asks for a deposit first." />
+
+Every send runs through it (`packages/engine/src/leak.ts`).
+
+| Send | Red | Amber | Effect |
+| --- | --- | --- | --- |
+| Funding a private wallet | not a standard size, or it would spend more than is ready (resting ZEC doesn't count) | — | Red **blocks** the funding |
+| Withdrawal to a shielded address | — | — | Always clear: the amount and both addresses stay private |
+| Withdrawal to a public address | exactly the amount that came home in the last 48 h | within 2% of it; within 2 h of a payout; not a standard size | Advisory: sending to your own exchange is your choice |
+
+Sapling addresses (`zs1…`) are refused as a destination; Mitoshi asks for a unified address.

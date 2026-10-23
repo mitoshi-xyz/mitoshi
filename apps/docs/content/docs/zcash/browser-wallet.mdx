@@ -1,0 +1,45 @@
+---
+title: The browser wallet
+description: librustzcash compiled to WebAssembly scans, proves and signs in a Web Worker, and nothing about your notes leaves the device.
+icon: Cpu
+---
+
+{/* Sources: packages/zwallet/rust/Cargo.toml:5-46; packages/zwallet/rust/src (lib.rs, sync.rs:25-108, send.rs:22-137, notes.rs:28-189,
+   prover.rs:1-79, wallet.rs:27-77); packages/zwallet/src (constants.ts:4-34, core.ts:14-42, worker.ts:20-67, sync.ts:28-144);
+   apps/web/src/constants.ts:17-36; apps/web/src/features/wallet/wallet-store.ts; packages/engine/src/rest.ts. */}
+
+<Screen name="portfolio" alt="The Portfolio screen of a new wallet on mitoshi.xyz: Shielded ZEC 0.00, the Deposit, Withdraw and Wallet buttons, and the empty Positions tab." caption="A brand-new wallet on mainnet: 0.00 shielded ZEC, synced, nothing on any venue yet." />
+
+## Inside the worker
+
+| Step | What happens | Code |
+| --- | --- | --- |
+| Start | The 7.9 MB `zwallet.wasm` loads in a Web Worker; the wallet database lives in an in-memory WASI directory | `packages/zwallet/src/core.ts` |
+| Create | 24 words (BIP 39, 256 bits) make one Zcash account with ZIP 32 keys; a new wallet's scan starts 20 blocks below the tip | `wallet.rs`, `zwallet/src/constants.ts` |
+| Sync | Every 30 seconds, 100 blocks per batch, single-threaded (WASI has no threads), up to 50 full transactions fetched per sync | `sync.rs`, `sync.ts` |
+| Rest | Notes that came from a public address are locked 2–6 h by the wallet's own output locks | `notes.rs`, `packages/engine/src/rest.ts` |
+| Send | A ZIP 321 payment request, ZIP 317 fee, no memo, the outgoing viewing key discarded, change to Ironwood | `send.rs` |
+| Prove | The Orchard proving key warms up in the background after the wallet opens; proofs run in the browser | `prover.rs` |
+| Save | The database is encrypted (AES-GCM 256, a fresh 12-byte IV per write) into IndexedDB after every change | `apps/web/src/features/vault/vault.ts` |
+
+## Rules it keeps
+
+- **No sync right after a send.** After a broadcast the wallet waits a random 1 to 10 minutes before its next sync,
+  so the gateway never sees a send followed at once by the same wallet's block reads.
+- **Sapling is never spent.** Its provers are stubs, which keeps about 50 MB of parameters out of the browser.
+- **Restores scan from Ironwood.** A wallet restored from words scans from block 3,428,143, the Ironwood activation
+  height on mainnet.
+- **Reorgs.** The wallet rewinds 10 blocks on a broken chain and gives up after 5 tries.
+
+## The light client
+
+The wallet reads the chain through six lightwalletd methods: `GetLatestBlock`, `GetTreeState`, `GetSubtreeRoots`,
+`GetBlockRange`, `GetTransaction` and `SendTransaction`. Every one is an [Oblivious HTTP](/docs/privacy/oblivious-http)
+message, because even a block range says something about a wallet (where its scan starts is its birthday). The
+compact blocks come from ChainSafe's public gRPC-web servers, which only ever see Mitoshi's gateway.
+
+<Callout type="warn" title="One residual, written down">
+Sends may spend Orchard and Ironwood notes together, with change to Ironwood. A wallet that still holds Orchard notes
+from before Ironwood (for example, after restoring an older wallet) can make a send that crosses from Orchard to
+Ironwood, and a pool crossing makes that value public. A wallet made in Mitoshi receives only into Ironwood.
+</Callout>

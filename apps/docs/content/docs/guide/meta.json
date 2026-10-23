@@ -1,0 +1,25 @@
+{
+  "title": "Guide",
+  "description": "Every screen, from the first deposit",
+  "icon": "Compass",
+  "root": true,
+  "pages": [
+    "index",
+    "getting-started",
+    "---Trade---",
+    "markets",
+    "predict",
+    "trade",
+    "tokens",
+    "---Your money---",
+    "private-wallets",
+    "wallet",
+    "portfolio",
+    "fees-and-timing",
+    "backup-and-recovery",
+    "---Help---",
+    "status",
+    "faq",
+    "troubleshooting"
+  ]
+}

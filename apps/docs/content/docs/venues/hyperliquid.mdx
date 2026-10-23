@@ -1,36 +1,46 @@
 ---
 title: Hyperliquid
-description: Crypto perps from a fresh key, funded with USDC on HyperCore.
+description: Crypto perps from a brand-new key that signs its own orders, funded with USDC on HyperCore through NEAR Intents.
+icon: Activity
 ---
 
-{/* Sources: packages/venues/src/hyperliquid (account.ts, constants.ts HL_ACTIVATION_FEE_USDC, DUST_USDC, transport.ts);
-   apps/web/src/features/hyperliquid; apps/web/src/features/private-wallets/home.ts. */}
+{/* Sources: packages/venues/src/hyperliquid (account.ts:62-214, transport.ts, constants.ts:2-28, market.ts);
+   apps/web/src/features/perps/hl-driver.ts:9-10,150-155; apps/web/src/features/private-wallets (funding.ts, home.ts:140-195);
+   services/web/src/live.ts:56-96. */}
+
+<Screen name="terminal-btc" alt="The Hyperliquid terminal on mitoshi.xyz for BTC: the price, one-hour candles, and on desktop the ticket with Margin, leverage and the button to fund a private wallet." caption="BTC on Hyperliquid. With no wallet for this venue yet, the ticket offers to fund one." />
 
 | | |
 | --- | --- |
 | **You trade** | Crypto perps on Hyperliquid's live terminal |
-| **Wallet** | A fresh EVM key |
+| **The wallet** | A fresh EVM key that signs its own orders (no agent key) |
 | **Funded with** | USDC on HyperCore |
-| **Code** | `packages/venues/src/hyperliquid` |
+| **Code** | `packages/venues/src/hyperliquid`, `apps/web/src/features/perps` |
 
 ## Funding
 
-NEAR delivers **USDC on HyperCore** straight to the fresh address. Mitoshi moves it from spot to perps when a trade
-needs it. A brand-new Hyperliquid account pays Hyperliquid's one-time **1 USDC activation fee**.
+NEAR delivers **USDC on HyperCore** straight to the fresh address. On the first order, Mitoshi moves it from spot to
+perps when the account keeps them apart.
 
 ## Trading
 
-- Long or short with **leverage**, **take-profit** and **stop-loss**, and close, from the live terminal.
-- Orders go through Hyperliquid's API, signed by the wallet's own key, with the official SDK's transport replaced by
-  Oblivious HTTP.
-- The terminal trades from the wallet that already traded this market; otherwise from a ready, unused wallet.
+<Shot src="/shots/wide/picker.webp" alt="The market picker on mitoshi.xyz: Hyperliquid and Polymarket tabs, a search box, categories, and a list of markets with prices." caption="The market picker switches between Hyperliquid and Polymarket Perps." />
+
+- Long or short with **leverage**, **take-profit** and **stop-loss**, from the live terminal.
+- Market orders are IOC limits 1% through the mid. Orders go through Hyperliquid's official SDK with its transport
+  replaced by Oblivious HTTP, signed by the wallet's own key.
+- The ticket's fee line uses 0.045% (Hyperliquid's base taker rate); the smallest position is $10.
+- The terminal trades from the wallet that already holds this market, otherwise from a ready wallet that has never
+  traded, otherwise it asks you to fund one.
 
 ## Coming home
 
-Positions are closed, the USDC is gathered in spot and sent to a NEAR deposit address, and NEAR swaps it to ZEC at a
-fresh shielded address. Under 1 USDC stays behind as dust.
+Two steps: **Close** each position, then **Send home**: orders are cancelled, perp USDC goes back to spot and is sent
+to a NEAR deposit address, and NEAR swaps it to ZEC at a fresh shielded address. Send home refuses while a position is
+open. Under 1 USDC stays behind as dust; if NEAR refunds the trip home, the USDC returns to the wallet.
 
 ## Live data
 
-Mids, candles, books and trades come from one shared WebSocket the relay keeps open to Hyperliquid. Only market
-channels are allowed: anything that names a user is refused, so the relay never learns which address is yours.
+Mids, candles, books, trades and asset context come from one WebSocket the relay keeps open to Hyperliquid for
+everyone. Only market channels are allowed: anything that names a user is refused, so the relay never learns which
+address is yours.

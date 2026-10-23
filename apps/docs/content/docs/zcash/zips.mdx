@@ -1,0 +1,39 @@
+---
+title: ZIPs in use
+description: The Zcash Improvement Proposals Mitoshi follows, and the exact place in the code where each one applies.
+icon: FileText
+---
+
+{/* Sources: packages/zwallet/rust/Cargo.toml:24; packages/zwallet/rust/src/send.rs:22-30,65-73; notes.rs:24,96;
+   packages/engine/src/constants.ts:4-9,31-39; packages/engine/src/schedule.ts; apps/web/src/constants.ts:20-25. */}
+
+| ZIP | What it says | How Mitoshi uses it | Code |
+| --- | --- | --- | --- |
+| **ZIP 32** | Shielded hierarchical deterministic wallets | The Zcash account and its spending key come from the 24 words through librustzcash's ZIP 32 derivation | `packages/zwallet/rust/src/wallet.rs`, `send.rs` |
+| **ZIP 317** | Proportional transfer fee | Every payment pays the standard ZIP 317 fee (`FeeRule::standard()`), computed by the wallet before it sends | `send.rs` |
+| **ZIP 318** (draft) | Orchard to Ironwood migration: standard amounts and timing | Fundings use only its denominations (n × 10^k ZEC, n ∈ {1, 2, 5}), start at random times, keep-ready refills wait an exponential delay, and a broadcast and a sync never share a window | `packages/engine/src/constants.ts`, `schedule.ts`, `apps/web/src/constants.ts` |
+| **ZIP 321** | Payment request URIs | Each send is built as a ZIP 321 transaction request | `send.rs` |
+
+## The standard amounts
+
+ZIP 318's denominations, as Mitoshi uses them: seven sizes from 0.01 to 1 ZEC. A funding is always exactly one of
+them, and the leak meter blocks any other amount. Amounts above 1 ZEC are not split; a wallet holds one size.
+
+<div className="not-prose my-4 flex flex-wrap gap-2 font-mono text-sm">
+  <span className="rounded-full border border-fd-border px-3 py-1">0.01</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.02</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.05</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.1</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.2</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.5</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">1 ZEC</span>
+</div>
+
+## The timing rules
+
+| Rule | Value | Code |
+| --- | --- | --- |
+| A funding you asked for | starts at a random moment 20 s to 3 min later (uniform) | `fundingTime`, `packages/engine/src/schedule.ts` |
+| A keep-ready refill | waits an exponential delay, 90 min on average, between 20 s and 12 h | `refillTime`, same file |
+| A funding due while the app was closed | gets a new random start instead of going out when the app opens | `retimed`, same file |
+| After a broadcast | no sync for a random 1 to 10 min | `SEND_QUIET_MIN_MS`, `apps/web/src/constants.ts` |

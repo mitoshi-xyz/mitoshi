@@ -1,0 +1,37 @@
+---
+title: Markets
+description: Everything you can trade privately on one screen, on every venue, with live prices that never reach a venue from your browser.
+icon: LayoutGrid
+---
+
+{/* Sources: apps/web/src/features/markets (markets-view.tsx:36-113, hero.tsx:14-121, section.tsx, perp-row.tsx);
+   apps/web/src/features/shell (rail.tsx, dock.tsx, places.ts:33-152, more.tsx, palette.tsx:83-216, top-line.tsx, money-plate.tsx). */}
+
+<Screen name="markets" alt="The Markets screen on mitoshi.xyz: a BTC price card with Long and Short, then Predictions from Polymarket with live odds." caption="Markets: the price card, then 01 Predictions, 02 Perpetuals and 03 Solana tokens." eager />
+
+| Section | What it shows |
+| --- | --- |
+| The price card | BTC, ETH, SOL, NVDA or GOLD, with a live price, its 24 h change and **LONG** / **SHORT**, which open the terminal |
+| **01 Predictions** | Six Polymarket events with live odds; **See all →** opens [Predict](/docs/guide/predict) |
+| **02 Perpetuals** | Two tabs: **Crypto** (Hyperliquid) and **Stocks · gold · oil** (Polymarket Perps), with price, change, funding and open interest |
+| **03 Solana tokens** | Eight trending tokens; **See all →** opens [Tokens](/docs/guide/tokens) |
+
+<Shot src="/shots/wide/markets-stocks.webp" alt="The Perpetuals section on mitoshi.xyz with the Stocks · gold · oil tab open: Polymarket Perps markets with sparklines, prices, changes and funding." caption="Perpetuals, Stocks · gold · oil: Polymarket Perps markets." />
+
+## Getting around
+
+| | Desktop (1280 px and up) | Phone |
+| --- | --- | --- |
+| Places | The rail: Markets, Perps, Predict, Tokens, Portfolio, Wallets (keys 1–6), More | The dock: Markets, Perps, the seal (your money), Predict, More |
+| Your balance | The money plate at the top of the rail, with a **MAINNET** badge and an eye to hide amounts | Behind the seal in the dock |
+| Search | **Search markets and pages** (⌘K or /) | The search icon |
+
+<Phones>
+  <Phone src="/shots/phone/markets.webp" alt="The Markets screen on a phone with the dock at the bottom." caption="On a phone, the dock replaces the rail." />
+  <Phone src="/shots/phone/more.webp" alt="The More sheet on a phone: the places, Deposit and Withdraw, Privacy, Settings, Status, Demo and Docs." caption="More: your money, privacy, settings, status and these docs." />
+</Phones>
+
+<Shot src="/shots/wide/search.webp" alt="The search on mitoshi.xyz with nv typed: perps, stocks and predictions that match, from every venue." caption="One search across every venue: Hyperliquid perps, Polymarket Perps stocks, Polymarket events and Solana tokens." />
+
+Searches for events and tokens run over Oblivious HTTP like every other call about you; the relay sees only that a
+sealed request passed.

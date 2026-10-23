@@ -1,19 +1,4 @@
 {
   "title": "Mitoshi",
-  "pages": [
-    "index",
-    "getting-started",
-    "private-wallets",
-    "---Venues---",
-    "...venues",
-    "---How it works---",
-    "privacy",
-    "architecture",
-    "fees-and-timing",
-    "backup-and-recovery",
-    "---Check it---",
-    "verify",
-    "faq",
-    "troubleshooting"
-  ]
+  "pages": ["guide", "venues", "privacy", "zcash", "build"]
 }

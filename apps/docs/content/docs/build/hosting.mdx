@@ -1,0 +1,48 @@
+---
+title: Hosting and headers
+description: "Each page arrives exactly as built: a CSP with its own script hashes, no-transform, and workers that can only reach mitoshi.xyz."
+icon: Server
+---
+
+{/* Sources: apps/web/scripts/headers.mjs:16-90; services/web/src (constants.ts:17-41, index.ts:92-125); services/web/wrangler.jsonc;
+   services/gateway/vercel.json; apps/docs/scripts/headers.mjs; apps/docs/wrangler.jsonc. */}
+
+## Three deployments
+
+| Site | Host | What it serves |
+| --- | --- | --- |
+| mitoshi.xyz | Cloudflare Worker `mitoshi-web` with static assets, placed in AWS eu-west-1 | The static app, `/relay/*` (sealed messages, public pictures, live feeds), 301s from the old `/docs/*` pages to this site |
+| mitoshi-gateway.vercel.app | Vercel Function in `dub1` (Dublin), up to 60 s per call | `/ohttp` for the relay only, `/ohttp-keys` for anyone |
+| docs.mitoshi.xyz | Cloudflare Worker `mitoshi-docs`, static assets only | This site |
+
+The relay and the docs Worker have their request logs off (`observability.enabled: false`).
+
+## Every page carries its own policy
+
+A script after each build (`apps/web/scripts/headers.mjs`, and this site's own `apps/docs/scripts/headers.mjs`) hashes
+every inline script of every page and writes a header file:
+
+| Header | Value |
+| --- | --- |
+| `Content-Security-Policy` | `default-src 'self'`, `script-src 'self'` plus that page's SHA-256 hashes (the app adds `'wasm-unsafe-eval'` for the wallet), `connect-src 'self'`, `font-src 'self'`, `img-src 'self' data:` (the app adds `blob:`), `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'` |
+| `Cache-Control` | `public, max-age=0, must-revalidate, no-transform` |
+| Isolation | COOP `same-origin`, COEP `require-corp`, CORP `same-origin` |
+| Others | `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, a `Permissions-Policy` that turns off camera, microphone, location, payment, USB and topics |
+
+**No `unsafe-inline` for scripts, and nothing from another origin.** `no-transform` stops Cloudflare's proxy from
+rewriting a page, so it can't inject its analytics beacon or an email-obfuscation script even if one is switched on for
+the zone. The 404 page answers every unknown path, so no header rule can name it: it carries the same policy in a
+`<meta>` tag.
+
+## Workers can reach only their own origin
+
+Module workers take their CSP from their own response, not from the page. On mitoshi.xyz every file under
+`/_next/static/` is served with `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'`, so the
+wallet worker and the Polymarket worker can reach mitoshi.xyz and nothing else, even if a library inside them reaches
+past the sealed fetch. Only files that exist are cached for a year; a missing chunk is never cached.
+
+## Fonts and pictures
+
+Sora, Inter and JetBrains Mono are downloaded at build time and served from the site itself; 見通し uses a 2.5 KB Noto
+Serif JP subset. The app's coin and venue marks are vendored files, so no mark is fetched from a third party at
+runtime.

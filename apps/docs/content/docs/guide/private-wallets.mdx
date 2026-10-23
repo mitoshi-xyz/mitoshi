@@ -1,0 +1,90 @@
+---
+title: Private wallets
+description: Brand-new single-use wallets, one per position, funded from the shielded pool and sent home when you're done.
+icon: WalletCards
+---
+
+{/* Sources: packages/engine/src (registry.ts:7-187, keys.ts:24-96, schedule.ts, constants.ts:4-58); apps/web/src/features/private-wallets
+   (private-wallets.tsx, keep-ready.tsx:15-84, fund-drawer.tsx:101-252, wallet-card.tsx:84-207, wallet-steps.tsx, public-view.tsx,
+   jobs.ts:53-330, home.ts, venues.ts:16-66); the venues' constants.ts files (DUST_*). */}
+
+A private wallet is a venue account made from a **new key** for **one position**, funded once and sent home once. No two
+share an address, a key or a swap.
+
+<Screen name="wallets" alt="The Wallets screen on mitoshi.xyz: New, Keep one ready with a switch for Polymarket, Hyperliquid and Solana, and the Live and Done tabs with no wallets yet." caption="Wallets, for a new account: Keep one ready per venue, and no wallets yet." />
+
+## What makes one
+
+| | |
+| --- | --- |
+| **Its own key** | From your 24 words on a hardened path of Mitoshi's own: `m/44'/coin'/6874'/venue'/index'` (coin 60 for Polymarket and Hyperliquid, 501 for Solana). 6874 spells MTSH on a phone keypad, so it never collides with a normal wallet's path |
+| **One position** | An order goes to the wallet that already holds that market; otherwise to a ready wallet that has never traded; otherwise you fund a new one. Another position's wallet is never used |
+| **A standard size** | 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 or 1 ZEC, so its one public hop looks like many others |
+| **Only on this device** | The list of your wallets lives in the encrypted vault in your browser; no server holds it |
+
+## Fund a wallet
+
+<Screen name="fund" alt="The New private wallet sheet on mitoshi.xyz: the Polymarket, Hyperliquid and Solana tabs, 0.05 ZEC chosen among the seven sizes, a NEAR Intents quote, the leak meter and the funding button." caption="New private wallet: pick the venue and a standard size; NEAR Intents quotes it before you fund." />
+
+**New** on Wallets, **Wallet** on Portfolio, the wallet chip's **Fund**, or any ticket's **Fund a private wallet** opens
+it. On 2026-10-23, for an empty account:
+
+<Receipt
+  kicker="New private wallet · Hyperliquid"
+  title="0.05 ZEC"
+  rows={[
+    ["A new wallet gets", "≈ 60.7931 USDC (≈ $60.77)"],
+    ["Time", "about 8 min"],
+    ["Network fee", "0.00015 ZEC"],
+    ["Mitoshi fee", "none"],
+    ["Route", "NEAR Intents · confidential"],
+    ["Leak meter", "blocked: only 0 ZEC is ready to spend"],
+    ["Button", "Deposit 0.05015 ZEC first"],
+  ]}
+  source="The funding sheet on mitoshi.xyz, 2026-10-23, quoted live over Oblivious HTTP. With ZEC to spend, the button reads Fund privately."
+/>
+
+## Its life
+
+<Lifecycle />
+
+| Step | What happens | How long |
+| --- | --- | --- |
+| **Preparing** | A key is derived; funding waits for a random moment | 20 s to 3 min ("Starts in about N min, so the start can't be matched to anything you did") |
+| **Funding** | A signed 1Click quote, then one shielded payment of exactly the size | About 8 min by 1Click's estimate; Polymarket adds the bridge credit |
+| **Ready** | Funded and unused | Until you trade |
+| **Trading** | Orders signed by this wallet's key | Until you send it home |
+| **Coming home** | The venue's positions closed or sold, the rest swapped to ZEC at a fresh shielded address | A few minutes, then the ZEC rests 2–6 h |
+| **Retired** | Empty; never used again | — |
+
+A funding that NEAR can't complete is **Refunded** to a fresh shielded address. A step that stopped shows **Needs
+you**, with **Try again**; a funding that never sent anything waits for a new random start. Wallets that came home move
+to the **Done** tab.
+
+## Keep one ready
+
+<Shot src="/shots/wide/keep-ready.webp" alt="Keep one ready on mitoshi.xyz with the Hyperliquid switch on, a 0.05 ZEC size chip and Waiting for ZEC." caption="Keep one ready, on for Hyperliquid at 0.05 ZEC. With no ZEC to spend, it waits." />
+
+A trade waits for a funding unless a wallet is already ready. **Keep one ready** holds one funded wallet per venue, at
+the size you pick, while Mitoshi is open. Its replacement does **not** start when you use it: it waits a random time
+from an exponential spread, **90 minutes on average and never more than 12 hours**, so a new wallet never shows up on
+the venue minutes after your trade.
+
+## Dust
+
+Coming home costs a swap, so whatever is smaller than the trip is **left in the venue wallet as dust**, never moved into
+another wallet:
+
+| Venue | Left as dust |
+| --- | --- |
+| Polymarket, Polymarket Perps | Under 1 pUSD |
+| Hyperliquid | Under 1 USDC |
+| Solana | Under 0.005 SOL |
+
+## What the public sees
+
+Every wallet has a **What the public sees** view: its public record as a copy trader would find it, read live from the
+venue over Oblivious HTTP. It shows when it was first seen, its fills or transactions, its deposits and withdrawals, its
+open positions and any links to your other wallets (none), with the reasons it can't be tied to you: its own key and
+path, no transfer to or from your other wallets, no shared deposit, refund or payout address, and one NEAR swap at a
+standard size. It needs a funded wallet, so there's no picture of it here yet.

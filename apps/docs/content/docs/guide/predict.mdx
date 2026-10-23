@@ -1,0 +1,46 @@
+---
+title: Predict
+description: Polymarket's events with live odds, and a Yes/No ticket that buys from a wallet nobody can trace back to you.
+icon: Target
+---
+
+{/* Sources: apps/web/src/features/polymarket (event-grid.tsx:35-85, event-view.tsx:113-283, prob-chart.tsx:12-98, order-book.tsx,
+   pm-ticket.tsx:155-344, pm-trade.ts:9-69, pm-orders.tsx); packages/venues/src/polymarket/constants.ts:6-17. */}
+
+<Screen name="predict" alt="The Predict screen on mitoshi.xyz: Polymarket's events in cards with their live odds, a search box and category pills." caption="Predict: Polymarket's events, searchable, by category." eager />
+
+**Trending, Politics, Sports, Crypto, Finance, Geopolitics, Tech, Culture, World, Economy**: each card shows the event,
+its leading outcomes and its odds. Open one for the event page.
+
+## The event page
+
+<Screen name="event" alt="A Polymarket event on mitoshi.xyz: its title, the chance, the one-month odds chart, the outcomes with Yes and No prices, and the ticket." caption="The event page: chance, odds history, every outcome, the order book and the rules." />
+
+| Part | What it shows |
+| --- | --- |
+| Header | The title, **Ends …**, **$X traded**, **$X liquidity** |
+| Chance | The leading outcome's chance, and an odds chart over **1H 6H 1D 1W 1M All** |
+| Outcomes | The top four with **Yes** and **No** prices; **All N outcomes** opens the rest |
+| Order book | Price, shares and total on each side, and the spread |
+| Rules | The market's resolution rules and source |
+
+## The ticket
+
+<Phones>
+  <Phone src="/shots/phone/event.webp" alt="The event on a phone with the pinned Yes and No buttons." caption="On a phone, Yes and No are pinned above the dock." />
+  <Phone src="/shots/phone/event-ticket.webp" alt="The ticket sheet on a phone: Buy, Market, the outcome prices and the amount." caption="The ticket opens as a sheet with a keypad." />
+</Phones>
+
+| | |
+| --- | --- |
+| **Buy / Sell** | Buy shares with pUSD, or sell shares you hold |
+| **Market / Limit** | At market (fill-and-kill, within two ticks of the estimate) or at your price, 1¢ to 99¢ |
+| **Amount** | Dollars to spend, with **$5 $10 $25 $100**; or shares to sell |
+| **Shown** | **Cost**, **To win** and **Chance** for a buy; **Shares**, **You get** and **Chance** for a sell |
+| **Button** | **Buy Yes** / **Sell No** with a wallet; **Fund a private wallet** without one |
+
+Each market lives in its own wallet. The ticket names it (**Fresh wallet 0x12ab…cdef** or **Holding wallet …**), and
+that link opens "What the public sees" for it. Open orders show under the ticket with **Cancel**; after resolution the
+button becomes **Redeem N winning shares**.
+
+How the wallet behind it is made, funded and sent home: [Polymarket](/docs/venues/polymarket).

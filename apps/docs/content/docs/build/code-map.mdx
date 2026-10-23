@@ -1,0 +1,77 @@
+---
+title: Code map
+description: Where every part lives in the repository, how to run it on your machine, and how it is tested and deployed.
+icon: FolderTree
+---
+
+{/* Sources: README.md (Run it locally); package.json scripts; .github/workflows/ci.yml; the packages' test files. */}
+
+The repository is [github.com/mitoshi-xyz/mitoshi](https://github.com/mitoshi-xyz/mitoshi), MIT licensed, a pnpm and
+Turborepo monorepo. Its history starts on 2026-10-22.
+
+<Files>
+  <Folder name="apps" defaultOpen>
+    <Folder name="web">
+      <File name="src/features — every screen, flow and state" />
+      <File name="scripts/headers.mjs — per-page CSP" />
+    </Folder>
+    <Folder name="docs">
+      <File name="content/docs — this site's pages" />
+      <File name="src/components/diagrams — the hand-drawn system maps" />
+    </Folder>
+  </Folder>
+  <Folder name="packages" defaultOpen>
+    <File name="zwallet — Zcash wallet (Rust → WASM) and its worker" />
+    <File name="engine — sizes, timing, registry, leak meter, keys" />
+    <File name="rails — NEAR Intents 1Click" />
+    <File name="venues — Polymarket, Polymarket Perps, Hyperliquid, Solana" />
+    <File name="net — OHTTP client and the pinned key" />
+    <File name="chart — the canvas chart engine" />
+  </Folder>
+  <Folder name="services" defaultOpen>
+    <File name="web — relay, live feeds, hosting (Cloudflare)" />
+    <File name="gateway — OHTTP gateway and allowlist (Vercel)" />
+  </Folder>
+</Files>
+
+## Run it locally
+
+Needs Node 24+ and pnpm 12. The wallet's WASM build is committed, so Rust isn't needed.
+
+```bash
+pnpm install
+```
+
+```bash
+pnpm --filter @mitoshi/web dev
+```
+
+That serves `localhost:3300` on Zcash **testnet** through the deployed relay (the app tints itself vermilion so test
+money never passes for real money). `pnpm --filter @mitoshi/web dev:main` serves mainnet on port 3301. Private wallets
+are funded on mainnet only.
+
+## Checks
+
+```bash
+pnpm lint && pnpm typecheck && pnpm test
+```
+
+| Package | Tests | What they cover |
+| --- | --- | --- |
+| `packages/engine` | 22 | Denominations, rest rules, scheduler, registry and `positionWallet`, leak meter, keys |
+| `packages/rails` | 7 | 1Click quote requests and the ed25519 signature check |
+| `packages/venues` | 7 | Polymarket Perps signing (4) and Solana transactions (3) |
+
+CI runs Biome, the type checks, these tests and a full build on Node 24 for every push to `main` and every pull request.
+
+## Deploy
+
+| What | Command |
+| --- | --- |
+| App and relay (Cloudflare) | `pnpm --filter @mitoshi/web-worker run deploy` |
+| Gateway (Vercel) | `pnpm --filter @mitoshi/gateway run deploy` |
+| This site (Cloudflare) | `pnpm --filter @mitoshi/docs run deploy` |
+| Rebuild the wallet WASM | `pnpm --filter @mitoshi/zwallet build:wasm` (Rust, LLVM clang, the wasi-libc sysroot) |
+
+The gateway's secrets (its OHTTP seed, the relay token, NEAR's partner key, Polymarket's builder credentials) are set on
+the host, never in the repository.

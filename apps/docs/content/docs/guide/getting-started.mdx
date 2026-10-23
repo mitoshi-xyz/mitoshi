@@ -1,0 +1,92 @@
+---
+title: Getting started
+description: Make a private balance in your browser with 24 words, back it up, and deposit shielded ZEC from Zodl. No account, no sign-up.
+icon: Rocket
+---
+
+{/* Sources: apps/web/src/features/wallet (onboarding.tsx:86-183, onboarding-parts.tsx, deposit-drawer.tsx:47-116, restore.tsx,
+   wallet-store.ts:190-301); apps/web/src/features/welcome/copy.ts:6-35; packages/zwallet/rust/src/wallet.rs:64-77;
+   apps/web/src/constants.ts:17-28; packages/engine/src (constants.ts:15-22, rest.ts). */}
+
+There is no account. Everything starts from 24 words made in your browser.
+
+## 1. Create the wallet
+
+<Screen name="wallet" alt="The first screen of the wallet on mitoshi.xyz: Your money, shielded, with Create a private wallet, I have a recovery phrase and Look around first." caption="The first visit: a short story, then Create a private wallet." />
+
+<Steps>
+<Step>
+
+Open [mitoshi.xyz/wallet](https://mitoshi.xyz/wallet) and choose **Create a private wallet**.
+
+</Step>
+<Step>
+
+**Write down these 24 words.** They stay blurred until you press and hold **Hold to reveal**.
+
+</Step>
+<Step>
+
+**Check three words**: pick the right word for three positions.
+
+</Step>
+<Step>
+
+**Create my wallet.** Mitoshi saves your words encrypted in this browser, makes your shielded account and syncs with
+Zcash. Then it opens your Portfolio.
+
+</Step>
+</Steps>
+
+<Shot src="/shots/wide/onboarding-words.webp" alt="The Write down these 24 words step on mitoshi.xyz: the word grid blurred, the Hold to reveal button, the warning never to type them into a website, and I wrote them down." caption="Step 1 as it looks before you hold the button. For this picture the words were also replaced with dots in the page; Mitoshi itself only blurs them." />
+
+<Callout type="warn">
+Anyone with the 24 words can move your money. Keep them offline. Mitoshi never asks for them, and no website should.
+</Callout>
+
+Restoring instead? **I have a recovery phrase** takes your 24 words or a backup file. See
+[Backup and recovery](/docs/guide/backup-and-recovery).
+
+## 2. Back it up
+
+| Option | What it holds | Where |
+| --- | --- | --- |
+| **24 words** | The balance and every private wallet's key | On paper, offline |
+| **Backup file** | Your words and your private-wallet list, locked with a passphrase | Settings → Backup file |
+| **Passphrase lock** | Asks for a passphrase each time Mitoshi opens in this browser | Settings → Passphrase lock |
+
+Make a backup file once you have private wallets: it is the only way to bring back Polymarket and Polymarket Perps
+wallets on a new browser.
+
+## 3. Deposit from Zodl
+
+<Screen name="deposit" alt="The Deposit ZEC drawer on mitoshi.xyz: a QR code with the Zcash mark, a fresh shielded address, Copy address, Open in wallet, Another fresh address, and Waiting for your deposit." caption="Deposit ZEC: a fresh shielded address and its QR code, every time you open it." />
+
+<Steps>
+<Step>
+Open **Deposit** (on Portfolio, or in **More**). It makes a **fresh shielded address** each time: a unified address
+with only an Orchard receiver, never reused.
+</Step>
+<Step>
+In Zodl (or any shielded Zcash wallet), scan the QR code or paste the address and send ZEC.
+</Step>
+<Step>
+Wait for one block. Mainnet blocks come about every 75 seconds, and the wallet checks for new ones every 30 seconds.
+</Step>
+</Steps>
+
+What happens next depends on where the ZEC came from:
+
+| Your deposit came from | It can fund a wallet |
+| --- | --- |
+| A shielded address (Zodl's default) | Once it confirms: "Fully shielded: ready to use now" |
+| A public (transparent) address, such as an exchange | After resting 2–6 hours, picked per note: "From a public address: resting 2–6 h" |
+
+The rest keeps an arrival from a public address from being matched to your next trade.
+
+## 4. Open a market
+
+Pick a market on [Markets](/docs/guide/markets), [Predict](/docs/guide/predict), [Trade](/docs/guide/trade) or
+[Tokens](/docs/guide/tokens). Your first trade on a venue asks you to fund a
+[private wallet](/docs/guide/private-wallets) for it, which takes a few minutes; **Keep one ready** skips the wait
+next time.

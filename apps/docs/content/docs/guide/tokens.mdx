@@ -1,0 +1,28 @@
+---
+title: Tokens
+description: Trending Solana tokens, routed by Jupiter, each buy from its own new wallet.
+icon: Coins
+---
+
+{/* Sources: apps/web/src/features/solana (tokens-table.tsx:28-57, token-row.tsx, token-view.tsx:63-232, token-chart.tsx:17-101,
+   swap-ticket.tsx:91-220, constants.ts:2-3). */}
+
+<Screen name="tokens" alt="The Tokens screen on mitoshi.xyz: trending Solana tokens with price, change, market cap and liquidity." caption="Tokens: trending on Solana, routed by Jupiter." eager />
+
+Search by name or mint. Each row shows **Price**, **Change**, **Market cap** and **Liquidity**; open one for its page.
+
+## A token
+
+<Screen name="token" alt="A Solana token page on mitoshi.xyz with its candles and the swap ticket on the right." caption="The token page: price, chart (5m to 1d, candles or line) and the ticket." />
+
+| Control | Options |
+| --- | --- |
+| Side | **Buy** with SOL, **Sell** for SOL |
+| Amount | **0.05 0.1 0.25 0.5** SOL to buy; **25% 50% All** to sell |
+| Shown | **You get**, **Impact**, **Route** |
+| Button | **Buy SYM** / **Sell SYM**; **Fund a private wallet** without one |
+| **Sell all and send home** | Sells every token back to SOL and starts the trip home (when a ready or trading wallet exists) |
+
+<Phone src="/shots/phone/token-swap.webp" alt="The buy sheet for a Solana token on a phone with SOL presets and a keypad." caption="On a phone, BUY and SELL open the ticket as a sheet." />
+
+Venue details: [Solana](/docs/venues/solana).

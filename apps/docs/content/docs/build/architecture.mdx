@@ -1,0 +1,56 @@
+---
+title: Architecture
+description: A static app with a real Zcash wallet inside, a relay and a gateway that each see half, and an allowlist of upstreams. Nothing else.
+icon: Network
+---
+
+{/* Sources: README.md (How it works); apps/web/next.config.ts; packages/*; services/web (wrangler.jsonc, src/index.ts, src/live.ts);
+   services/gateway/src (constants.ts, builder.ts, img.ts, ohttp.ts); .github/diagrams/*.mmd. */}
+
+Mitoshi is a **static web app**. No Mitoshi server holds keys, balances or the map of your wallets: there is a relay
+and a gateway that pass sealed requests, and neither sees both ends.
+
+## The system map
+
+<Diagram name="system-map" alt="System map: the Mitoshi app, its Zcash wallet and per-position keys in the browser send every user call over Oblivious HTTP to a Cloudflare relay that sees the IP, then to a Vercel gateway in Dublin that sees the request, then to allowlisted upstreams: the Zcash light server, NEAR Intents 1Click, and Polymarket, Hyperliquid and Jupiter. Public prices come through the relay." caption="The map in the README, rendered from .github/diagrams/readme-system.mmd in light and dark." />
+
+The detailed map: every part in the browser, both lanes through the relay, and every upstream.
+
+<SystemMap />
+
+## The two hops
+
+<OhttpHops />
+
+The details of each hop, what it forwards and what it drops, are on [Oblivious HTTP](/docs/privacy/oblivious-http).
+
+## The money's route
+
+<Diagram name="funding-flow" alt="Funding round trip: at a random moment, your shielded ZEC sends one standard amount with a fresh shielded refund address to NEAR Intents, which pays USDC, pUSD or SOL to a fresh wallet in a confidential swap; the wallet opens one position on the venue, closes it, sends the proceeds back through NEAR Intents to a fresh shielded address. A copy trader finds one funding, one trade, no history." caption="The README's funding round trip, from .github/diagrams/readme-funding.mmd." />
+
+<FundingFlow />
+
+## In the browser
+
+| Piece | Package | What it does |
+| --- | --- | --- |
+| Wallet worker | `packages/zwallet` | Zcash's `zcash_client_sqlite` 0.23 on `wasm32-wasip1`, in a Web Worker: sync, notes, proofs, sends |
+| Vault | `apps/web` | IndexedDB, every record AES-GCM encrypted under a non-extractable key, optionally wrapped by a passphrase |
+| Engine | `packages/engine` | Standard sizes, rest rules, random scheduling, the wallet registry, the leak meter, key paths (BIP 32, SLIP-0010) |
+| Rails | `packages/rails` | NEAR 1Click quotes, deposits and status; every quote's ed25519 signature checked |
+| Venues | `packages/venues` | Polymarket (official SDK in its own worker), Polymarket Perps, Hyperliquid (official SDK), Solana (Jupiter Ultra) |
+| OHTTP | `packages/net` | The RFC 9458 client and the gateway's pinned key |
+| Chart | `packages/chart` | A canvas engine for live lines and candles |
+
+## On the network
+
+| Service | Where | What it does |
+| --- | --- | --- |
+| `mitoshi-web` | Cloudflare Worker, placed in AWS eu-west-1 | Serves the static app with strict headers, relays sealed messages, proxies public pictures, holds one live feed per venue in a Durable Object |
+| `mitoshi-gateway` | Vercel Function, Dublin (`dub1`) | Opens each sealed message, calls only the allowlist, seals the answer; holds the NEAR partner key and the Polymarket builder secret |
+| `mitoshi-docs` | Cloudflare Worker, static assets | This site |
+
+<Cards>
+  <Card title="Hosting and headers" href="/docs/build/hosting" description="How each site is served: CSP, no-transform, workers, caching." icon={<Icon name="Server" />} />
+  <Card title="Code map" href="/docs/build/code-map" description="Every package, how to run it locally, how it's tested and deployed." icon={<Icon name="FolderTree" />} />
+</Cards>

@@ -1,0 +1,74 @@
+---
+title: Oblivious HTTP
+description: Every call about you is sealed in your browser, carried by a relay that can't read it and opened by a gateway that can't see who sent it.
+icon: Waypoints
+---
+
+{/* Sources: packages/net/src (private-fetch.ts, constants.ts); services/web/src (index.ts, constants.ts, live.ts);
+   services/gateway/src (app.ts, ohttp.ts, upstream.ts, constants.ts, img.ts, builder.ts); services/gateway/vercel.json;
+   services/web/wrangler.jsonc; apps/web/src/features/marks (private-image.ts, mark.tsx). */}
+
+<Diagram name="system-map" alt="System map: the Mitoshi app, its Zcash wallet and per-position keys in the browser send every user call over Oblivious HTTP to a Cloudflare relay that sees the IP, then to a Vercel gateway in Dublin that sees the request, then to allowlisted upstreams: the Zcash light server, NEAR Intents 1Click, and Polymarket, Hyperliquid and Jupiter. Public prices come through the relay." caption="The same map the README shows. Every user call takes the sealed path." />
+
+## The client
+
+| | |
+| --- | --- |
+| Standard | RFC 9458 Oblivious HTTP |
+| Suite | DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM; a fresh HPKE context per request |
+| Key | The gateway's key configuration is pinned in the app (`packages/net/src/constants.ts`), so the relay can't swap in its own |
+| Inner request | `credentials: omit`, `no-referrer`; up to 8 MiB |
+| Endpoint | `POST /relay/ohttp` on the same origin, content type `message/ohttp-req` |
+
+## The relay: knows who, not what
+
+A Cloudflare Worker (`mitoshi-web`), placed in AWS eu-west-1, with its logs off.
+
+- Forwards only the sealed body to the gateway, with a fresh header set: no IP, cookies, user agent, referrer or
+  language.
+- Answers only `/relay/ohttp`, `/relay/img` and the three live feeds; anything else is a 404.
+- Holds **one live WebSocket per venue** (Hyperliquid, Polymarket, Polymarket Perps) in a Durable Object and shares it
+  with everyone watching. Only public market channels are allowed: a subscription that names a user is refused. The
+  Polymarket Perps `tickers` channel is skipped (about 700 updates a second for all markets); `statistics` gives the
+  price, sent at most once a second.
+
+## The gateway: knows what, not who
+
+A Vercel Function in Dublin (`dub1`, AWS eu-west-1). It accepts only messages that carry the relay's token, opens
+each one, and calls **only an allowlist** of 14 hosts with exact methods and path prefixes:
+
+| Upstream | What for |
+| --- | --- |
+| `zcash-mainnet.chainsafe.dev`, `zcash-testnet.chainsafe.dev` | Six lightwalletd methods |
+| `1click.chaindefuser.com` | NEAR Intents quotes, deposits, status (the partner key is added here; the browser never sees it) |
+| `api.hyperliquid.xyz` | Markets, accounts, signed orders |
+| `gamma-api`, `clob`, `relayer-v2`, `data-api`, `bridge.polymarket.com` | Events, books, orders, gasless wallets, positions, the bridge |
+| `api.perpetuals.polymarket.com` | Polymarket Perps |
+| `polygon.drpc.org` | Read-only Polygon calls, no sends |
+| `lite-api.jup.ag`, `api.geckoterminal.com`, `api.mainnet-beta.solana.com` | Solana swaps, charts, balances and the trip home |
+
+Every upstream request leaves with the same browser-like user agent for everyone and drops cookie, origin, referrer,
+user-agent and forwarding headers. Redirects aren't followed. A public answer may be cached and shared between users
+for a few seconds; anything carrying a credential never is.
+
+<Callout title="Why the gateway isn't on Cloudflare">
+Tests on 2026-10-22 showed that a Cloudflare Worker passes the visitor's own country on to every Cloudflare-hosted site
+it calls, and Polymarket, 1Click and Jupiter sit behind Cloudflare. From Vercel's Dublin region, every request leaves
+from Ireland.
+</Callout>
+
+## Pictures
+
+| Picture | Path | Who sees what |
+| --- | --- | --- |
+| Public ones (market and token lists) | `GET /relay/img?u=…`, cached a day | The relay sees which public picture, like any public price |
+| Pictures of what you hold (positions, orders) | inside an OHTTP message to `img.mitoshi.internal` | Nobody sees which; the browser gets a blob |
+
+The image fetch accepts only HTTPS, refuses local and internal hosts and literal IP addresses, re-checks each of up to
+three redirects, and takes PNG, JPEG, WebP, GIF, AVIF or SVG up to 2 MiB.
+
+## The builder signer
+
+Polymarket's gasless Deposit Wallets need builder headers. The gateway holds that secret and signs **only** Deposit
+Wallet relayer calls to Polymarket's factory (`WALLET-CREATE` and `WALLET` requests on four relayer paths); anything
+else gets a 403. Through OHTTP it sees which wallet asks, never who.

@@ -1,0 +1,7 @@
+{
+  "title": "Zcash",
+  "description": "A real Zcash wallet in the browser",
+  "icon": "Shield",
+  "root": true,
+  "pages": ["index", "browser-wallet", "zips", "testnet-proof"]
+}

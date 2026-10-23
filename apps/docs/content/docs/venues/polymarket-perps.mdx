@@ -1,44 +1,56 @@
 ---
 title: Polymarket Perps
-description: Perpetuals on US stocks, indices, gold and oil, margined in pUSD.
+description: Long or short NVIDIA, gold or an index with leverage, from a fresh Polymarket wallet whose orders are signed by its own short-lived key.
+icon: CandlestickChart
 ---
 
-{/* Sources: packages/venues/src/pmperps (account.ts, signing.ts, constants.ts PROXY_LIFETIME_MS, MARKET_SLIPPAGE,
-   DUST_PUSD); apps/web/src/features/pmperps; apps/web/src/features/trade/terminal.tsx (useTradingWallet). */}
+{/* Sources: packages/venues/src/pmperps (account.ts:103-140,207-217,330-342, signing.ts, constants.ts:10-49);
+   apps/web/src/features/perps/pm-driver.ts:20-123; apps/web/src/features/pmperps (pp.ts, perps-home.ts);
+   apps/web/src/features/trade (terminal.tsx, ticket.tsx, order.ts:53-80, positions.tsx:96-141); services/web/src/live.ts:142-183. */}
+
+<Screen name="terminal-nvda" alt="The Polymarket Perps terminal on mitoshi.xyz for NVIDIA: the price, one-hour candles, and on desktop the ticket in a side panel." caption="NVIDIA on Polymarket Perps: live candles, read through the relay's shared feed and over Oblivious HTTP." />
 
 | | |
 | --- | --- |
-| **You trade** | NVIDIA and other US stocks, indices, gold, oil and crypto, with leverage |
-| **Wallet** | A fresh Polymarket wallet; its own key owns the Perps account |
+| **You trade** | Perps on US stocks, indices, commodities and crypto, with leverage |
+| **The wallet** | A fresh Polymarket wallet; its key owns the Perps account |
 | **Funded with** | pUSD, at least 10, moved in from the wallet's Deposit Wallet |
-| **Code** | `packages/venues/src/pmperps` |
+| **Code** | `packages/venues/src/pmperps`, `apps/web/src/features/perps` |
 
 ## Set up
 
-Perps uses the same kind of fresh Polymarket wallet as [Polymarket](/venues/polymarket). The wallet's own key owns
-the Perps account and authorises a **proxy key for 7 days**, which signs each order. A new proxy is authorised when one
-expires or is lost. Every request is a signed command over Polymarket's REST API, so it goes through Oblivious HTTP
-like everything else.
+Perps trades from the same kind of fresh wallet as [Polymarket](/docs/venues/polymarket). The wallet's own key owns
+the Perps account and authorises a **proxy key for 7 days** with an EIP-712 signature; the proxy signs each order. A new
+proxy is authorised an hour before the old one expires, or if it is refused. Every request is a signed command over
+Polymarket's REST API, so it is sealed like everything else.
 
 ## Funding
 
-1. The wallet is funded with pUSD, as on [Polymarket](/venues/polymarket#funding).
-2. Its pUSD moves from the Deposit Wallet into Perps, **gasless**. That first deposit, at least **10 pUSD**, opens the
-   Perps account.
+1. The wallet is funded with pUSD, exactly as on [Polymarket](/docs/venues/polymarket#funding).
+2. On its first Perps order, all of its pUSD moves from the Deposit Wallet into Perps, **gasless**. That first deposit,
+   at least **10 pUSD**, opens the Perps account.
 
 ## Trading
 
-- **Long or short** at market (an IOC limit at most 1% through the mark) or with a limit.
-- **Leverage**, and **take-profit** and **stop-loss** exits.
-- The terminal trades from the wallet that already traded this market; otherwise from a ready, unused wallet.
+<Phones>
+  <Phone src="/shots/phone/order-nvda.webp" alt="The Long NVDA order sheet on a phone: $25 margin on the keypad, 5× leverage, the position size in dollars and NVDA, the liquidation price and the fee." caption="The ticket starts with the amount." />
+  <Phone src="/shots/phone/leverage.webp" alt="The Leverage sheet on a phone with the slider, the presets and the liquidation estimate." caption="Leverage: a slider and presets up to the market's maximum." />
+  <Phone src="/shots/phone/tpsl.webp" alt="The Take profit · Stop loss sheet on a phone with percentage presets." caption="Take profit and stop loss as a return on margin." />
+</Phones>
+
+- **Long or short** at market (an IOC limit at most 1% through the mark) or with a limit (good till cancelled).
+- **Leverage** (5× by default), **take-profit** and **stop-loss** exits; see the [ticket's arithmetic](/docs/guide/trade#the-ticket).
+- The terminal trades from the wallet that already holds this market, otherwise from a ready wallet that has never
+  traded, otherwise it asks you to fund one.
 
 ## Coming home
 
-Orders are cancelled and positions closed. The withdrawable pUSD goes back to the Deposit Wallet, signed by the
-wallet's own key, and then takes [Polymarket's route home](/venues/polymarket#coming-home). Under 1 pUSD stays behind as
-dust.
+Two steps, as on the venue: first **Close** each position. Then **Send home** cancels any orders, withdraws the pUSD
+back to the Deposit Wallet with the owner's signature, and takes [Polymarket's route home](/docs/venues/polymarket#coming-home).
+Send home refuses while a position is open. Under 1 pUSD withdrawable stays behind as dust.
 
 ## Live data
 
-Prices, candles and books come from Polymarket Perps' public feed through the relay's live feed. The relay skips the
-`tickers` channel: it pushes about 700 updates a second for every market at once, and `statistics` gives the price.
+Prices, candles, books and trades come from Polymarket Perps' public feed through the relay's shared live feed. The
+relay skips the `tickers` channel (about 700 updates a second across every market) and uses `statistics` for the
+price, at most once a second.

@@ -1,0 +1,25 @@
+---
+title: Venues
+description: Four public markets from one shielded balance, each position from a wallet made for it, all through NEAR Intents.
+icon: Store
+---
+
+{/* Sources: packages/venues/src/*; packages/engine/src/constants.ts:53-58 (VENUE_BRANCH); apps/web/src/features/private-wallets/funding.ts:21-55;
+   services/gateway/src/constants.ts (allowlist). */}
+
+<Brands />
+
+| Venue | You trade | The wallet | Funded with | Key path |
+| --- | --- | --- | --- | --- |
+| [Polymarket](/docs/venues/polymarket) | Prediction markets: Yes/No and multi-outcome events | A Polymarket Deposit Wallet for a fresh signer key, one market per wallet | USDC, credited as pUSD by Polymarket's bridge | `m/44'/60'/6874'/0'/i'` |
+| [Polymarket Perps](/docs/venues/polymarket-perps) | Perps on US stocks, indices, commodities and crypto | The same kind of fresh Polymarket wallet; a 7-day proxy key signs its orders | pUSD moved into Perps, at least 10 | `m/44'/60'/6874'/0'/i'` |
+| [Hyperliquid](/docs/venues/hyperliquid) | Crypto perps | A fresh EVM key that signs its own orders | USDC on HyperCore | `m/44'/60'/6874'/1'/i'` |
+| [Solana](/docs/venues/solana) | Any token Jupiter routes | A fresh ed25519 key (SLIP-0010) | SOL, which also pays the fees | `m/44'/501'/6874'/2'/i'` |
+
+Every venue call goes through the [gateway's allowlist](/docs/privacy/oblivious-http), and every funding and trip
+home goes through [NEAR Intents](/docs/venues/near-intents). No order carries a builder code.
+
+<Cards>
+  <Card title="NEAR Intents, the rail" href="/docs/venues/near-intents" description="Routes, confidential mode, the signature check and refunds." icon={<Icon name="ArrowLeftRight" />} />
+  <Card title="Private wallets" href="/docs/guide/private-wallets" description="How each wallet is made, funded and sent home." icon={<Icon name="WalletCards" />} />
+</Cards>

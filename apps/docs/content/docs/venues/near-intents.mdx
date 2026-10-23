@@ -1,0 +1,57 @@
+---
+title: NEAR Intents
+description: Every rail in and out of the shielded pool is a NEAR Intents 1Click swap, in confidential mode, with a signed quote checked before any ZEC moves.
+icon: ArrowLeftRight
+---
+
+{/* Sources: packages/rails/src (constants.ts:1-58, oneclick.ts:42-100, signature.ts:19-90, rails.test.ts);
+   apps/web/src/features/private-wallets (funding.ts:21-101, jobs.ts:88-253, home.ts, swaps.ts:13-27, fund-drawer.tsx:208-252);
+   packages/engine/src/registry.ts:19-28. */}
+
+<Diagram name="funding-flow" alt="Funding round trip: at a random moment, your shielded ZEC sends one standard amount with a fresh shielded refund address to NEAR Intents, which pays USDC, pUSD or SOL to a fresh wallet in a confidential swap; the wallet opens one position on the venue, closes it, sends the proceeds back through NEAR Intents to a fresh shielded address." caption="One swap out of the pool for each wallet, one swap home." />
+
+## Routes
+
+| Venue | Funding (ZEC →) | Trip home (→ ZEC) | Confidential |
+| --- | --- | --- | --- |
+| Polymarket and Perps | USDC on Polygon, else Arbitrum, else Base, to the wallet's Polymarket bridge address | USDC on Polygon from the bridge → ZEC | Funding yes; trip home no (flexible-input quote) |
+| Hyperliquid | USDC on HyperCore | HyperCore USDC → ZEC | Both |
+| Solana | SOL | SOL → ZEC | Both |
+
+A funding is always one of the seven [standard sizes](/docs/zcash/zips#the-standard-amounts). The swap settings: exact
+input, 1% slippage, a two-hour deadline.
+
+## The quote check
+
+<Shot src="/shots/wide/fund-route.webp" alt="The New private wallet sheet with its details open: a new wallet gets an amount of USDC, its dollar value and time estimate, the network fee, Mitoshi fee none, and the route through NEAR Intents marked confidential." caption="The funding sheet asks NEAR Intents for a price over Oblivious HTTP and shows the route." />
+
+Before any ZEC moves, Mitoshi checks each quote:
+
+1. **The signature.** 1Click signs each quote with ed25519; Mitoshi verifies it against 1Click's published key, pinned
+   in `packages/rails/src/constants.ts`.
+2. **The terms.** The quote must echo what was asked: the assets, the amount, the recipient and the refund address.
+   A live quote must carry a deposit address.
+3. **The record.** The whole signed quote is saved in the encrypted vault before the payment, so a closed tab can find
+   the swap again and any dispute can be settled.
+
+Then one shielded payment of exactly the wallet's size goes to the deposit address, and its transaction id is sent to
+1Click. Mitoshi follows the swap every 15 seconds while the app is open.
+
+## Confidential mode
+
+Confidential mode means NEAR doesn't publish which deposit paid which payout. It needs NEAR's partner key, which the
+gateway adds to 1Click calls; the browser never sees it. If 1Click refuses a confidential quote (HTTP 401), the app uses
+public quotes for the rest of the session and says so on the Privacy screen and in the funding sheet.
+
+## Refunds
+
+| Swap | If NEAR can't complete it |
+| --- | --- |
+| A funding | The ZEC comes back to a fresh shielded address made for this swap; the wallet shows **Refunded** |
+| A trip home | The money comes back to the venue wallet, ready to send home again |
+
+## Fees
+
+There is no Mitoshi fee. A 0.2% funding fee is built in but switched off: no fee recipient is set
+(`APP_FEE_RECIPIENT` is `null`), and the funding sheet shows "Mitoshi fee: none". You pay the swap spread and NEAR's own
+fees, which are part of the quote.

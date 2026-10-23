@@ -1,0 +1,89 @@
+---
+title: Introduction
+description: "Trade predictions, stocks and crypto from shielded ZEC: each position opens from a brand-new wallet funded through NEAR Intents."
+icon: Compass
+---
+
+{/* Sources: README.md (lead, One trade start to finish); apps/web/src/features (trade/ticket.tsx, order.ts:59-80,
+   private-wallets/fund-drawer.tsx, jobs.ts); packages/engine/src (constants.ts, registry.ts:168-187). Values from the
+   captures taken on mitoshi.xyz on 2026-10-23. */}
+
+Your money stays in Zcash's shielded pool, in a real Zcash wallet that runs in your browser. When you open a position,
+Mitoshi gives it a **brand-new wallet**, funds it through **NEAR Intents** with one standard amount at a random moment,
+and trades on the venue's own market. When you're done, the money comes home to a fresh shielded address.
+
+A copy trader watching the venue finds a wallet with one funding, one position and no history, and nothing that links
+it to your other wallets or to you.
+
+<Phones>
+  <Phone src="/shots/phone/event.webp" alt="A Polymarket event on mitoshi.xyz on a phone, with its odds chart and Yes and No buttons." caption="Predict on Polymarket" eager />
+  <Phone src="/shots/phone/terminal-nvda.webp" alt="The NVIDIA perps terminal on a phone with one-hour candles and Long and Short buttons." caption="Trade NVIDIA on Polymarket Perps" eager />
+  <Phone src="/shots/phone/order-nvda.webp" alt="The Long NVDA order sheet on a phone: $25 at 5× leverage with the position size and fee." caption="An amount-first ticket" eager />
+</Phones>
+
+## Your first trade
+
+<Steps>
+<Step>
+
+**Make a private balance.** Open [mitoshi.xyz/wallet](https://mitoshi.xyz/wallet), write down 24 words and check three
+of them. No account, no sign-up. → [Getting started](/docs/guide/getting-started)
+
+</Step>
+<Step>
+
+**Deposit ZEC** from Zodl or any shielded wallet to the fresh address Mitoshi shows. A fully shielded deposit is
+usable once it confirms.
+
+</Step>
+<Step>
+
+**Pick a market**, say NVIDIA on Polymarket Perps. The ticket starts with the amount: **$25 at 5×** is a **$125.00**
+position, **0.58768 NVDA** at the price when this was captured, fee **$0.05**. → [Trade](/docs/guide/trade)
+
+</Step>
+<Step>
+
+**Fund a private wallet.** With no ready wallet for that venue, the ticket says **Fund a private wallet**. Pick a
+standard size (0.05 ZEC by default); Mitoshi derives a new key and, at a random moment 20 s to 3 min later, pays
+exactly that much from the shielded pool into NEAR Intents. On 2026-10-23 a confidential quote for 0.05 ZEC gave
+**≈ 60.79 USDC on Hyperliquid in about 8 minutes**. → [Private wallets](/docs/guide/private-wallets)
+
+</Step>
+<Step>
+
+**Trade.** When the wallet is ready, place the order: it goes to the venue's real book, signed by that wallet's own
+key (on Polymarket Perps, by a short-lived key that wallet authorised).
+
+</Step>
+<Step>
+
+**See what a copy trader sees.** "What the public sees" reads the wallet's public record from the venue: one funding,
+one position, no links to your other wallets.
+
+</Step>
+<Step>
+
+**Come home.** Close the position, then **Send home**: the proceeds swap back to ZEC at a fresh shielded address.
+
+</Step>
+</Steps>
+
+<Callout title="Skip the wait">
+Turn on **Keep one ready** for a venue and Mitoshi keeps a funded wallet waiting while the app is open, so the next
+position doesn't wait for a funding.
+</Callout>
+
+## Where things stand
+
+The app is live on Zcash mainnet at [mitoshi.xyz](https://mitoshi.xyz), with live data from every venue through the
+relay. The browser wallet's proofs and sends are verified on testnet, and confidential NEAR quotes are verified over
+Oblivious HTTP. **The full round trip on mainnet (fund, trade, close, come home) has not run yet**, so no live trade is
+claimed here. [Verify it yourself](/docs/privacy/verify) lists the evidence.
+
+<Cards>
+  <Card title="Who sees what" href="/docs/privacy" description="Every party, what it sees and what it never sees." icon={<Icon name="ShieldCheck" />} />
+  <Card title="Built on Zcash" href="/docs/zcash" description="Zcash's own wallet code in your browser." icon={<Icon name="Shield" />} />
+  <Card title="Venues" href="/docs/venues" description="Polymarket, Polymarket Perps, Hyperliquid, Solana." icon={<Icon name="Store" />} />
+  <Card title="Architecture" href="/docs/build/architecture" description="The system maps: browser, relay, gateway." icon={<Icon name="Network" />} />
+</Cards>

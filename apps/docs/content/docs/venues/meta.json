@@ -1,4 +1,7 @@
 {
   "title": "Venues",
-  "pages": ["polymarket", "polymarket-perps", "hyperliquid", "solana"]
+  "description": "Four public markets and the rail between them",
+  "icon": "Store",
+  "root": true,
+  "pages": ["index", "polymarket", "polymarket-perps", "hyperliquid", "solana", "---The rail---", "near-intents"]
 }

@@ -1,0 +1,7 @@
+{
+  "title": "Build",
+  "description": "How it's built, served and checked",
+  "icon": "Wrench",
+  "root": true,
+  "pages": ["architecture", "hosting", "code-map"]
+}

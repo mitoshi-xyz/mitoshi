@@ -1,0 +1,7 @@
+{
+  "title": "Privacy",
+  "description": "Who sees what, and how to check it",
+  "icon": "ShieldCheck",
+  "root": true,
+  "pages": ["index", "what-stays-public", "rules", "oblivious-http", "verify"]
+}

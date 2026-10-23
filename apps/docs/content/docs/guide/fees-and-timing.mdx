@@ -1,0 +1,48 @@
+---
+title: Fees and timing
+description: What a round trip costs and how long each step takes. Mitoshi itself charges nothing.
+icon: Timer
+---
+
+{/* Sources: packages/rails/src/constants.ts:44-58; packages/engine/src/constants.ts:9-48; apps/web/src/constants.ts:17-25;
+   apps/web/src/features/private-wallets (funding.ts:57-58, fund-drawer.tsx:208-252); apps/web/src/features/perps/hl-driver.ts:9-10;
+   packages/rails/src/fixtures/dry-quote.json; the funding-sheet capture of 2026-10-23. */}
+
+## Fees
+
+| What | Charged by | How much |
+| --- | --- | --- |
+| Trading | Mitoshi | **Nothing.** No fee and no builder code on any order |
+| Funding | Mitoshi | **Nothing.** A 0.2% funding fee exists in the code but is off: no fee recipient is set, and the funding sheet shows "Mitoshi fee: none" |
+| Venue fees | Polymarket, Hyperliquid, Jupiter | Each venue's own; the perps ticket shows its fee before you trade |
+| The swaps | NEAR Intents | The spread and NEAR's fees, inside the quote you see before you fund |
+| Zcash network fee | Zcash miners | The ZIP 317 fee; the funding sheet reserves 0.00015 ZEC for it |
+| Polymarket bridge | Polymarket's bridge | Shown in the funding sheet for Polymarket |
+
+## Timing
+
+| Step | Typical time | From |
+| --- | --- | --- |
+| A new wallet starts funding | 20 s to 3 min after you ask, at random | Mitoshi's scheduler |
+| A keep-ready replacement starts | 90 min on average after the last one is used, at most 12 h | Mitoshi's scheduler |
+| Funding: ZEC in, venue asset out | About 8 minutes | 1Click's estimate (465 s in a quote of 2026-10-22; "about 8 min" in the funding sheet on 2026-10-23) |
+| Polymarket credit: USDC to pUSD | Shown in the funding sheet | Polymarket's bridge |
+| A deposit confirms | One block, about 75 s on mainnet | Zcash |
+| The wallet checks for blocks | Every 30 s; not for 1–10 min after a send | Mitoshi's wallet |
+| Rest after a public arrival (an exchange, or a trip home) | 2 to 6 h, per note | Mitoshi's rest rules |
+
+## Sizes
+
+Every funding is exactly one of these, so the public hop blends in:
+
+<div className="not-prose my-4 flex flex-wrap gap-2 font-mono text-sm">
+  <span className="rounded-full border border-fd-border px-3 py-1">0.01 ZEC</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.02 ZEC</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.05 ZEC</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.1 ZEC</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.2 ZEC</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">0.5 ZEC</span>
+  <span className="rounded-full border border-fd-border px-3 py-1">1 ZEC</span>
+</div>
+
+The leak meter blocks a funding of any other size.

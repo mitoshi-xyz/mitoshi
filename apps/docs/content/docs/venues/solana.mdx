@@ -1,30 +1,39 @@
 ---
 title: Solana
-description: Solana tokens through Jupiter, from a fresh ed25519 key.
+description: Buy any token Jupiter routes from a fresh ed25519 wallet, then sell it all and send it home in one action.
+icon: Coins
 ---
 
-{/* Sources: packages/venues/src/solana (account.ts, tx.ts, constants.ts DUST_LAMPORTS); apps/web/src/features/solana
-   (token-view.tsx); services/gateway/src/constants.ts (lite-api.jup.ag, api.geckoterminal.com, Solana RPC). */}
+{/* Sources: packages/venues/src/solana (account.ts:89-143, tx.ts:53-68, market.ts:101-154, constants.ts:1-15);
+   apps/web/src/features/solana (token-view.tsx, swap-ticket.tsx, tokens-table.tsx, constants.ts:2-3); apps/web/src/features/private-wallets/home.ts:197-253. */}
+
+<Screen name="token" alt="A Solana token page on mitoshi.xyz: the token's price and chart, and on desktop the swap ticket beside it with Jupiter's mark." caption="A token from the Tokens list, with its chart and Jupiter's swap ticket." />
 
 | | |
 | --- | --- |
 | **You trade** | Any token Jupiter routes |
-| **Wallet** | A fresh ed25519 key (SLIP-0010) |
-| **Funded with** | SOL, which also pays the fees |
-| **Code** | `packages/venues/src/solana` |
+| **The wallet** | A fresh ed25519 key (SLIP-0010) |
+| **Funded with** | SOL, which also pays the wallet's fees |
+| **Code** | `packages/venues/src/solana`, `apps/web/src/features/solana` |
 
 ## Funding
 
-NEAR delivers **SOL** to the fresh address. The same SOL pays the wallet's transaction fees.
+NEAR delivers **SOL** to the fresh address. When buying, the wallet keeps 0.01 SOL back for fees and token-account rent.
 
 ## Trading
 
-- Swaps go through **Jupiter Ultra**: Jupiter routes the swap and broadcasts the transaction this wallet signed.
-- One Solana wallet trades until you send it home, so it can hold several tokens. A new one is used when none is
-  trading.
-- Charts and prices come from Jupiter and GeckoTerminal through the gateway.
+<Phones>
+  <Phone src="/shots/phone/tokens.webp" alt="The Tokens list on a phone: trending Solana tokens with prices and 24-hour changes." caption="Tokens: trending on Solana, routed by Jupiter." />
+  <Phone src="/shots/phone/token-swap.webp" alt="The buy sheet for a Solana token on a phone with SOL presets." caption="The swap sheet with SOL presets." />
+</Phones>
+
+- Swaps go through **Jupiter Ultra**: Jupiter quotes and routes the order, the wallet signs only its own part of the
+  transaction in the browser (it refuses one it isn't asked to sign), and Jupiter broadcasts it.
+- Charts and pool data come from GeckoTerminal, prices and lists from Jupiter, all through the gateway.
+- A token you already hold trades from the wallet that holds it; a new token takes a ready wallet that has never traded,
+  or asks you to fund one.
 
 ## Coming home
 
-Every token is sold back to SOL, then one transfer goes to a NEAR deposit address, and NEAR swaps it to ZEC at a fresh
-shielded address. Under 0.005 SOL stays behind as dust.
+**Sell all and send home** sells every token back to SOL through Jupiter, then one transfer goes to a NEAR deposit
+address and NEAR swaps it to ZEC at a fresh shielded address. Under 0.005 SOL stays behind as dust.

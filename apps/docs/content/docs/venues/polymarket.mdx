@@ -1,60 +1,71 @@
 ---
 title: Polymarket
-description: Prediction markets, from a fresh Deposit Wallet per market.
+description: Buy Yes or No on any Polymarket event from a Deposit Wallet nobody has seen before, one market per wallet.
+icon: Target
 ---
 
-{/* Sources: packages/venues/src/polymarket (wallet.ts, account.ts, bridge.ts, trading.ts); apps/web/src/features/polymarket
-   (pm-trade.ts walletFor); apps/web/src/features/private-wallets (funding.ts FUNDING_ROUTES, home.ts);
-   services/gateway/src/builder.ts. */}
+{/* Sources: packages/venues/src/polymarket (wallet.ts:13-35, account.ts:14-123,179-187, bridge.ts, constants.ts);
+   apps/web/src/features/polymarket (pm-trade.ts:9-69, pm-ticket.tsx, pm-worker.ts); apps/web/src/features/private-wallets
+   (funding.ts:21-101, home.ts:42-124); services/gateway/src/builder.ts:39-83; packages/rails/src/oneclick.ts:42-69. */}
+
+<Screen name="event" alt="A Polymarket event on mitoshi.xyz: the event title, its chance, the odds chart over one month, the outcomes, and on desktop the ticket beside it." caption="A live Polymarket event in Mitoshi, read over Oblivious HTTP." />
 
 | | |
 | --- | --- |
 | **You trade** | Any outcome on Polymarket's book: Yes/No and multi-outcome events |
-| **Wallet** | A Polymarket Deposit Wallet for a fresh signer key, one market per wallet |
+| **The wallet** | A Polymarket Deposit Wallet for a fresh signer key, one market per wallet |
 | **Funded with** | USDC, credited as pUSD by Polymarket's bridge |
-| **Code** | `packages/venues/src/polymarket` |
+| **Code** | `packages/venues/src/polymarket`, `apps/web/src/features/polymarket` |
 
 ## Set up
 
-Polymarket's official TypeScript SDK runs in its own Web Worker, and every call it makes is sealed with Oblivious
-HTTP. The wallet's **Deposit Wallet** is deployed and approved **gasless** through Polymarket's relayer. The Builder
-secret that authorises those relayer calls stays on Mitoshi's gateway, which signs **only Deposit Wallet requests**
-(`services/gateway/src/builder.ts`).
+Polymarket's official TypeScript SDK runs in its own Web Worker whose only network is the sealed fetch. The Deposit
+Wallet's address is known before it exists (it is derived from the signer), so NEAR can pay it straight away; the
+wallet is deployed and approved **gasless** through Polymarket's relayer on its first trade. The builder secret that
+authorises those relayer calls stays on the gateway, which [signs only Deposit Wallet calls](/docs/privacy/oblivious-http#the-builder-signer).
 
 ## Funding
 
 <Steps>
 <Step>
-One standard amount of ZEC goes to a NEAR Intents deposit address.
+One standard amount of ZEC goes to a NEAR Intents deposit address, with a fresh shielded refund address.
 </Step>
 <Step>
 NEAR delivers USDC to the wallet's **Polymarket bridge address**: on Polygon, or on Arbitrum or Base when NEAR has no
-Polygon route at that moment. The bridge takes either.
+Polygon route at that moment.
 </Step>
 <Step>
-The bridge credits **pUSD** to the Deposit Wallet, in about 30 seconds.
+The bridge credits **pUSD** to the Deposit Wallet. The wallet is ready when the bridge reports it complete.
 </Step>
 </Steps>
 
 ## Trading
 
-- Buy or sell any outcome **at market** (fill-and-kill, with a price guard) or with a **limit**.
-- Cancel open orders; **redeem** winning shares after the market resolves.
-- Adding to a position or selling it stays on the wallet that holds it. A new market takes a ready, never-used wallet.
-- Orders carry **no builder code**: Polymarket publishes the builder field when it is set.
+<Phones>
+  <Phone src="/shots/phone/event.webp" alt="A Polymarket event on a phone: the odds chart and the pinned Yes and No buttons above the dock." caption="The event on a phone." />
+  <Phone src="/shots/phone/event-ticket.webp" alt="The Polymarket ticket sheet on a phone: Buy, Market, the Yes and No prices, an amount on the keypad, and the button to fund a private wallet." caption="The ticket opens as a sheet with a keypad." />
+</Phones>
+
+- **Buy or sell** any outcome **at market** (fill-and-kill, within two ticks of the estimate) or with a **limit**
+  (good till cancelled); cancel open orders; **redeem** winning shares after the market resolves.
+- **One market per wallet.** Adding to a position or selling it stays on the wallet that holds it; a new market takes
+  a ready wallet that has never traded, or asks you to fund one.
+- **No builder code** on orders: Polymarket publishes that field when it is set.
 
 ## Coming home
 
-Open orders are cancelled, resolved shares redeemed, the rest sold. The pUSD leaves through a **bridge withdrawal** that
-pays a NEAR deposit address in USDC, and NEAR swaps it to ZEC at a fresh shielded address. Under 1 pUSD stays behind as
-dust.
+**Send home** cancels open orders, redeems resolved shares, sells the rest at market and brings any Perps money back
+first. The pUSD then leaves through a one-time **bridge withdrawal** that pays a NEAR deposit address in USDC on
+Polygon, and NEAR swaps it to ZEC at a fresh shielded address. Under 1 pUSD stays behind as dust. If NEAR refunds the
+trip home, the money returns to the Deposit Wallet.
 
 <Callout title="Not in NEAR's confidential mode">
-This trip home is the one swap Mitoshi cannot quote in NEAR's confidential mode: the bridge pays out whatever arrives,
-which needs a flexible-input quote, and 1Click offers no confidential mode for those.
+This is the one swap Mitoshi can't make confidential: the bridge pays out an inexact amount, which needs a
+flexible-input quote, and 1Click offers no confidential mode for those. NEAR's record pairs that payout with the fresh
+shielded address it goes to.
 </Callout>
 
 ## Public on purpose
 
 Each wallet's **relayer calls** (creating it, its approvals, redeeming, moving pUSD into Perps, the trip home) are
-attributed to Mitoshi's builder profile. Polymarket can tell these come from Mitoshi users, and when, not which user.
+attributed to Mitoshi's builder profile. Polymarket can tell these come from Mitoshi users, and when, not which one.

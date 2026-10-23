@@ -1,0 +1,42 @@
+---
+title: Who sees what
+description: Every party that touches a request, what it can see, and what it never sees. Nobody can tie your wallets to each other or to you.
+icon: ShieldCheck
+---
+
+{/* Sources: services/web/src (index.ts, live.ts); services/gateway/src (app.ts, constants.ts, upstream.ts); packages/net;
+   apps/web/src/features/privacy/privacy-view.tsx; apps/web/src/features/private-wallets (jobs.ts:99, home.ts:84,165,222, swaps.ts);
+   packages/engine/src/registry.ts. */}
+
+Mitoshi's promise is narrow and checkable: **nobody can link two of your trading wallets, or any of them to you or your
+ZEC.** It hides who traded, not what was traded.
+
+## Who sees what
+
+<OhttpHops />
+
+| Party | Sees | Never sees |
+| --- | --- | --- |
+| **Your browser** | Everything: your words, balance and which wallets are yours, encrypted on this device | — it sends none of it in the clear |
+| **Relay** (Cloudflare, `mitoshi-web`) | Your IP, the size and time of each request, and which public markets you look at | What you ask about your wallets: every such call is sealed |
+| **Gateway** (Vercel, Dublin) | One request's content, such as an address's balance, arriving from the relay | Your IP, cookies, or which requests come from the same person |
+| **Each venue** | That one wallet's orders and positions, sent from Ireland | Your other wallets, your balance, your IP or country |
+| **NEAR Intents** | One swap: a standard ZEC amount in and a fresh wallet out (a funding), or a venue asset in and a fresh shielded address out (a trip home) | Who sent it, or your other swaps |
+| **The Zcash chain** | That a shielded transaction happened, and the one hop to NEAR's deposit address | Amounts and addresses inside the pool, or that it was you |
+| **Mitoshi's servers** | Only what the relay and gateway rows say; there is no database and no account | Your keys, your wallet list, your positions |
+
+<Screen name="privacy" alt="The Privacy screen on mitoshi.xyz: Your wallets as the public sees them, then Who sees what with a row for each party, then what Mitoshi does so nothing links." caption="The app's own Privacy screen says the same thing, party by party, and lists your live wallets as a copy trader would find them." />
+
+## What keeps your wallets apart
+
+- **One wallet per position.** An order goes to the wallet that already holds that market; otherwise to a ready wallet
+  that has never traded; otherwise you fund a new one. Another position's wallet is never used
+  (`positionWallet`, `packages/engine/src/registry.ts`).
+- **Its own key** on a hardened path of Mitoshi's own, so no two wallets share a key, a refund address or a request.
+- **Standard sizes at random moments.** See [the rules](/docs/privacy/rules).
+- **Every call sealed.** See [Oblivious HTTP](/docs/privacy/oblivious-http).
+
+<Cards>
+  <Card title="What stays public" href="/docs/privacy/what-stays-public" description="What is public on purpose, and the residuals Mitoshi cannot hide." icon={<Icon name="Eye" />} />
+  <Card title="Verify it yourself" href="/docs/privacy/verify" description="Network panel, pinned key, headers, testnet transactions." icon={<Icon name="SearchCheck" />} />
+</Cards>

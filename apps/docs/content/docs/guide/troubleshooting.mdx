@@ -1,0 +1,27 @@
+---
+title: Troubleshooting
+description: What to do when a deposit, a funding or a trip home seems stuck, in the app's own words.
+icon: Wrench
+---
+
+{/* Sources: apps/web/src/features (wallet/deposit-drawer.tsx, private-wallets/funding.ts:60-65, fund-drawer.tsx:107-148,
+   jobs.ts:274-330, home.ts, settings/status.tsx, settings/settings.tsx:14-51, vault/lock-screen.tsx); packages/engine/src/leak.ts. */}
+
+Start at [Service status](/docs/guide/status): it shows whether each hop is answering.
+
+| What you see | Why | What to do |
+| --- | --- | --- |
+| "From a public address: resting 2–6 h" | It came from a transparent address | Wait; it can fund wallets once rested. Deposit from a shielded wallet next time |
+| The balance hasn't moved | The wallet checks every 30 s and pauses 1–10 min after each send | Wait a minute; the pause after a send is on purpose |
+| A wallet stays **Preparing** for minutes | It starts at a random moment, 20 s to 3 min after you ask | Wait. A keep-ready replacement can wait hours (90 min on average, 12 h at most) |
+| **blocked** on a funding | The size isn't standard, or it would spend more than is ready | Pick a standard size, deposit, or wait for resting ZEC |
+| **Deposit 0.05015 ZEC first** | Not enough ZEC is ready for the size plus the fee | Deposit, or pick a smaller size |
+| "Private wallets are funded through NEAR Intents, which only takes mainnet ZEC." | The app is running on testnet | Use mitoshi.xyz (mainnet) |
+| A wallet shows **Refunded** | NEAR couldn't complete the funding | The ZEC went to a fresh shielded address in your balance |
+| A wallet shows **Needs you** | A step stopped | **Try again**; a funding that never sent anything waits for a new random start |
+| **Send home** isn't there on a perps wallet | It still holds a position | **Close** it first; Send home appears once the wallet holds nothing |
+| A trip home was refunded | NEAR couldn't complete the swap home | The money is back in the venue wallet; send it home again |
+| Something is left in a retired wallet | It's smaller than the trip home would cost | It stays as [dust](/docs/guide/private-wallets#dust) |
+| A wallet is missing after a restore from words | The scan covers Hyperliquid and Solana, one address every 3–9 s | Let it finish, or Settings → **Find my wallets**. Polymarket wallets come back only from the backup file |
+| **Mitoshi is locked** | The passphrase lock is on | Enter it. There is no reset: without it, start over from the 24 words |
+| Nothing funds while the tab is closed | Fundings, keep-ready and swap tracking run in your tab | Leave Mitoshi open until the wallet is ready |

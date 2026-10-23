@@ -1,0 +1,45 @@
+---
+title: Deposit and withdraw
+description: Put shielded ZEC in from any Zcash wallet and take it out again, with a leak meter that warns before a withdrawal can be matched to a payout.
+icon: ArrowDownUp
+---
+
+{/* Sources: apps/web/src/features/wallet (deposit-drawer.tsx:31-116, withdraw-drawer.tsx:32-266, history.tsx:57-150);
+   apps/web/src/features/privacy/leak-meter.tsx; packages/engine/src/leak.ts:60-85; apps/web/src/kit/slide.tsx. */}
+
+## Deposit
+
+<Screen name="deposit" alt="The Deposit ZEC drawer on mitoshi.xyz: a QR code, a fresh shielded address in groups, Copy address, Open in wallet, Another fresh address, and Waiting for your deposit." caption="Deposit ZEC: a new shielded address each time." />
+
+| | |
+| --- | --- |
+| Address | A fresh unified address with only an Orchard receiver; **Another fresh address** makes a new one |
+| Buttons | **Copy address**, **Open in wallet** (a `zcash:` link) |
+| Steps | **Deposit seen** → **Confirming in a block** → **Confirmed** |
+| Then | "Fully shielded: ready to use now", or "From a public address: resting 2–6 h before it can fund a wallet" |
+
+Send from a shielded wallet (Zodl, Zashi, Ywallet) and it is usable the moment it lands. From an exchange or any
+transparent address it works too, but rests 2–6 hours first.
+
+## Withdraw
+
+<Phones>
+  <Phone src="/shots/phone/withdraw.webp" alt="The Withdraw ZEC sheet on a phone: an amount typed on the keypad, the ready balance, the To field and Slide to send privately." caption="Withdraw ZEC on a phone: the amount on a keypad." />
+  <Phone src="/shots/phone/deposit.webp" alt="The Deposit ZEC sheet on a phone with the QR code and the fresh address." caption="Deposit ZEC on a phone." />
+</Phones>
+
+| Step | What you see |
+| --- | --- |
+| Amount | In ZEC, with "0.05 ZEC ready · Max" (your own figure); resting ZEC is shown but can't be sent yet |
+| To | A unified address (`u1…`) or a transparent one; **Paste** |
+| Verdict | "Shielded address: the amount and both ends stay private" · "Transparent address: the amount and the recipient will be public" · "Sapling addresses are not supported; ask for a unified address (u1…)" |
+| Cost | **Fee** and **Arrives**, with the ZIP 317 fee |
+| Leak meter | Clear for a shielded address. For a public one: red if it exactly matches money that came home in the last 48 h; amber if within 2% of it, within 2 h of it, or not a standard size |
+| Send | **Slide to send privately**, then "Proving in this browser…" → **Sent privately** → **Confirmed** |
+
+If anything fails before it sends: "Nothing was sent. Your ZEC is where it was."
+
+<Callout>
+The withdrawal meter only warns. Sending to your own exchange is your choice, so red doesn't block it; on a funding, red
+does.
+</Callout>

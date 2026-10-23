@@ -1,0 +1,27 @@
+---
+title: Service status
+description: A live check of every hop between your browser and the venues, from the relay to the Zcash light server.
+icon: Gauge
+---
+
+{/* Sources: apps/web/src/features/settings/status.tsx:29-171; apps/web/src/features/shell/health-chip.tsx. */}
+
+<Screen name="status" alt="The Status screen on mitoshi.xyz: Your browser, the Mitoshi relay, the gateway in Ireland, NEAR Intents, Jupiter, Polymarket, Polymarket Perps, Hyperliquid and the Zcash light server, each with its response time." caption="Status: each hop, what it sees, and whether it answers." eager />
+
+[mitoshi.xyz/status](https://mitoshi.xyz/status) checks each part over the same path the app uses, and says what each
+one sees:
+
+| Row | What it sees | Its check |
+| --- | --- | --- |
+| Your browser | Everything, encrypted on this device | this device |
+| Mitoshi relay · Cloudflare | Your IP address, never what you ask | the live feed: live, connecting or reconnecting |
+| Mitoshi gateway · Ireland | What is asked, never who asks | a sealed round trip, in ms |
+| NEAR Intents · 1Click | Each swap: a standard ZEC amount in, a fresh wallet out | ms |
+| Jupiter · Solana | A fresh Solana wallet's swaps, from the gateway's address | ms |
+| Polymarket | Market reads from the gateway's address | ms |
+| Polymarket Perps | A fresh wallet's Perps orders, signed by its own proxy key | ms |
+| Hyperliquid | A fresh account's orders, from the gateway's address | ms |
+| Zcash light server | Requests for blocks from the gateway; your notes are decrypted only in your browser | the latest block once a wallet is open |
+
+Each row can be checked again on its own. A row over 2.5 s says "slow"; one that fails says "not answering". The chip at
+the top of every screen (Private relay · live, Connecting…, Reconnecting…) opens this page.

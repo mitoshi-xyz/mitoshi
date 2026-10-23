@@ -1,0 +1,42 @@
+---
+title: Built on Zcash
+description: Zcash's own wallet code, compiled for the browser, holds your balance in the shielded pool and proves every payment on your device.
+icon: Shield
+---
+
+{/* Sources: packages/zwallet/rust/Cargo.toml:15-46; packages/zwallet/rust/src (send.rs, wallet.rs, notes.rs, prover.rs, sync.rs);
+   packages/zwallet/src (worker.ts, core.ts, constants.ts); apps/web/src/constants.ts:17-28; packages/engine/src (rest.ts, constants.ts). */}
+
+Mitoshi's balance is a real Zcash wallet. Not a custodial account, not a wrapped token: Zcash's own Rust wallet
+library, compiled to WebAssembly, running in a Web Worker in your browser. It scans the chain, holds your notes,
+builds the zero-knowledge proof for each payment and signs it, all on your device.
+
+<Cards>
+  <Card title="The browser wallet" href="/docs/zcash/browser-wallet" description="librustzcash on WASI: sync, notes, proofs, sends." icon={<Icon name="Cpu" />} />
+  <Card title="ZIPs in use" href="/docs/zcash/zips" description="Which Zcash Improvement Proposals the code follows, and where." icon={<Icon name="FileText" />} />
+  <Card title="Testnet proof" href="/docs/zcash/testnet-proof" description="Three transactions the browser wallet proved and broadcast, and how to check them." icon={<Icon name="BadgeCheck" />} />
+</Cards>
+
+## What runs where
+
+| Piece | What it is | Code |
+| --- | --- | --- |
+| Wallet library | `zcash_client_sqlite` 0.23, `zcash_client_backend` 0.25, `zcash_protocol` 0.11, `orchard` 0.16 | `packages/zwallet/rust/Cargo.toml` |
+| Target | `wasm32-wasip1`, run through a WASI shim in a Web Worker | `packages/zwallet/src/worker.ts` |
+| Pools | Spends Ironwood (NU6.3) and Orchard notes, change always to Ironwood; Sapling is never spent | `packages/zwallet/rust/src/send.rs` |
+| Addresses | A fresh unified address with only an Orchard receiver, never reused | `packages/zwallet/rust/src/wallet.rs` |
+| Light client | Six lightwalletd calls, every one sealed with Oblivious HTTP | `packages/zwallet/src/sync.ts` |
+| Storage | The wallet database, encrypted with AES-GCM into IndexedDB after every change | `apps/web/src/features/vault` |
+
+## Why the shielded pool matters here
+
+Every private wallet is funded from this balance, and every trip home lands back in it at a fresh address. On the
+Zcash chain an outside observer sees that a shielded transaction happened, not its amount, its sender or its receiver.
+The one public step is the payment from the pool to NEAR Intents' deposit address, always at a
+[standard size](/docs/privacy/rules).
+
+<Callout title="Mainnet and testnet">
+mitoshi.xyz runs on Zcash mainnet. The browser wallet's proofs and sends were checked on testnet, where blocks come
+faster; the [testnet proof](/docs/zcash/testnet-proof) lists them. Private wallets are funded on mainnet only, because
+NEAR Intents takes mainnet ZEC.
+</Callout>

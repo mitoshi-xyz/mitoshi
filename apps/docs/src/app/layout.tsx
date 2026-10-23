@@ -2,16 +2,22 @@ import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import StaticSearchDialog from "@/components/search";
-import { DOCS_ORIGIN } from "@/lib/constants";
 import { fontVariables } from "@/lib/fonts";
+import { OG, SITE } from "@/lib/site";
 import "./global.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(DOCS_ORIGIN),
-  title: { default: "Mitoshi docs", template: "%s · Mitoshi docs" },
-  description:
-    "How Mitoshi works: a brand-new wallet for every trade on Polymarket, Hyperliquid and Solana, funded from shielded ZEC through NEAR Intents.",
+  metadataBase: new URL(SITE.url),
+  title: { default: `${SITE.title} · ${SITE.motto}`, template: `%s · ${SITE.title}` },
+  description: SITE.description,
+  applicationName: SITE.title,
   referrer: "no-referrer",
+  openGraph: {
+    siteName: SITE.title,
+    type: "website",
+    images: [{ url: "/og/home.png", width: OG.width, height: OG.height }],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

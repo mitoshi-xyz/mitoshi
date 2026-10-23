@@ -1,0 +1,75 @@
+---
+title: Trade
+description: A live perps terminal for Hyperliquid crypto and Polymarket Perps stocks, gold and indices, with a ticket that starts with the amount.
+icon: CandlestickChart
+---
+
+{/* Sources: apps/web/src/features/trade (terminal.tsx:19-257, chart-panel.tsx:12-137, market-picker.tsx, ticket.tsx:84-268,
+   order.ts:53-80, constants.ts:3-12, leverage-sheet.tsx, exits-sheet.tsx, positions.tsx:56-152); apps/web/src/features/perps
+   (hl-driver.ts:9-10,151-155, pm-driver.ts:100-107); packages/venues/src/hyperliquid/constants.ts:17-28; packages/venues/src/pmperps/constants.ts:39-49.
+   Ticket values from the capture taken on mitoshi.xyz on 2026-10-23. */}
+
+<Screen name="terminal-nvda" alt="The perps terminal on mitoshi.xyz for NVIDIA on Polymarket Perps: one-hour candles, the price, funding and open interest, and the ticket on the right." caption="NVIDIA on Polymarket Perps. On desktop the ticket sits beside the chart; on a phone, LONG and SHORT open it as a sheet." eager />
+
+## The terminal
+
+| Part | What it does |
+| --- | --- |
+| Market chip | The market, its venue, maximum leverage and live price; opens the picker (Hyperliquid or Polymarket, search, All · Stocks · Indices · Commodities · Crypto) |
+| Chart | Opens on **Live**, the price line; pick an interval for candles: Hyperliquid 1m to 1d, Polymarket Perps 1m to 1w |
+| Stats | **Funding / h**, **Open interest**, **24h volume** (wide screens) |
+| Wallet chip | **Fund** when this venue has no wallet; a ring and minutes while one funds; the free margin when it's ready |
+| Tabs | **Trade** and **Positions** |
+
+## The ticket
+
+The ticket starts with how much margin you put in, not how many contracts.
+
+<Shot src="/shots/wide/order-nvda.webp" alt="The NVDA ticket on mitoshi.xyz: Long, $25 margin, $125.00 · 0.58768 NVDA, leverage 5×, TP / SL off, Market, Liq 180.795 · fee $0.05, and Fund a private wallet." caption="$25 at 5× on NVIDIA, as the ticket showed it on 2026-10-23." />
+
+<Receipt
+  kicker="Polymarket Perps · Long NVDA"
+  title="$25 at 5×"
+  rows={[
+    ["Margin", "$25"],
+    ["Leverage (default)", "5×"],
+    ["Position = margin × leverage", "$125.00"],
+    ["Size = position ÷ price", "0.58768 NVDA"],
+    ["Fee = position × the venue's taker fee", "$0.05"],
+    ["Liquidation, estimated", "180.795"],
+  ]}
+  source="From the ticket on mitoshi.xyz, 2026-10-23, at NVIDIA's mark then. Arithmetic: apps/web/src/features/trade/order.ts."
+/>
+
+| Control | Options |
+| --- | --- |
+| Side | **Long** / **Short** |
+| Margin | Typed (a keypad on a phone), or **25% 50% 75% Max** of what is free |
+| **Leverage** | A slider and presets 1, 2, 3, 5, 10, 20, 25, 40, 50 up to the market's maximum, and **Max** |
+| **TP / SL** | Take profit **+10% +25% +50% +100%**, stop loss **−10% −25% −50% −75%**, as a return on margin, or a price |
+| Type | **Market** (an IOC limit a little through the price) or **Limit** |
+| Button | **Long NVDA · 5×**; with a problem, the fix: "Only $X is free", "The smallest position is $N", **Fund a private wallet** |
+
+<Phones>
+  <Phone src="/shots/phone/order-nvda.webp" alt="The Long NVDA sheet on a phone with $25 typed on the keypad." caption="On a phone, the ticket is a sheet with a keypad." />
+  <Phone src="/shots/phone/leverage.webp" alt="The Leverage sheet on a phone." caption="Leverage, with the liquidation estimate." />
+  <Phone src="/shots/phone/tpsl.webp" alt="The Take profit · Stop loss sheet on a phone." caption="Exits as a return on margin." />
+</Phones>
+
+## Placing the order
+
+The order goes to the wallet that already holds this market; otherwise to a ready wallet that has never traded;
+otherwise the button reads **Fund a private wallet** and opens the [funding sheet](/docs/guide/private-wallets#fund-a-wallet)
+for this venue. The order isn't queued: when the wallet is ready, Mitoshi says so and you place it.
+
+While it sends, the ticket says what is happening: "Moving the funding into the perp account…", "Setting 5× leverage…",
+"Signing with this wallet's own key…" on Hyperliquid; "Setting up the wallet, gasless…", "Moving X pUSD into Perps…"
+on Polymarket Perps.
+
+## Positions and coming home
+
+**Positions** lists each wallet's position (side, leverage, entry → mark, liquidation) with **Close**, and its
+take-profit and stop-loss with **Cancel**. Closing and coming home are two steps on perps: **Close** first, then
+**Send home** appears once the wallet holds nothing.
+
+Venue details: [Polymarket Perps](/docs/venues/polymarket-perps) · [Hyperliquid](/docs/venues/hyperliquid).
