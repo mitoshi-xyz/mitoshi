@@ -50,9 +50,16 @@
   .p-left { width: 310px; left: 20px; top: 150px; transform: rotate(-7deg); opacity: 0.92; }
   .p-right { width: 310px; right: 20px; top: 150px; transform: rotate(7deg); opacity: 0.92; }
   .p-mid { width: 360px; left: 270px; top: 46px; z-index: 2; }
+  html.og, html.og body { height: 1008px; }
+  html.og .p-mid { top: 100px; }
+  html.og .p-left, html.og .p-right { top: 204px; }
 </style>
 </head>
 <body>
+  <script>
+    // #og: the same art at the 1.91:1 link-preview ratio (rendered at 1920x1008, then scaled to 1200x630).
+    if (location.hash === "#og") document.documentElement.classList.add("og");
+  </script>
   <section class="left">
     <div class="brand">
       <span class="seal">
