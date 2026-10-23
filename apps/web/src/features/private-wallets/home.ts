@@ -109,7 +109,6 @@ export async function sendPolymarketHome(id: string): Promise<{ sent: number }> 
     recipient,
     refundTo: w.address,
     dry: false,
-    appFee: false,
     flexible: true,
   });
   const depositAddress = q.quote.depositAddress;
@@ -190,7 +189,6 @@ export async function sendHyperliquidHome(id: string): Promise<{ sent: number }>
     recipient,
     refundTo: w.address,
     dry: false,
-    appFee: false,
   });
   const depositAddress = q.quote.depositAddress as `0x${string}` | undefined;
   if (!depositAddress) throw new Error("the quote has no deposit address");
@@ -247,7 +245,6 @@ export async function sendSolanaHome(id: string): Promise<{ sent: number }> {
     recipient,
     refundTo: w.address,
     dry: false,
-    appFee: false,
   });
   const depositAddress = q.quote.depositAddress;
   if (!depositAddress) throw new Error("the quote has no deposit address");

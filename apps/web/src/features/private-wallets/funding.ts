@@ -110,7 +110,6 @@ export async function previewFunding(venue: Venue, sizeZat: number): Promise<Fun
     recipient,
     refundTo,
     dry: true,
-    appFee: true,
   });
   const asset = ASSETS[to];
   const { spendable, resting } = balances();

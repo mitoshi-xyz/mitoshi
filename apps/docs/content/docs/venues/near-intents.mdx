@@ -53,8 +53,7 @@ Privacy screen show the mode NEAR granted, read back from each signed quote, not
 
 ## Fees
 
-Mitoshi adds no fee of its own: no fee recipient is set (`APP_FEE_RECIPIENT` is `null`), so Mitoshi sends no app fee
-with its quotes. NEAR's 1Click takes **0.2%** of each swap made with a partner key and no app fee (0.25% without a key;
+Mitoshi takes no fee: its quotes carry no app fee, so NEAR's record of a swap names no Mitoshi account. NEAR's 1Click
+takes **0.2%** of each swap made with a partner key and no app fee (0.25% without a key;
 [NEAR's fee page](https://docs.near-intents.org/resources/fees)), listed in the quote's own `appFees`. The funding
-sheet reads both from the signed quote: **Swap cost** (everything the route takes, in dollars, with NEAR's fee) and
-**Mitoshi fee**. If Mitoshi ever sets a fee, 1Click splits it 50/50 and keeps at least its 20 bps.
+sheet reads it from the signed quote as **Swap cost**: everything the route takes, in dollars, with NEAR's fee.

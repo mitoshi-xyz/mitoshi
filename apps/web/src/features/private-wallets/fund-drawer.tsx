@@ -241,9 +241,7 @@ export function FundDrawer({
                     {terms.feeBps ? ` · NEAR fee ${terms.feeBps / BPS_PER_PERCENT}%` : ""}
                   </dd>
                   <dt className="text-ink-2">Mitoshi fee</dt>
-                  <dd className="num text-right">
-                    {terms.mitoshiBps ? `${terms.mitoshiBps / BPS_PER_PERCENT}%` : "none"}
-                  </dd>
+                  <dd className="num text-right">none</dd>
                   {p.credited ? (
                     <>
                       <dt className="text-ink-2">Bridge to pUSD</dt>

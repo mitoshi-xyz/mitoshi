@@ -105,7 +105,6 @@ async function fund(id: string) {
       recipient,
       refundTo,
       dry: false,
-      appFee: true,
     });
     const depositAddress = q.quote.depositAddress;
     if (!depositAddress) throw new Error("the quote has no deposit address");

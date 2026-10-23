@@ -1,13 +1,5 @@
 import type { PrivateFetch } from "@mitoshi/net";
-import {
-  APP_FEE_BPS,
-  APP_FEE_RECIPIENT,
-  ASSETS,
-  type AssetKey,
-  DEADLINE_MS,
-  ONECLICK_API,
-  SLIPPAGE_BPS,
-} from "./constants.ts";
+import { ASSETS, type AssetKey, DEADLINE_MS, ONECLICK_API, SLIPPAGE_BPS } from "./constants.ts";
 import { verifyQuote } from "./signature.ts";
 import type { Confidentiality, QuoteRequest, QuoteResponse, StatusResponse } from "./types.ts";
 
@@ -36,8 +28,6 @@ export interface SwapInput {
   refundTo: string;
   /** Live (with a deposit address) or a dry preview. */
   dry: boolean;
-  /** Charge Mitoshi's funding fee (fundings only). */
-  appFee: boolean;
   confidentiality?: Confidentiality;
   /**
    * Accept whatever amount actually arrives (FLEX_INPUT; "the quote is not a cap"). For deposits
@@ -48,6 +38,10 @@ export interface SwapInput {
   now?: number;
 }
 
+/**
+ * The request for a quote. It never carries appFees: Mitoshi takes no fee, so the only fee in an answer is
+ * 1Click's own (and NEAR's record of a swap names no Mitoshi account).
+ */
 export function quoteRequest(input: SwapInput): QuoteRequest {
   const req: QuoteRequest = {
     dry: input.dry,
@@ -63,7 +57,6 @@ export function quoteRequest(input: SwapInput): QuoteRequest {
     recipientType: "DESTINATION_CHAIN",
     deadline: new Date((input.now ?? Date.now()) + DEADLINE_MS).toISOString(),
   };
-  if (input.appFee && APP_FEE_RECIPIENT) req.appFees = [{ recipient: APP_FEE_RECIPIENT, fee: APP_FEE_BPS }];
   if (input.confidentiality && input.confidentiality !== "public" && !input.flexible) {
     req.confidentiality = input.confidentiality;
   }
@@ -74,23 +67,17 @@ export function quoteRequest(input: SwapInput): QuoteRequest {
 export interface SwapTerms {
   /** NEAR's confidential mode: its public record can't pair this deposit with its payout. */
   confidential: boolean;
-  /** Mitoshi's own fee in the quote, in basis points (none until APP_FEE_RECIPIENT is set). */
-  mitoshiBps: number;
-  /** Every other fee the quote lists: 1Click's platform fee (20 bps with a partner key, 25 without). */
+  /** The fees the quote lists, in basis points: 1Click's own (20 bps with a partner key, 25 without). */
   feeBps: number;
   /** What the route costs in all, in dollars: the input's value minus the output's, at 1Click's prices. */
   costUsd: number;
 }
 
 export function swapTerms(q: QuoteResponse): SwapTerms {
-  const fees = q.quoteRequest.appFees ?? [];
-  const ours = (f: { recipient: string }) => APP_FEE_RECIPIENT !== null && f.recipient === APP_FEE_RECIPIENT;
-  const bps = (list: { fee: number }[]) => list.reduce((n, f) => n + f.fee, 0);
   const mode = q.quoteRequest.confidentiality;
   return {
     confidential: mode === "basic" || mode === "advanced",
-    mitoshiBps: bps(fees.filter(ours)),
-    feeBps: bps(fees.filter((f) => !ours(f))),
+    feeBps: (q.quoteRequest.appFees ?? []).reduce((n, f) => n + f.fee, 0),
     costUsd: Math.max(0, Number(q.quote.amountInUsd) - Number(q.quote.amountOutUsd)),
   };
 }

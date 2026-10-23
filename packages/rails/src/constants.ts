@@ -46,17 +46,3 @@ export const SLIPPAGE_BPS = 100;
 
 /** How long a deposit address stays live. ZEC deposits need confirmations, so allow two hours. */
 export const DEADLINE_MS = 2 * 60 * 60 * 1000;
-
-/**
- * Mitoshi's fee on each funding swap, in basis points, asked for through 1Click appFees. 1Click
- * splits an app fee 50/50 and keeps at least its own 20 bps (docs.near-intents.org/resources/fees):
- * asking for 20 bps pays Mitoshi 10 and charges the trader 30 in all; 40 bps pays each side 20.
- */
-export const APP_FEE_BPS = 20;
-
-/**
- * The NEAR account that receives the funding fee. Unset until the owner names one; with no
- * recipient no app fee is added (and none is shown). Once set, NEAR's record of each funding names
- * this account, so anyone can list the fundings that came through Mitoshi (not who made them).
- */
-export const APP_FEE_RECIPIENT: string | null = null;

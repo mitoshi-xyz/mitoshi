@@ -38,14 +38,13 @@ describe("quote requests", () => {
       recipient: "0xabc",
       refundTo: "u1abc",
       dry: false,
-      appFee: true,
       now: 0,
     });
     assert.equal(r.swapType, "EXACT_INPUT");
     assert.equal(r.originAsset, "nep141:zec.omft.near");
     assert.equal(r.refundTo, "u1abc");
     assert.equal(r.deadline, "1970-01-01T02:00:00.000Z");
-    assert.equal(r.appFees, undefined, "no fee without a named recipient");
+    assert.equal(r.appFees, undefined, "Mitoshi asks for no fee");
     assert.equal(r.confidentiality, undefined);
   });
 
@@ -57,7 +56,6 @@ describe("quote requests", () => {
       recipient: "u1home",
       refundTo: "0xwallet",
       dry: false,
-      appFee: false,
       flexible: true,
       confidentiality: "basic",
       now: 0,
@@ -71,7 +69,6 @@ describe("swap terms", () => {
   it("reads the mode and the fees from 1Click's answer, not from the request", () => {
     const t = swapTerms(fixture);
     assert.equal(t.confidential, false, "the fixture came back public");
-    assert.equal(t.mitoshiBps, 0, "no Mitoshi fee without a named recipient");
     assert.equal(t.feeBps, 30, "every listed fee counts");
     assert.ok(t.costUsd > 0);
     const granted = structuredClone(fixture);

@@ -143,7 +143,7 @@ export const LANDING = {
       },
       {
         q: "What does it cost?",
-        a: "No Mitoshi fee on trades. You pay the venue's own fees and NEAR's swap spread, shown before you fund.",
+        a: "Mitoshi takes no fee. You pay the venue's own fees and NEAR Intents' 0.2% and spread on each swap, shown before you fund.",
       },
       {
         q: "How fast is a new wallet?",
