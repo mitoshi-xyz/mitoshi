@@ -79,6 +79,15 @@ export function EventView() {
   const wide = useMedia(WIDE);
   const phone = usePhone();
   const [sheet, setSheet] = useState<"ticket" | "outcomes" | null>(null);
+  /** The chart's heading names the market; the pinned Yes/No bar repeats the name only once it is off screen. */
+  const [heading, setHeading] = useState<HTMLElement | null>(null);
+  const [headingSeen, setHeadingSeen] = useState(true);
+  useEffect(() => {
+    if (!heading) return;
+    const io = new IntersectionObserver(([entry]) => setHeadingSeen(entry?.isIntersecting ?? true));
+    io.observe(heading);
+    return () => io.disconnect();
+  }, [heading]);
   const [q, setQ] = useState("");
   const ranked = useMemo(
     () =>
@@ -164,7 +173,7 @@ export function EventView() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-5">
           <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface-1 p-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div ref={setHeading} className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="text-[13px] text-ink-2">
                 {market?.title} · {chosen?.label}
               </span>
@@ -225,7 +234,7 @@ export function EventView() {
 
       {!wide && market && chosen ? (
         <div className="sticky bottom-[calc(var(--dock-h)+20px)] z-[var(--z-float)] grid grid-cols-2 gap-2 md:bottom-4">
-          {e.markets.length > 1 ? (
+          {e.markets.length > 1 && !headingSeen ? (
             <span className="col-span-2 mx-auto max-w-full truncate rounded-full bg-surface-1/90 px-3 py-1 text-[12px] text-ink-2 backdrop-blur">
               {market.title}
             </span>
