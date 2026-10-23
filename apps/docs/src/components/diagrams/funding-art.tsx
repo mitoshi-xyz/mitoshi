@@ -34,7 +34,7 @@ function Wide(p: string) {
         x={(C1 + BW + C2) / 2}
         y={MID1 + 32}
         anchor="middle"
-        lines={["exact 0.01–1 ZEC,", "starts at random", "20 s–3 min later,", "no memo"]}
+        lines={["0.01–1 ZEC only,", "random start", "20 s–3 min later,", "no memo"]}
       />
 
       <Box
@@ -75,7 +75,7 @@ function Wide(p: string) {
         x={(C2 + BW + C3) / 2}
         y={MID2 + 32}
         anchor="middle"
-        lines={["close, then swap", "to ZEC; under ~$1", "stays as dust"]}
+        lines={["close, then one", "swap to ZEC;", "under ~$1 stays", "as dust"]}
       />
 
       <Box
@@ -104,7 +104,7 @@ function Wide(p: string) {
 
       <Note
         x={C1}
-        y={410}
+        y={428}
         lines={[
           "Every quote's signature and terms are checked before any ZEC is sent.",
           "NEAR's confidential mode covers every funding and every trip home except Polymarket's.",
@@ -200,7 +200,7 @@ export function FundingFlow() {
       id="funding-flow"
       label="The funding round trip. One standard amount of ZEC leaves the shielded pool at a random moment for a NEAR Intents 1Click deposit address, which delivers the venue's asset to a brand-new wallet in about 7.5 minutes. That wallet trades once on the venue's own market. Closing swaps the proceeds back to ZEC at a fresh shielded address in about 2.5 minutes, where it rests 2 to 6 hours before it can be spent."
       caption="The money's whole route. Only the two hops through NEAR are public, both at standard sizes; the wallet in between has one trade and no history."
-      wide={{ w: 840, h: 450, body: Wide }}
+      wide={{ w: 840, h: 462, body: Wide }}
       tall={{ x: TALL_X, w: TALL_W, h: 16 + 5 * T_STEP + T_H + 56, body: Tall }}
     />
   );

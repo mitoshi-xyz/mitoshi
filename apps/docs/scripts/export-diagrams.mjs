@@ -1,9 +1,7 @@
 /**
- * `pnpm --filter @mitoshi/docs diagrams`: renders the system maps from the built site (out/) to PNG with headless
- * Chrome, using the site's own CSS and fonts, so the README shows exactly what the docs show.
- *
- *   default      the README pictures, dark theme, 1600 px wide: .github/assets/architecture.png, funding-flow.png
- *   --all <dir>  every diagram, wide and tall, dark and light, into <dir> (for checking the drawings)
+ * `pnpm --filter @mitoshi/docs diagrams <dir>`: renders every system map from the built site (out/) to PNG with
+ * headless Chrome, using the site's own CSS and fonts: wide at 1440 px and tall at 375 px, dark and light, into <dir>.
+ * It is for checking the drawings (overlaps, legibility); nothing it writes is part of the site or the repository.
  *
  * Needs a build first (`pnpm --filter @mitoshi/docs build`) and Google Chrome (CHROME=/path/to/chrome to override).
  * Chrome is driven over the DevTools protocol, so each picture is clipped to the figure exactly.
@@ -16,10 +14,8 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const OUT = fileURLToPath(new URL("../out/", import.meta.url));
-const ASSETS = fileURLToPath(new URL("../../../.github/assets/", import.meta.url));
 const CHROME = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const README_WIDTH = 1600;
 const INSPECT_WIDE = 1440;
 const INSPECT_TALL = 375;
 const PAD = 48;
@@ -34,10 +30,6 @@ const PAGES = {
   "funding-flow": "architecture.html",
   lifecycle: "private-wallets.html",
 };
-const README = [
-  { id: "system-map", file: "architecture.png" },
-  { id: "funding-flow", file: "funding-flow.png" },
-];
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -181,29 +173,19 @@ async function shoot(cdp, url, width, file) {
 
 const pages = new Map();
 const jobs = [];
-const all = process.argv.indexOf("--all");
-if (all > 0) {
-  const dir = process.argv[all + 1];
-  if (!dir) throw new Error("--all needs a folder");
-  mkdirSync(dir, { recursive: true });
-  for (const id of Object.keys(PAGES)) {
-    for (const [variant, width] of [
-      ["wide", INSPECT_WIDE],
-      ["tall", INSPECT_TALL],
-    ]) {
-      for (const theme of ["dark", "light"]) {
-        const path = `/__${id}-${variant}-${theme}.html`;
-        pages.set(path, exportPage(id, variant, theme, width));
-        jobs.push({ path, width, file: join(dir, `${id}-${variant}-${theme}.png`) });
-      }
+const dir = process.argv[2];
+if (!dir) throw new Error("usage: export-diagrams.mjs <folder>");
+mkdirSync(dir, { recursive: true });
+for (const id of Object.keys(PAGES)) {
+  for (const [variant, width] of [
+    ["wide", INSPECT_WIDE],
+    ["tall", INSPECT_TALL],
+  ]) {
+    for (const theme of ["dark", "light"]) {
+      const path = `/__${id}-${variant}-${theme}.html`;
+      pages.set(path, exportPage(id, variant, theme, width));
+      jobs.push({ path, width, file: join(dir, `${id}-${variant}-${theme}.png`) });
     }
-  }
-} else {
-  mkdirSync(ASSETS, { recursive: true });
-  for (const { id, file } of README) {
-    const path = `/__${id}.html`;
-    pages.set(path, exportPage(id, "wide", "dark", README_WIDTH));
-    jobs.push({ path, width: README_WIDTH, file: join(ASSETS, file) });
   }
 }
 
