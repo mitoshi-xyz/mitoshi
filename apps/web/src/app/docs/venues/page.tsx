@@ -21,9 +21,9 @@ export default function VenuesDocs() {
       />
       <H2>Polymarket Perps</H2>
       <P>
-        Perpetuals on US stocks, indices, gold, oil and crypto, margined in pUSD, from the same fresh Polymarket wallets.
-        The wallet's own key owns the Perps account and authorizes a proxy key that signs each order; every request is
-        a signed command over Polymarket's REST API, so it goes through Oblivious HTTP like everything else.
+        Perpetuals on US stocks, indices, gold, oil and crypto, margined in pUSD, from the same fresh Polymarket
+        wallets. The wallet's own key owns the Perps account and authorizes a proxy key that signs each order; every
+        request is a signed command over Polymarket's REST API, so it goes through Oblivious HTTP like everything else.
       </P>
       <List
         items={[

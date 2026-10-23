@@ -87,7 +87,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         >
           Skip to content
         </a>
-        <Rail />
+        <Rail onMore={() => setMore(true)} />
         <div className="mt-column">
           <TopLine onSearch={() => setPalette(true)} />
           <main

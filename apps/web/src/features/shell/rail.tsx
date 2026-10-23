@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ const STROKE = 2;
 const STROKE_HERE = 2.5;
 
 /** The floating rail: the seal, the money plate, the places (keys 1–6), and the theme at the foot. */
-export function Rail() {
+export function Rail({ onMore }: { onMore: () => void }) {
   const path = usePathname();
   const here = placeFor(path);
   const index = here ? PLACES.indexOf(here) : -1;
@@ -57,6 +57,15 @@ export function Rail() {
           </Link>
         ))}
       </nav>
+      <button
+        type="button"
+        onClick={onMore}
+        title="More · money, privacy, settings, status, docs"
+        className="mt-nav-item"
+      >
+        <Menu size={22} strokeWidth={STROKE} className="shrink-0" />
+        <span className="mt-nav-label">More</span>
+      </button>
       <div className="mt-auto flex flex-col items-center gap-3 xl:flex-row xl:pl-1">
         <button
           type="button"

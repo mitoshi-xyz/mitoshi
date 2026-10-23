@@ -3,12 +3,13 @@
 import type { PrivateWallet } from "@mitoshi/engine";
 import { useQueryClient } from "@tanstack/react-query";
 import { Layers } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { cx, EmptyState, RollingNumber, Skeleton, Wait } from "@/kit";
 import { price, upDown } from "../format";
 import { Mark } from "../marks/mark";
 import { DRIVERS, usePerpAccount } from "../perps/hooks";
-import type { PerpMarket, PerpVenue } from "../perps/model";
+import { type PerpMarket, type PerpVenue, terminalHref } from "../perps/model";
 import { MASK, useHideAmounts } from "../shell/prefs";
 
 const ADDRESS_HEAD = 6;
@@ -63,7 +64,13 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
           <div key={p.marketId} className="flex flex-col gap-2 rounded-lg bg-surface-2/60 p-2.5">
             <div className="flex items-center gap-2">
               <Mark symbol={m?.name ?? p.marketId} src={m?.logo ?? null} size={22} />
-              <span className="font-semibold text-sm">{m?.name ?? p.marketId}</span>
+              {m ? (
+                <Link href={terminalHref(m)} className="font-semibold text-sm hover:underline">
+                  {m.name}
+                </Link>
+              ) : (
+                <span className="font-semibold text-sm">{p.marketId}</span>
+              )}
               <span
                 className={cx(
                   "rounded px-1.5 py-0.5 font-semibold text-[11px]",

@@ -2,6 +2,7 @@ import {
   Activity,
   ArrowDownToLine,
   ArrowUpFromLine,
+  BookOpen,
   CandlestickChart,
   ChartPie,
   Coins,
@@ -131,6 +132,13 @@ export const PAGES: readonly Page[] = [
     href: "/status",
     icon: Activity,
     description: "Every party on the private path, live.",
+    group: "mitoshi",
+  },
+  {
+    name: "Docs",
+    href: "/docs",
+    icon: BookOpen,
+    description: "How it works, the threat model, fees and recovery.",
     group: "mitoshi",
   },
 ];

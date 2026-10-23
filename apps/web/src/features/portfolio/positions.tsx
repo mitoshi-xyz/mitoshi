@@ -7,9 +7,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { cue, cx, EmptyState, Skeleton } from "@/kit";
 import { price, usd } from "../format";
-import { hlAccount } from "../hyperliquid/hl";
-import { perpByName, usePerps } from "../hyperliquid/hooks";
 import { Mark, VenueMark } from "../marks/mark";
+import { DRIVERS, usePerpMarkets } from "../perps/hooks";
+import { terminalHref } from "../perps/model";
 import { openPublicView } from "../private-wallets/drawers";
 import { shortAddress } from "../private-wallets/venues";
 import { MASK, useHideAmounts } from "../shell/prefs";
@@ -26,12 +26,13 @@ function Pnl({ v, hidden }: { v: number | null; hidden: boolean }) {
 
 /** Closes one perp at market from its own wallet, after a confirmation. */
 function ClosePerp({ row }: { row: PositionRow }) {
-  const perps = usePerps();
+  const venue = row.perpVenue ?? "hyperliquid";
+  const markets = usePerpMarkets(venue);
   const queries = useQueryClient();
   const [ask, setAsk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const perp = perpByName(perps.data, row.asset);
+  const market = markets.data?.find((m) => m.id === row.asset);
   if (!ask) {
     return (
       <button
@@ -48,16 +49,16 @@ function ClosePerp({ row }: { row: PositionRow }) {
       {error ? <span className="text-[11px] text-down">{error}</span> : null}
       <button
         type="button"
-        disabled={busy || !perp || row.markPx === null}
+        disabled={busy || !market || row.markPx === null}
         onClick={async () => {
-          if (!perp || row.markPx === null) return;
+          if (!market || row.markPx === null) return;
           setBusy(true);
           setError(null);
           try {
-            const account = await hlAccount(row.w);
-            const state = await account.state();
-            const position = state.positions.find((p) => p.coin === row.asset);
-            if (position) await account.close(perp, position, row.markPx);
+            const driver = DRIVERS[venue];
+            const account = await driver.account(row.w);
+            const position = account.positions.find((p) => p.marketId === row.asset);
+            if (position) await driver.close(row.w, market, position, row.markPx);
             cue((row.pnlUsd ?? 0) >= 0 ? "win" : "loss");
             void queries.invalidateQueries({ queryKey: ["portfolio", row.w.id] });
             setAsk(false);
@@ -78,7 +79,7 @@ function ClosePerp({ row }: { row: PositionRow }) {
   );
 }
 
-/** Every open position across every wallet: perps on Hyperliquid, tokens on Solana. */
+/** Every open position across every wallet: predictions, perps on both venues, Solana tokens. */
 export function Positions({
   rows,
   loading,
@@ -89,6 +90,8 @@ export function Positions({
   tokens: Record<string, SolToken | null | undefined>;
 }) {
   const [hidden] = useHideAmounts();
+  const stocks = usePerpMarkets("pmperps");
+  const logos = new Map((stocks.data ?? []).map((m) => [m.id, m.logo]));
   if (loading && rows.length === 0) {
     return (
       <div className="flex flex-col gap-2">
@@ -122,13 +125,13 @@ export function Positions({
           const t = r.kind === "token" ? tokens[r.asset] : null;
           const symbol =
             r.kind === "perp"
-              ? r.asset
+              ? (r.label ?? r.asset)
               : r.kind === "outcome"
                 ? (r.label ?? "Outcome")
                 : (t?.symbol ?? `${r.asset.slice(0, MINT_HEAD)}…`);
           const href =
             r.kind === "perp"
-              ? `/trade#${r.asset}`
+              ? terminalHref({ venue: r.perpVenue ?? "hyperliquid", id: r.asset })
               : r.kind === "outcome"
                 ? r.eventId
                   ? `/event#${r.eventId}`
@@ -144,7 +147,11 @@ export function Positions({
                   {r.kind === "outcome" ? (
                     <VenueMark venue="polymarket" size={30} />
                   ) : (
-                    <Mark symbol={symbol} src={t?.icon ?? null} size={30} />
+                    <Mark
+                      symbol={symbol}
+                      src={t?.icon ?? (r.perpVenue === "pmperps" ? (logos.get(r.asset) ?? null) : null)}
+                      size={30}
+                    />
                   )}
                   <VenueMark
                     venue={r.w.venue}
