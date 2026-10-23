@@ -171,7 +171,7 @@ export function WithdrawDrawer({ open, onClose }: { open: boolean; onClose: () =
               {problem ?? `${zec(spendable)} ${UNIT} ready · Max`}
             </button>
           </div>
-          {phone ? <Keypad onKey={(k) => setAmount(pressKey(amount, k, AMOUNT_DECIMALS))} /> : null}
+          {phone ? <Keypad onKey={(k) => setAmount((a) => pressKey(a, k, AMOUNT_DECIMALS))} /> : null}
 
           <div className="flex flex-col gap-1.5">
             <span className="relative">

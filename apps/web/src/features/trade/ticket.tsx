@@ -26,7 +26,7 @@ export interface TicketProps {
   wallet: PrivateWallet | undefined;
   account: PerpAccount | undefined;
   order: Order;
-  setOrder: (patch: Partial<Order>) => void;
+  setOrder: (patch: Partial<Order> | ((o: Order) => Partial<Order>)) => void;
   /** Phones: the amount uses the keypad. */
   keypad?: boolean;
   /** In the order sheet the side sits in the sheet's header. */
@@ -215,7 +215,7 @@ export function Ticket({
         ))}
       </div>
 
-      {keypad ? <Keypad onKey={(k) => setOrder({ margin: pressKey(order.margin, k, MARGIN_DECIMALS) })} /> : null}
+      {keypad ? <Keypad onKey={(k) => setOrder((o) => ({ margin: pressKey(o.margin, k, MARGIN_DECIMALS) }))} /> : null}
 
       <div className="flex gap-2">
         <Chip

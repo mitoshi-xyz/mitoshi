@@ -41,7 +41,9 @@ export function useOrder(market: PerpMarket | undefined) {
       sl: "",
     }));
   }, [marketKey]);
-  const set = (patch: Partial<Order>) => setOrder((o) => ({ ...o, ...patch }));
+  /** A patch, or a function of the latest order (taps that land in one frame must not overwrite each other). */
+  const set = (patch: Partial<Order> | ((o: Order) => Partial<Order>)) =>
+    setOrder((o) => ({ ...o, ...(typeof patch === "function" ? patch(o) : patch) }));
   return [order, set] as const;
 }
 

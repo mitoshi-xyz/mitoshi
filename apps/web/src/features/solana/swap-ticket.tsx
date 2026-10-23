@@ -196,8 +196,8 @@ export function SwapTicket({
       {keypad ? (
         <Keypad
           onKey={(k) =>
-            setAmount(
-              pressKey(amount, k, Math.min(AMOUNT_DECIMALS, side === "buy" ? LAMPORT_DECIMALS : token.decimals)),
+            setAmount((a) =>
+              pressKey(a, k, Math.min(AMOUNT_DECIMALS, side === "buy" ? LAMPORT_DECIMALS : token.decimals)),
             )
           }
         />

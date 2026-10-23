@@ -276,7 +276,7 @@ export function PmTicket({ market, outcome, onOutcome, book, keypad = false, bar
           ))}
         </div>
       ) : null}
-      {keypad ? <Keypad onKey={(k) => setAmount(pressKey(amount, k, SHARE_DIGITS))} /> : null}
+      {keypad ? <Keypad onKey={(k) => setAmount((a) => pressKey(a, k, SHARE_DIGITS))} /> : null}
 
       {type === "limit" ? (
         <label className="flex items-center gap-2 rounded-full border border-hairline bg-surface-2 px-4">
