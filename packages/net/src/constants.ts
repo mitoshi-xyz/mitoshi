@@ -9,3 +9,6 @@ export const OHTTP_MAX_MESSAGE_BYTES = 8 * 1024 * 1024;
 
 /** Relay paths, under the relay base. */
 export const RELAY_PATHS = { ohttp: "/ohttp", img: "/img" } as const;
+
+/** The gateway's image route as an OHTTP target (it handles this name itself; nothing resolves it). */
+export const PRIVATE_IMAGE_HOST = "img.mitoshi.internal";

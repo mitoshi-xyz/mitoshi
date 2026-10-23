@@ -17,6 +17,7 @@ const HTTP_REDIRECT_MAX = 399;
 function privateHost(host: string): boolean {
   return (
     host === "localhost" ||
+    host.endsWith(".localhost") ||
     host.endsWith(".local") ||
     host.endsWith(".internal") ||
     /^[\d.]+$/.test(host) ||

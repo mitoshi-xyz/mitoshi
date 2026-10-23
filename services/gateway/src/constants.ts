@@ -286,6 +286,8 @@ export const MS_PER_SECOND = 1000;
 
 /** Remote Builder Signing: the OHTTP target the browser SDK asks for builder headers (builder.ts). */
 export const BUILDER_SIGN_HOST = "builder.mitoshi.internal";
+/** The image route as an OHTTP target: pictures of what a user holds, so the relay never sees which (img.ts). */
+export const IMAGE_HOST = "img.mitoshi.internal";
 /** Relayer requests the builder signer will sign: Deposit Wallet creation, batches, nonces, status. */
 export const BUILDER_RELAYER_PATHS = [
   "/submit",

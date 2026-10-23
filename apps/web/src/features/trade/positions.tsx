@@ -63,7 +63,7 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
         return (
           <div key={p.marketId} className="flex flex-col gap-2 rounded-lg bg-surface-2/60 p-2.5">
             <div className="flex items-center gap-2">
-              <Mark symbol={m?.name ?? p.marketId} src={m?.logo ?? null} size={22} />
+              <Mark symbol={m?.name ?? p.marketId} src={m?.logo ?? null} size={22} held />
               {m ? (
                 <Link href={terminalHref(m)} className="font-semibold text-sm hover:underline">
                   {m.name}
@@ -111,7 +111,7 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
         return (
           <div key={o.oid} className="flex items-center justify-between gap-2 text-[12px] text-ink-2">
             <span className="flex items-center gap-1.5">
-              <Mark symbol={m?.name ?? o.marketId} src={m?.logo ?? null} size={16} />
+              <Mark symbol={m?.name ?? o.marketId} src={m?.logo ?? null} size={16} held />
               {o.trigger
                 ? `${o.trigger.kind === "tp" ? "Take profit" : "Stop loss"} ${price(o.trigger.px)}`
                 : `${o.isBuy ? "Buy" : "Sell"} ${o.size} at ${price(o.px)}`}

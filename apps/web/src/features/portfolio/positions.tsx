@@ -151,6 +151,7 @@ export function Positions({
                       symbol={symbol}
                       src={t?.icon ?? (r.perpVenue === "pmperps" ? (logos.get(r.asset) ?? null) : null)}
                       size={30}
+                      held
                     />
                   )}
                   <VenueMark

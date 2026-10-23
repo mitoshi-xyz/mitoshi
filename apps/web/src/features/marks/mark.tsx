@@ -1,9 +1,10 @@
 "use client";
 
 import { proxiedImage } from "@mitoshi/net";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RELAY } from "@/constants";
 import { COIN_MARKS, RASTER_MARKS, type VENUE_MARKS } from "./manifest.generated";
+import { privateImage } from "./private-image";
 
 export type Venue = (typeof VENUE_MARKS)[number];
 
@@ -33,23 +34,42 @@ function Disc({ symbol, size }: { symbol: string; size: number }) {
   );
 }
 
+/** A held asset's picture over OHTTP; null until it arrives (or if it cannot). */
+function useHeldPicture(src: string | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!src) return;
+    let current = true;
+    void privateImage(src).then((u) => current && setUrl(u));
+    return () => {
+      current = false;
+    };
+  }, [src]);
+  return src ? url : null;
+}
+
 /**
- * An asset's mark: the vendored one when Mitoshi ships it (public/marks), else a picture the venue publishes (through
- * the relay's image proxy, so no image host sees the browser), else a labelled disc.
+ * An asset's mark: the vendored one when Mitoshi ships it (public/marks), else a picture the venue publishes, else a
+ * labelled disc. The picture comes through the relay's image proxy, so no image host sees the browser; for something
+ * the user holds (`held`), it comes over OHTTP instead, so the relay does not see which it is either.
  */
 export function Mark({
   symbol,
   src,
   size = 24,
   className = "",
+  held = false,
 }: {
   symbol: string;
   src?: string | null;
   size?: number;
   className?: string;
+  held?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
-  const url = localMark(symbol) ?? (src ? proxiedImage(RELAY, src) : null);
+  const local = localMark(symbol);
+  const heldPicture = useHeldPicture(held && !local && src ? src : null);
+  const url = local ?? (src ? (held ? heldPicture : proxiedImage(RELAY, src)) : null);
   if (!url || failed) return <Disc symbol={symbol} size={size} />;
   return (
     <img
