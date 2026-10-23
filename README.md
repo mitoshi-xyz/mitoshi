@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://mitoshi.xyz">
-    <img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade predictions, stocks and crypto from shielded ZEC. On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." />
+    <picture><img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade predictions, stocks and crypto from shielded ZEC. On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." /></picture>
   </a>
 </p>
 
@@ -21,13 +21,30 @@
   <a href="https://mitoshi.xyz/status"><b>Status</b></a>
 </p>
 
-Each position opens from a brand-new wallet funded through NEAR Intents, so copy traders find one trade and no
-history. Your balance never leaves Zcash's shielded pool: a real Zcash wallet runs in your browser, every funding is one
-standard amount sent at a random moment, every call about your wallets goes out encrypted through two hops, and when
-you close, the money comes home to a fresh shielded address. The market sees the trade, not who made it.
+On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy
+traders find one trade and no history. From one shielded ZEC balance you bet on prediction markets, trade US stocks,
+indices, gold and oil, go long or short on crypto perps, and buy Solana tokens, with one portfolio across all of them.
+The privacy is the engine: a real Zcash wallet runs in your browser, every funding is one standard amount sent at a
+random moment, every call about your wallets travels over Oblivious HTTP, and closing sends the money home to a fresh
+shielded address. The market sees the trade, not who made it.
 
 Built for **[ZECATHON](https://thezecathon.com) · Private Markets** ([how Mitoshi meets the hackathon](#how-mitoshi-meets-the-hackathon)).
 *Mitoshi* (見通し) means **outlook**: the view ahead.
+
+### Why traders need it
+
+In their own words:
+
+- "The copy traders literally ruin my trading. It makes trading 20x harder." Trader Rasmr, quoted by
+  [@kai_xbt](https://x.com/kai_xbt/status/2103361144325087380), 2026-09-25 (21.6k views).
+- "I created another wallet to trade in peace and people found it."
+  [@DegenCapitalLLC](https://x.com/DegenCapitalLLC/status/2105567151352689047), 2026-10-01 (34k views).
+- Copy traders "are basically unavoidable unless you use a new wallet for every trade."
+  [@remusofmars](https://x.com/remusofmars/status/2103484283247530247), 2026-09-25.
+
+Every Polymarket trade is public, and tools already grade thousands of wallets for copy trading
+([r/Polymarket](https://www.reddit.com/r/Polymarket/comments/1vu93xl/), 2026-08-21). A new wallet alone is found again
+through the money that funds it; Mitoshi funds each one from the shielded pool.
 
 ## One trade, start to finish
 
@@ -127,7 +144,7 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 | Requirement or criterion (verbatim) | How Mitoshi meets it | Check it |
 | --- | --- | --- |
 | **Privacy:** "Does it actually preserve privacy, or does it only look like it does? Leaks are disqualifying, not deductions." | Shielded balance in the browser, one fresh wallet per position, standard amounts at random times, confidential NEAR swaps, every call over Oblivious HTTP, no server-side state. Residuals are written down, not hidden | [Who sees what](#who-sees-what) · [threat model](https://docs.mitoshi.xyz/privacy) · [gateway allowlist](services/gateway/src/constants.ts) |
-| **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [mitoshi.xyz](https://mitoshi.xyz) |
+| **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet, in their own words; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [Why traders need it](#why-traders-need-it) · [mitoshi.xyz](https://mitoshi.xyz) |
 | **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 36 unit tests | [Proof and evidence](#proof-and-evidence) |
 | **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
 | **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
@@ -151,11 +168,18 @@ Dated; re-checked on 2026-10-23.
 The testnet transactions were read back with `GetTransaction` from the light server the wallet syncs from; public
 testnet explorers follow an older testnet chain and do not show them.
 
-**Also in the app:** a [portfolio](https://mitoshi.xyz/portfolio) across every wallet and venue, private
-[wallets](https://mitoshi.xyz/wallets) with their timeline and "keep one ready", the copy-trader's view of each wallet,
-backup and recovery from the 24 words, and a [status](https://mitoshi.xyz/status) page for every hop. Guides:
-[how it works](https://docs.mitoshi.xyz/private-wallets) · [venues](https://docs.mitoshi.xyz/venues/polymarket) ·
-[fees and timing](https://docs.mitoshi.xyz/fees-and-timing) · [recovery](https://docs.mitoshi.xyz/backup-and-recovery).
+## Everything in Mitoshi
+
+| Surface | What you do there | Open it | Guide |
+| --- | --- | --- | --- |
+| **Markets** | Every venue's live markets in one place, with live prices | [/markets](https://mitoshi.xyz/markets) | [Overview](https://docs.mitoshi.xyz) |
+| **Predict** · Polymarket | Events with their odds history, every outcome, Yes or No at market or limit, the order book, redeem after resolution | [/predict](https://mitoshi.xyz/predict) | [Polymarket](https://docs.mitoshi.xyz/venues/polymarket) |
+| **Perps** · Polymarket Perps and Hyperliquid | US stocks, indices, gold and oil, and crypto: live candles, long or short, leverage and TP/SL in their own sheets, close | [/trade](https://mitoshi.xyz/trade#pm/NVDA-USD) | [Perps](https://docs.mitoshi.xyz/venues/polymarket-perps) · [Hyperliquid](https://docs.mitoshi.xyz/venues/hyperliquid) |
+| **Tokens** · Solana through Jupiter | Trending tokens, a live chart, buy and sell | [/tokens](https://mitoshi.xyz/tokens) | [Solana](https://docs.mitoshi.xyz/venues/solana) |
+| **Portfolio** | Every position across every wallet and venue, P&L, history, deposit and withdraw | [/portfolio](https://mitoshi.xyz/portfolio) | [Private wallets](https://docs.mitoshi.xyz/private-wallets) |
+| **Wallets** | Each private wallet's timeline, "keep one ready", what the public sees, send home | [/wallets](https://mitoshi.xyz/wallets) | [Private wallets](https://docs.mitoshi.xyz/private-wallets) |
+| **Privacy and status** | Who sees what and the leak meter; the live state of every hop | [/privacy](https://mitoshi.xyz/privacy) · [/status](https://mitoshi.xyz/status) | [Privacy](https://docs.mitoshi.xyz/privacy) · [Verify](https://docs.mitoshi.xyz/verify) |
+| **Settings** | Recovery words and an encrypted backup file, a passphrase lock, Forget | [/settings](https://mitoshi.xyz/settings) | [Backup and recovery](https://docs.mitoshi.xyz/backup-and-recovery) |
 
 ## Run it locally
 
@@ -219,6 +243,8 @@ with an earlier, unrelated project, and uses none of its code.
 - **One operator runs both hops and serves the app**, so keeping relay and gateway apart is a promise you can check in
   this repository, not something the code enforces.
 - **Public light servers** serve the compact blocks; they only ever see the gateway.
+- **No outside testers yet.** The demand above is traders' own public posts; nobody outside the team has traded
+  through Mitoshi.
 - **Web only.**
 
 ## License
