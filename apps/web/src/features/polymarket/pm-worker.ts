@@ -32,6 +32,14 @@ self.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
   return parts(input, init).then(([u, i]) => send(u, i));
 };
 
+/** Anything the SDK might reach for besides fetch fails closed (the worker's own CSP also allows only this origin). */
+class Refused {
+  constructor() {
+    throw new Error("the Polymarket worker makes no direct connections");
+  }
+}
+Object.assign(self, { WebSocket: Refused, XMLHttpRequest: Refused, EventSource: Refused });
+
 const accounts = new Map<string, Promise<PolymarketAccount>>();
 
 function account(key: `0x${string}`): Promise<PolymarketAccount> {

@@ -7,6 +7,7 @@ import {
   RELAY_PREFIX,
   STATIC_CACHE,
   STATIC_PREFIX,
+  WORKER_CSP,
   WWW_HOST,
 } from "./constants";
 
@@ -112,6 +113,7 @@ export default {
       const res = await env.ASSETS.fetch(request);
       const out = new Response(res.body, res);
       out.headers.set("cache-control", res.status === HTTP_OK ? STATIC_CACHE : "no-store");
+      out.headers.set("content-security-policy", WORKER_CSP);
       return out;
     }
     return env.ASSETS.fetch(request);

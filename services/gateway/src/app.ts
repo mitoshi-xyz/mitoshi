@@ -5,6 +5,7 @@ import { ohttp, ohttpKeys } from "./ohttp";
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_NOT_FOUND = 404;
 const HTTP_BAD_GATEWAY = 502;
+const HTTP_UNAVAILABLE = 503;
 
 export interface Env {
   /** 32-byte hex seed for the OHTTP key pair. */
@@ -33,7 +34,9 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   const [head, ...rest] = url.pathname.split("/").filter(Boolean);
   if (head === "ohttp-keys") return ohttpKeys(env.OHTTP_SEED);
   if (head === "v1" && rest[0] === "geo") return geo();
-  if (env.RELAY_TOKEN && request.headers.get("x-mitoshi-relay") !== env.RELAY_TOKEN) {
+  // Without the token the gateway would take requests straight from browsers and see IP and content together: refuse.
+  if (!env.RELAY_TOKEN) return new Response("gateway not configured", { status: HTTP_UNAVAILABLE });
+  if (request.headers.get("x-mitoshi-relay") !== env.RELAY_TOKEN) {
     return new Response("relay only", { status: HTTP_UNAUTHORIZED });
   }
   if (head === "ohttp") {

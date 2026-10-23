@@ -16,6 +16,12 @@ export const WWW_HOST = "www.mitoshi.xyz";
 
 /** Build files are named by their content, so a found one never changes. */
 export const STATIC_PREFIX = "/_next/static/";
+/**
+ * The policy every /_next/static file is served with. Browsers apply it only where a script runs as a worker (a module
+ * worker takes its CSP from its own response, not from the page), so the wallet and Polymarket workers can reach this
+ * origin and nothing else, even if a library inside them reaches past the OHTTP fetch.
+ */
+export const WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'";
 export const STATIC_CACHE = "public, max-age=31536000, immutable";
 
 /** Images are shared by everyone, so the relay may cache them. */
