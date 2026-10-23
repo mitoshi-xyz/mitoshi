@@ -9,7 +9,7 @@
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/relay/*"]
+    "run_worker_first": ["/relay/*", "/_next/static/*"]
   },
   // The relay runs in Europe, so the address the gateway sees says nothing about where a user is.
   "placement": { "mode": "targeted", "region": "aws:eu-west-1" },

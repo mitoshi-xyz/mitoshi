@@ -1,4 +1,12 @@
-import { DEV_ORIGINS, IMAGE_CACHE_SECONDS, MAX_RELAY_BODY_BYTES, PASS_BACK, RELAY_PREFIX } from "./constants";
+import {
+  DEV_ORIGINS,
+  IMAGE_CACHE_SECONDS,
+  MAX_RELAY_BODY_BYTES,
+  PASS_BACK,
+  RELAY_PREFIX,
+  STATIC_CACHE,
+  STATIC_PREFIX,
+} from "./constants";
 
 import { PROTOCOLS } from "./live";
 
@@ -11,6 +19,7 @@ interface Env {
   RELAY_TOKEN?: string;
 }
 
+const HTTP_OK = 200;
 const HTTP_NO_CONTENT = 204;
 const HTTP_FORBIDDEN = 403;
 const HTTP_NOT_FOUND = 404;
@@ -89,6 +98,13 @@ export default {
         return new Response(null, { status: HTTP_NO_CONTENT, headers: h });
       }
       return relay(request, env, url.pathname.slice(RELAY_PREFIX.length), url.search);
+    }
+    if (url.pathname.startsWith(STATIC_PREFIX)) {
+      // Only a file that exists is cached for good; a miss (a chunk from another deploy) is never cached.
+      const res = await env.ASSETS.fetch(request);
+      const out = new Response(res.body, res);
+      out.headers.set("cache-control", res.status === HTTP_OK ? STATIC_CACHE : "no-store");
+      return out;
     }
     return env.ASSETS.fetch(request);
   },

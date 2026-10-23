@@ -65,7 +65,8 @@ function routes(file) {
 }
 
 const lines = ["/*", ...Object.entries(EVERYWHERE).map(([k, v]) => `  ${k}: ${v}`), ""];
-lines.push("/_next/static/*", "  Cache-Control: public, max-age=31536000, immutable", "");
+// /_next/static/* caching is set by the Worker (services/web), which marks only real files immutable: a rule here would
+// also make a missing chunk's 404 immutable, and a browser that loads mid-deploy would keep it for a year.
 
 let pages = 0;
 for (const file of htmlFiles(OUT)) {
