@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mitoshi demo cover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&family=Sora:wght@700;800&display=block" rel="stylesheet" />
+<style>
+  @font-face {
+    font-family: "Mitoshi Serif";
+    src: url("../../../apps/web/src/fonts/noto-serif-jp/700.woff2") format("woff2");
+    font-weight: 700;
+  }
+  :root { --bg: #050505; --ink: #f4eee3; --ink-2: rgb(244 238 227 / 0.66); --ink-3: rgb(244 238 227 / 0.42); --accent: #e04d26; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+  body {
+    position: relative;
+    font-family: Inter, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 700px at 50% 62%, rgb(224 77 38 / 0.18), transparent 70%),
+      radial-gradient(circle, rgb(244 238 227 / 0.07) 1.2px, transparent 1.6px) 0 0 / 22px 22px,
+      var(--bg);
+  }
+  .top { position: absolute; top: 88px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .seal { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; }
+  .seal svg { width: 58%; }
+  .word { font: 700 26px/1 Sora, sans-serif; letter-spacing: 0.2em; }
+  .stamp { font: 700 26px/1 "Mitoshi Serif", serif; color: var(--ink-2); }
+  h1 { font: 800 84px/1 Sora, sans-serif; letter-spacing: -0.035em; text-align: center; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .tag { font: 500 18px/1 "JetBrains Mono", monospace; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+
+  .phone { position: absolute; border-radius: 48px; padding: 9px; background: #141414; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 50px 90px -30px #000; }
+  .phone img { display: block; width: 100%; border-radius: 39px; }
+  .p1 { width: 300px; left: 330px; top: 420px; transform: rotate(-8deg); }
+  .p2 { width: 330px; left: 795px; top: 380px; z-index: 2; }
+  .p3 { width: 300px; right: 330px; top: 420px; transform: rotate(8deg); }
+
+  .play { position: absolute; z-index: 3; left: 50%; top: 640px; width: 168px; height: 168px; margin-left: -84px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; box-shadow: 0 0 0 14px rgb(224 77 38 / 0.22), 0 30px 70px -20px rgb(224 77 38 / 0.7); }
+  .play svg { width: 64px; margin-left: 10px; }
+  .watch { position: absolute; z-index: 3; left: 0; right: 0; top: 836px; text-align: center; font: 700 30px/1 Sora, sans-serif; text-shadow: 0 2px 20px #000; }
+  body.still .play, body.still .watch { display: none; }
+</style>
+</head>
+<body>
+  <script>if (location.hash === "#still") document.body.classList.add("still");</script>
+  <section class="top">
+    <div class="brand">
+      <span class="seal">
+        <svg viewBox="0 0 248 248" fill="none" aria-hidden="true">
+          <path d="M36 200 H212" stroke="#141210" stroke-width="28" stroke-linecap="round" />
+          <path d="M52 156 C 104 156, 132 92, 182 62" stroke="#141210" stroke-width="28" stroke-linecap="round" />
+          <circle cx="200" cy="44" r="27" fill="#f4eee3" />
+        </svg>
+      </span>
+      <span class="word">MITOSHI</span>
+      <span class="stamp">見通し</span>
+    </div>
+    <h1>Trade <em>privately</em> from anywhere.</h1>
+    <p class="tag">Shielded ZEC · Polymarket · Hyperliquid · Solana</p>
+  </section>
+
+  <div class="phone p1"><img src="../../../apps/web/public/captures/event.jpg" alt="" /></div>
+  <div class="phone p2"><img src="../../../apps/web/public/captures/terminal.jpg" alt="" /></div>
+  <div class="phone p3"><img src="../../../apps/web/public/captures/order.jpg" alt="" /></div>
+
+  <div class="play" aria-hidden="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5Z" fill="#f4eee3" /></svg>
+  </div>
+  <p class="watch">Watch the demo</p>
+</body>
+</html>

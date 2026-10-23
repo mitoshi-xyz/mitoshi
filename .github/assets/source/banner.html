@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mitoshi banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&family=Sora:wght@700;800&display=block" rel="stylesheet" />
+<style>
+  @font-face {
+    font-family: "Mitoshi Serif";
+    src: url("../../../apps/web/src/fonts/noto-serif-jp/700.woff2") format("woff2");
+    font-weight: 700;
+  }
+  :root {
+    --bg: #050505;
+    --ink: #f4eee3;
+    --ink-2: rgb(244 238 227 / 0.66);
+    --ink-3: rgb(244 238 227 / 0.42);
+    --hair: rgb(255 255 255 / 0.1);
+    --accent: #e04d26;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1920px; height: 900px; overflow: hidden; background: var(--bg); }
+  body {
+    position: relative;
+    font-family: Inter, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 620px at 78% 52%, rgb(224 77 38 / 0.16), transparent 70%),
+      radial-gradient(circle, rgb(244 238 227 / 0.07) 1.2px, transparent 1.6px) 0 0 / 22px 22px,
+      var(--bg);
+  }
+  .left { position: absolute; left: 128px; top: 0; bottom: 0; width: 780px; display: flex; flex-direction: column; justify-content: center; gap: 34px; }
+  .brand { display: flex; align-items: center; gap: 18px; }
+  .seal { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; }
+  .seal svg { width: 58%; }
+  .word { font: 700 30px/1 Sora, sans-serif; letter-spacing: 0.2em; }
+  .stamp { font: 700 30px/1 "Mitoshi Serif", serif; color: var(--ink-2); }
+  h1 { font: 800 96px/1 Sora, sans-serif; letter-spacing: -0.035em; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .sub { font: 400 29px/1.42 Inter, sans-serif; color: var(--ink-2); max-width: 720px; }
+  .venues { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .venue { display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 20px 0 10px; border: 1px solid var(--hair); border-radius: 999px; font: 500 20px/1 Inter, sans-serif; color: var(--ink-2); background: rgb(23 23 23 / 0.7); }
+  .venue img { width: 32px; height: 32px; border-radius: 28%; }
+  .foot { font: 500 17px/1 "JetBrains Mono", monospace; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+  .phones { position: absolute; right: 70px; top: 0; bottom: 0; width: 900px; }
+  .phone { position: absolute; border-radius: 52px; padding: 10px; background: #141414; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 50px 90px -30px #000, 0 30px 60px -40px rgb(224 77 38 / 0.4); }
+  .phone img { display: block; width: 100%; border-radius: 42px; }
+  .p-left { width: 310px; left: 20px; top: 150px; transform: rotate(-7deg); opacity: 0.92; }
+  .p-right { width: 310px; right: 20px; top: 150px; transform: rotate(7deg); opacity: 0.92; }
+  .p-mid { width: 360px; left: 270px; top: 46px; z-index: 2; }
+</style>
+</head>
+<body>
+  <section class="left">
+    <div class="brand">
+      <span class="seal">
+        <svg viewBox="0 0 248 248" fill="none" aria-hidden="true">
+          <path d="M36 200 H212" stroke="#141210" stroke-width="28" stroke-linecap="round" />
+          <path d="M52 156 C 104 156, 132 92, 182 62" stroke="#141210" stroke-width="28" stroke-linecap="round" />
+          <circle cx="200" cy="44" r="27" fill="#f4eee3" />
+        </svg>
+      </span>
+      <span class="word">MITOSHI</span>
+      <span class="stamp">見通し</span>
+    </div>
+    <h1>Trade <em>privately</em><br />from anywhere.</h1>
+    <p class="sub">Prediction markets, US stocks, gold and crypto perps, Solana tokens. Every trade from a fresh wallet funded from shielded ZEC.</p>
+    <div class="venues">
+      <span class="venue"><img src="../../../apps/web/public/marks/venue-polymarket.svg" alt="" />Polymarket</span>
+      <span class="venue"><img src="../../../apps/web/public/marks/venue-hyperliquid.svg" alt="" />Hyperliquid</span>
+      <span class="venue"><img src="../../../apps/web/public/marks/venue-solana.svg" alt="" />Solana</span>
+    </div>
+    <p class="foot">Built on Zcash · NEAR Intents</p>
+  </section>
+
+  <section class="phones">
+    <div class="phone p-left"><img src="../../../apps/web/public/captures/event.jpg" alt="" /></div>
+    <div class="phone p-right"><img src="../../../apps/web/public/captures/order.jpg" alt="" /></div>
+    <div class="phone p-mid"><img src="../../../apps/web/public/captures/terminal.jpg" alt="" /></div>
+  </section>
+</body>
+</html>

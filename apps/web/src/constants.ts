@@ -3,8 +3,7 @@
  * it cannot read, and pictures through its image proxy. Development points at the deployed relay.
  */
 export const RELAY =
-  process.env.NEXT_PUBLIC_RELAY ??
-  (process.env.NODE_ENV === "development" ? "https://mitoshi.xyz/relay" : "/relay");
+  process.env.NEXT_PUBLIC_RELAY ?? (process.env.NODE_ENV === "development" ? "https://mitoshi.xyz/relay" : "/relay");
 
 /**
  * Zcash network the app runs on. A production build is mainnet and development is testnet, unless

@@ -1,0 +1,34 @@
+{
+  "banner.png": {
+    "made": "2026-10-23",
+    "how": "Composed in HTML (source/banner.html) and rendered with headless Chrome at a 1920x900 viewport.",
+    "screens": [
+      "apps/web/public/captures/event.jpg",
+      "apps/web/public/captures/terminal.jpg",
+      "apps/web/public/captures/order.jpg"
+    ],
+    "screensAre": "Unchanged captures of the production app at 375x812 (2x), 2026-10-23: event.jpg and terminal.jpg from mitoshi.xyz and its workers.dev address, order.jpg earlier the same day. Prices and odds are live public market data; no wallet was funded and no order was sent.",
+    "marks": "apps/web/public/marks/venue-*.svg (see apps/web/scripts/venues/SOURCES.md).",
+    "words": "The landing hero (apps/web/src/features/landing/copy.ts)."
+  },
+  "demo-cover.png": {
+    "made": "2026-10-23",
+    "how": "Composed in HTML (source/demo-cover.html) and rendered with headless Chrome at a 1920x1080 viewport.",
+    "screens": [
+      "apps/web/public/captures/event.jpg",
+      "apps/web/public/captures/terminal.jpg",
+      "apps/web/public/captures/order.jpg"
+    ],
+    "note": "Artwork with a play button that links to /demo. It is not a recording, and it shows no transaction."
+  },
+  "apps/web/public/demo/still.webp": {
+    "made": "2026-10-23",
+    "how": "source/demo-cover.html#still (the cover without the play button), rendered at 1920x1080 and resized to 1280x720.",
+    "note": "Shown on /demo while the recording does not exist, so nothing there looks playable that isn't."
+  },
+  "apps/web/public/demo/cover.webp": {
+    "made": "2026-10-23",
+    "how": "demo-cover.png resized to 1280x720.",
+    "note": "The cover /demo links out from once DEMO_VIDEO_URL is set."
+  }
+}
