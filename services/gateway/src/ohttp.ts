@@ -12,6 +12,9 @@ import { forward, type Secrets } from "./upstream";
  */
 
 const HTTP_BAD_REQUEST = 400;
+const HTTP_BAD_GATEWAY = 502;
+/** The largest inner answer sealed whole: under Vercel's 4.5 MB response limit once padded and encrypted. */
+const MAX_ANSWER_BYTES = 4 * 1024 * 1024;
 const HTTP_UNAVAILABLE = 503;
 const HEX_RADIX = 16;
 const HEX_CHARS_PER_BYTE = 2;
@@ -89,5 +92,12 @@ export async function ohttp(
       : target.hostname === IMAGE_HOST
         ? await img(decapsulated.request)
         : await forward(decapsulated.request, secrets);
-  return decapsulated.context.encapsulateResponse(inner);
+  // An answer too big for one message (or for the host's response limit) would fail the whole function with a bare
+  // 500: say so inside the sealed answer instead, so the app can show what happened.
+  const body = await inner.arrayBuffer();
+  const sealed =
+    body.byteLength <= MAX_ANSWER_BYTES
+      ? new Response(body, { status: inner.status, headers: inner.headers })
+      : new Response("answer too large for one message", { status: HTTP_BAD_GATEWAY });
+  return decapsulated.context.encapsulateResponse(sealed);
 }

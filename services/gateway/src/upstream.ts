@@ -83,6 +83,18 @@ function upstreamHeaders(inner: Headers, rule: Upstream): Headers {
   return out;
 }
 
+/** A listing cut to the fields the app reads (Upstream.shape); anything else, or anything unparsable, passes as is. */
+async function shaped(rule: Upstream, url: URL, res: Response, body: ArrayBuffer): Promise<ArrayBuffer> {
+  const shape = rule.shape?.[url.pathname];
+  if (!shape || !res.ok || !(res.headers.get("content-type") ?? "").includes("json")) return body;
+  try {
+    const text = JSON.stringify(shape(JSON.parse(new TextDecoder().decode(body))));
+    return new TextEncoder().encode(text).buffer as ArrayBuffer;
+  } catch {
+    return body;
+  }
+}
+
 function filtered(res: Response): Headers {
   const out = new Headers({ "cache-control": "no-store" });
   for (const name of RESPONSE_HEADERS) {
@@ -134,8 +146,8 @@ export async function forward(inner: Request, secrets: Secrets = {}): Promise<Re
   } catch (e) {
     return refuse(`upstream unreachable: ${url.hostname} (${e instanceof Error ? e.name : "error"})`, HTTP_BAD_GATEWAY);
   }
-  const answer = await res.arrayBuffer();
   const out = filtered(res);
+  const answer = await shaped(rule, url, res, await res.arrayBuffer());
   if (shareable && res.ok && ttl !== undefined) {
     remember(key, {
       expires: Date.now() + ttl * MS_PER_SECOND,

@@ -1,3 +1,4 @@
+import { eventList, searchResults } from "./shape";
 /**
  * The gateway runs on Vercel in Dublin (dub1, AWS eu-west-1). Polymarket names eu-west-1 its
  * "Closest Non-Georestricted Region", and Ireland is close-only on its frontend only, not on the API
@@ -46,6 +47,8 @@ export interface Upstream {
   cacheGetPaths?: Record<string, number>;
   /** For JSON-RPC upstreams: the only methods a request may call. */
   rpcMethods?: readonly string[];
+  /** Exact GET paths whose JSON answer is cut to the fields the app reads (shape.ts), keyed by path. */
+  shape?: Record<string, (body: unknown) => unknown>;
 }
 
 const GET_POST = ["GET", "POST"] as const;
@@ -104,6 +107,7 @@ export const UPSTREAMS: Record<string, Upstream> = {
     paths: ["/events", "/tags", "/public-search", "/markets"],
     methods: ["GET"],
     cacheSeconds: 30,
+    shape: { "/events": eventList, "/public-search": searchResults },
   },
   // Polymarket CLOB reads: price history and order books (trading routes are added with S4 trading).
   // Polymarket CLOB (docs.polymarket.com/trading): public reads, plus each private wallet's own
