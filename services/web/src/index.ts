@@ -1,4 +1,5 @@
 import {
+  CANONICAL_HOST,
   DEV_ORIGINS,
   IMAGE_CACHE_SECONDS,
   MAX_RELAY_BODY_BYTES,
@@ -6,6 +7,7 @@ import {
   RELAY_PREFIX,
   STATIC_CACHE,
   STATIC_PREFIX,
+  WWW_HOST,
 } from "./constants";
 
 import { PROTOCOLS } from "./live";
@@ -20,6 +22,7 @@ interface Env {
 }
 
 const HTTP_OK = 200;
+const HTTP_MOVED = 301;
 const HTTP_NO_CONTENT = 204;
 const HTTP_FORBIDDEN = 403;
 const HTTP_NOT_FOUND = 404;
@@ -82,6 +85,10 @@ async function relay(request: Request, env: Env, path: string, search: string): 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.hostname === WWW_HOST) {
+      url.hostname = CANONICAL_HOST;
+      return Response.redirect(url.toString(), HTTP_MOVED);
+    }
     const feed = url.pathname.startsWith(`${RELAY_PREFIX}/live/`) ? url.pathname.split("/").pop() : undefined;
     if (feed !== undefined) {
       const origin = request.headers.get("origin");

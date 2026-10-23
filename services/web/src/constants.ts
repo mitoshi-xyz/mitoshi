@@ -10,6 +10,10 @@ export const MAX_RELAY_BODY_BYTES = 8 * 1024 * 1024 + 64 * 1024;
 /** Response headers passed back to the browser from the gateway. */
 export const PASS_BACK = ["content-type", "cache-control", "content-security-policy", "x-content-type-options"];
 
+/** The one address the app answers at; www redirects there. */
+export const CANONICAL_HOST = "mitoshi.xyz";
+export const WWW_HOST = "www.mitoshi.xyz";
+
 /** Build files are named by their content, so a found one never changes. */
 export const STATIC_PREFIX = "/_next/static/";
 export const STATIC_CACHE = "public, max-age=31536000, immutable";

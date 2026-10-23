@@ -2,6 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mitoshi-web",
   "main": "src/index.ts",
+  // workers.dev stays on: local development uses it as its relay (DEV_ORIGINS).
+  "workers_dev": true,
+  "preview_urls": false,
+  // mitoshi.xyz (its zone is on Cloudflare); www redirects to it.
+  "routes": [
+    { "pattern": "mitoshi.xyz", "custom_domain": true },
+    { "pattern": "www.mitoshi.xyz", "custom_domain": true }
+  ],
   "compatibility_date": "2026-10-01",
   // The static app. Headers (CSP with per-page script hashes, COOP/COEP) come from out/_headers.
   "assets": {

@@ -12,10 +12,15 @@ import { LockScreen } from "../vault/lock-screen";
 import { bootWallet, useWallet } from "../wallet/wallet-store";
 import { Dock } from "./dock";
 import { More } from "./more";
+import { OfflineStrip } from "./offline-strip";
 import { Palette } from "./palette";
 import { PLACES } from "./places";
 import { Rail } from "./rail";
+import { RouteProgress } from "./route-progress";
 import { TopLine } from "./top-line";
+
+/** How long the app must run before the chunk-reload guard resets. */
+const CHUNK_GUARD_MS = 10_000;
 
 /** One query cache for the whole app (markets, accounts), kept across screens. */
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
@@ -39,8 +44,18 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
     document.documentElement.dataset.network = ZEC_NETWORK;
     primeFeedback();
     void bootWallet();
+    // Once the app has run a while, a later chunk failure (a newer deploy) may reload once again. Not at once: an
+    // error page renders this shell too, and clearing the guard there would let a missing chunk reload forever.
+    const guard = setTimeout(() => {
+      try {
+        sessionStorage.removeItem("mitoshi:chunk-reload");
+      } catch {
+        // Storage blocked: the reload guard simply stays as it is.
+      }
+    }, CHUNK_GUARD_MS);
     // A locked vault refuses the read; the lock screen loads the registry once it opens.
     loadRegistry().then(startJobs, () => undefined);
+    return () => clearTimeout(guard);
   }, []);
 
   useEffect(() => {
@@ -89,6 +104,8 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         <Palette open={palette} onClose={() => setPalette(false)} />
         <WalletDrawers />
         <Toaster />
+        <RouteProgress />
+        <OfflineStrip />
       </div>
     </QueryClientProvider>
   );
