@@ -134,7 +134,12 @@ export function Ticket({
       });
       setOutcome(
         res.kind === "filled"
-          ? { kind: "filled", text: `${side} ${Number(size.toPrecision(SIZE_SIG))} ${market.name} at ${price(px)}` }
+          ? res.exitsMissing
+            ? {
+                kind: "failed",
+                text: `${side} ${Number(size.toPrecision(SIZE_SIG))} ${market.name} at ${price(px)}, but TP/SL did not attach: watch it or close it`,
+              }
+            : { kind: "filled", text: `${side} ${Number(size.toPrecision(SIZE_SIG))} ${market.name} at ${price(px)}` }
           : { kind: "resting", text: `Limit resting at ${price(px)}` },
       );
       setOrder({ margin: "" });

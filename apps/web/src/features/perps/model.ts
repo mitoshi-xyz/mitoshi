@@ -72,7 +72,16 @@ export interface PerpAccount {
   orders: PerpOrder[];
 }
 
-export type PerpFill = { kind: "filled"; avgPx: number; size: number; oid: number } | { kind: "resting"; oid: number };
+export type PerpFill =
+  | {
+      kind: "filled";
+      avgPx: number;
+      size: number;
+      oid: number;
+      /** The TP/SL asked for did not attach (the venue refused one, or the entry filled only in part). */
+      exitsMissing?: boolean;
+    }
+  | { kind: "resting"; oid: number };
 
 export interface PerpOrderArgs {
   market: PerpMarket;

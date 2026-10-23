@@ -75,6 +75,7 @@ export default function PrivacyDocs() {
           "One hop in and one hop out per wallet, at a standard size, through NEAR's deposit addresses.",
           "NEAR Intents' record of each swap, which pairs its deposit with its payout. NEAR's confidential mode, in which deposits and payouts can't be matched, is used whenever the gateway holds a NEAR partner key.",
           "On Polymarket, wallet creation is gasless through Polymarket's relayer and attributed to Mitoshi's builder profile: Polymarket knows a wallet was made by a Mitoshi user, not which one.",
+          "Reading your wallets: while Portfolio or a terminal is open, the venues and the gateway see their balances asked about in the same stretch of time. Each wallet is read on its own random schedule, through one gateway address shared by every user, and the gateway keeps no logs, but someone watching many sessions could still notice two addresses that are always asked about in the same minutes. Keep fewer wallets open at once if that matters to you.",
         ]}
       />
       <Note tone="warn">

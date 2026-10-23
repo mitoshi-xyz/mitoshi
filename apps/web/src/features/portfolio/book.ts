@@ -16,13 +16,13 @@ import { solAccount, solMarket } from "../solana/sol";
 const ON_VENUE = new Set<PrivateWallet["status"]>(["ready", "trading", "returning", "failed"]);
 const LAMPORTS_PER_SOL = 1_000_000_000;
 /**
- * Each wallet is read on its own random schedule (12–30 s) after a random first delay: a venue
- * that saw one gateway ask about several addresses at the same instant, over and over, could tie
- * them together.
+ * Each wallet is read on its own random schedule (20–60 s) after its own random first delay (up to 20 s when there is
+ * more than one): a gateway or venue that saw several addresses asked about in one burst, over and over, could guess
+ * they belong together. Spread out, their reads blend with everyone else's; the residual is in the threat model.
  */
-const POLL_MIN_MS = 12_000;
-const POLL_SPREAD_MS = 18_000;
-const FIRST_DELAY_MAX_MS = 4_000;
+const POLL_MIN_MS = 20_000;
+const POLL_SPREAD_MS = 40_000;
+const FIRST_DELAY_MAX_MS = 20_000;
 
 const jitter = (spread: number) => Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % spread;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -137,7 +137,8 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
       enabled: ON_VENUE.has(w.status),
       refetchInterval: () => POLL_MIN_MS + jitter(POLL_SPREAD_MS),
       queryFn: async () => {
-        await sleep(jitter(FIRST_DELAY_MAX_MS));
+        // One wallet links to nothing: read it at once. Several: each waits its own random moment.
+        if (wallets.filter((x) => ON_VENUE.has(x.status)).length > 1) await sleep(jitter(FIRST_DELAY_MAX_MS));
         return readVenue(w);
       },
     })),

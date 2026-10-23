@@ -12,80 +12,39 @@ import {
 } from "./constants.ts";
 import type { PerpsMarket } from "./market.ts";
 import { signCreateProxy, signOp, signWithdraw } from "./signing.ts";
-
-/** A delegated signer for trading: the owner authorises it once, and it signs every order. */
-export interface PerpsCredentials {
-  proxy: Hex;
-  proxyKey: Hex;
-  secret: string;
-  /** When the proxy stops being valid (ms). */
-  expiry: number;
-}
-
-export interface PerpsPosition {
-  id: number;
-  symbol: string;
-  /** Signed size in contracts: positive long, negative short. */
-  size: number;
-  entryPx: number;
-  leverage: number;
-  cross: boolean;
-  marginUsed: number;
-  valueUsd: number;
-  liquidationPx: number | null;
-  unrealizedPnl: number;
-  funding: number;
-}
-
-export interface PerpsOpenOrder {
-  oid: number;
-  instrumentId: number;
-  isBuy: boolean;
-  px: number;
-  size: number;
-  reduceOnly: boolean;
-  trigger: { kind: "tp" | "sl"; px: number } | null;
-  at: number;
-}
-
-export interface PerpsAccountState {
-  /** Total account value (equity plus unrealised PnL). */
-  equity: number;
-  /** What new orders can use as margin. */
-  available: number;
-  /** What can leave the account now (after the 10% notional reserve). */
-  withdrawable: number;
-  inLiquidation: boolean;
-  positions: PerpsPosition[];
-  orders: PerpsOpenOrder[];
-}
-
-export type PerpsOrderResult =
-  | { kind: "filled"; avgPx: number; size: number; oid: number }
-  | { kind: "resting"; oid: number };
-
-export interface PerpsOrderInput {
-  market: PerpsMarket;
-  isBuy: boolean;
-  /** Size in contracts. */
-  size: number;
-  /** Limit price (GTC); market orders are IOC limits MARKET_SLIPPAGE through the mark. */
-  limitPx?: number;
-  reduceOnly?: boolean;
-  takeProfitPx?: number;
-  stopLossPx?: number;
-}
+import type {
+  PerpsAccountState,
+  PerpsCredentials,
+  PerpsOrderInput,
+  PerpsOrderResult,
+  PerpsPosition,
+  RawOrder,
+} from "./types.ts";
 
 type Signable = boolean | number | string | undefined | readonly Signable[];
 
 const ORDER_POLL_MS = 400;
 const ORDER_POLL_TRIES = 15;
 const SCALE_EPSILON = 1e-9;
+const CANCEL_TRIES = 6;
+const CANCEL_RETRY_MS = 1_000;
+const HTTP_UNAUTHORIZED = 401;
+const HTTP_FORBIDDEN = 403;
+/** Cancel answers that mean the order is gone already (docs: Trading, cancel errors). */
+const GONE = new Set(["order_not_in_orderbook", "order_already_terminal", "order_not_found"]);
 
-/** A decimal string with at most `d` places, rounded down (sizes) or to nearest (prices). */
-function fixed(x: number, d: number, round: "down" | "nearest" = "nearest"): string {
+/**
+ * A decimal string with at most `d` places: sizes round down; a buy limit rounds down and a sell limit up, so a typed
+ * price is never worse once it fits the tick; other prices round to nearest.
+ */
+function fixed(x: number, d: number, round: "down" | "up" | "nearest" = "nearest"): string {
   const k = 10 ** d;
-  const scaled = round === "down" ? Math.floor(x * k + SCALE_EPSILON) : Math.round(x * k);
+  const scaled =
+    round === "down"
+      ? Math.floor(x * k + SCALE_EPSILON)
+      : round === "up"
+        ? Math.ceil(x * k - SCALE_EPSILON)
+        : Math.round(x * k);
   return (scaled / k).toFixed(d);
 }
 
@@ -94,21 +53,6 @@ function clientOrderId(): string {
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-interface RawOrder {
-  order_id: number;
-  instrument_id: number;
-  buy: boolean;
-  price: string;
-  quantity: string;
-  ro: boolean;
-  status: string;
-  filled_quantity: string;
-  resting_quantity: string;
-  created_timestamp: number;
-  client_order_id?: string;
-  tpsl?: { kind: "tp" | "sl"; trp: string };
-}
 
 /**
  * One private wallet's Polymarket Perps account. The wallet's own key owns it and authorises a
@@ -140,6 +84,7 @@ export class PolymarketPerpsAccount {
     method: "GET" | "POST" | "DELETE" | "PATCH",
     path: string,
     opts: { query?: Record<string, string | number>; body?: unknown; auth?: boolean } = {},
+    retried = false,
   ): Promise<T> {
     const url = new URL(path, PERPS_API);
     for (const [k, v] of Object.entries(opts.query ?? {})) url.searchParams.set(k, String(v));
@@ -155,6 +100,11 @@ export class PolymarketPerpsAccount {
       headers,
       ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
     });
+    // A proxy Polymarket no longer accepts (revoked, or expired early): authorise a new one and ask once more.
+    if (opts.auth && !retried && (res.status === HTTP_UNAUTHORIZED || res.status === HTTP_FORBIDDEN)) {
+      this.creds = null;
+      return this.call<T>(method, path, opts, true);
+    }
     const text = await res.text();
     const body = (text ? JSON.parse(text) : null) as T | { status?: string; error?: string } | null;
     const err = body && !Array.isArray(body) && typeof body === "object" && "status" in body && body.status === "err";
@@ -258,7 +208,10 @@ export class PolymarketPerpsAccount {
     const { market } = input;
     const slip = Math.min(MARKET_SLIPPAGE, market.priceBounds / 2);
     const limit = input.limitPx !== undefined;
-    const p = fixed(input.limitPx ?? mark * (input.isBuy ? 1 + slip : 1 - slip), market.priceDecimals);
+    const p =
+      input.limitPx !== undefined
+        ? fixed(input.limitPx, market.priceDecimals, input.isBuy ? "down" : "up")
+        : fixed(mark * (input.isBuy ? 1 + slip : 1 - slip), market.priceDecimals);
     const qty = fixed(input.size, market.quantityDecimals, "down");
     const c = clientOrderId();
     const tif = limit ? "gtc" : "ioc";
@@ -296,7 +249,17 @@ export class PolymarketPerpsAccount {
     if (first?.status !== "ok" || first.oid === undefined) {
       throw new Error(`order not accepted: ${first?.error ?? "no answer"}`);
     }
-    return this.settle(first.oid, c, market, placedAt);
+    const childRefused = acks.slice(1).some((a) => a.status !== "ok");
+    const res = await this.settle(first.oid, c, market, placedAt);
+    if (res.kind !== "filled" || exits.length === 0) return res;
+    // Docs: a bracket's exits stay dormant until the entry fills in full; a partial fill cancels them. Check the book.
+    const open = await this.call<RawOrder[]>("GET", "/v1/account/open-orders", {
+      query: { instrument_id: market.id },
+      auth: true,
+    });
+    const onBook = new Set(open.filter((o) => o.tpsl).map((o) => o.tpsl?.kind));
+    const missing = childRefused || exits.some((x) => !onBook.has(x.kind));
+    return missing ? { ...res, exitsMissing: true } : res;
   }
 
   /** Follows an accepted order to its first resting or terminal state (taker orders may queue briefly). */
@@ -333,9 +296,26 @@ export class PolymarketPerpsAccount {
     return qty > 0 ? mine.reduce((s, f) => s + Number(f.price) * Number(f.quantity), 0) / qty : fallback;
   }
 
+  /**
+   * Cancels orders by id, retrying the ones the venue cannot cancel yet (`order_in_flight`) and treating already-gone
+   * ones as done. Throws if any is still live after the retries.
+   */
   async cancel(oids: number[]) {
-    if (!oids.length) return;
-    await this.command("DELETE", "/v1/trade/orders", ["cancelOrders", oids], { type: "cancelOrders", args: oids });
+    let left = oids;
+    for (let i = 0; i < CANCEL_TRIES && left.length; i++) {
+      if (i > 0) await wait(CANCEL_RETRY_MS);
+      const results = await this.command<{ status: string; oid?: number; error?: string }[]>(
+        "DELETE",
+        "/v1/trade/orders",
+        ["cancelOrders", left],
+        { type: "cancelOrders", args: left },
+      );
+      left = left.filter((oid, idx) => {
+        const r = results.find((x) => x.oid === oid) ?? results[idx];
+        return r?.status !== "ok" && !GONE.has(r?.error ?? "");
+      });
+    }
+    if (left.length) throw new Error(`${left.length} order${left.length === 1 ? "" : "s"} could not be cancelled yet`);
   }
 
   /** Closes a position at market (reduce-only). */
@@ -348,9 +328,13 @@ export class PolymarketPerpsAccount {
    * Returns the pUSD that can be withdrawn, rounded down to the cent, or 0 when only dust is left.
    */
   async consolidate(): Promise<number> {
+    const before = await this.state();
+    if (before.positions.length > 0) throw new Error("close every position before sending the money home");
+    await this.cancel(before.orders.map((o) => o.oid));
+    // Read again: a cancel that raced a fill can leave a position, and freed margin changes what can leave.
     const s = await this.state();
-    if (s.positions.length > 0) throw new Error("close every position before sending the money home");
-    await this.cancel(s.orders.map((o) => o.oid));
+    if (s.positions.length > 0) throw new Error("an order filled while cancelling; close that position first");
+    if (s.orders.length > 0) throw new Error("some orders are still open; try again in a moment");
     return s.withdrawable < DUST_PUSD ? 0 : Number(fixed(s.withdrawable, 2, "down"));
   }
 
