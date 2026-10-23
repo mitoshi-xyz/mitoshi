@@ -22,7 +22,7 @@ Work in progress. See the build stages below; each one ships only when it works 
    your device.
 2. **Private wallets**: for each position Mitoshi derives a fresh key and funds it from the shielded pool through
    NEAR Intents 1Click, in ZIP 318 canonical amounts, at random times, so no deposit can be matched to you.
-3. **Trade**: Polymarket (prediction markets), Hyperliquid (perps) and Solana (tokens), at each venue's real prices.
+3. **Trade**: Polymarket (prediction markets), Polymarket Perps (US stocks, indices, gold, oil), Hyperliquid (crypto perps) and Solana (tokens), at each venue's real prices.
 4. **Come home**: proceeds return to a fresh shielded address. Your portfolio across every venue lives only on your
    device.
 

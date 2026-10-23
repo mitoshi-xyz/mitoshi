@@ -7,6 +7,7 @@ import { RotateCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cx, LiveDot } from "@/kit";
 import { hlLive, hlMarket } from "../hyperliquid/hl";
+import { ppMarket } from "../pmperps/pp";
 import { pmMarket } from "../polymarket/pm";
 import { oneclick } from "../private-wallets/swaps";
 import { solMarket } from "../solana/sol";
@@ -49,6 +50,18 @@ const PROBES: Probe[] = [
     name: "Polymarket",
     sees: "Market reads from the gateway's address",
     run: () => pmMarket.events("trending"),
+  },
+  {
+    id: "pmperps",
+    name: "Polymarket Perps",
+    sees: "A fresh wallet's Perps orders, signed by its own proxy key, from the gateway's address",
+    run: () => ppMarket.markets(),
+  },
+  {
+    id: "hyperliquid",
+    name: "Hyperliquid",
+    sees: "A fresh account's orders, from the gateway's address",
+    run: () => hlMarket.perps(),
   },
 ];
 
