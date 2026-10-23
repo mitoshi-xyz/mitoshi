@@ -49,7 +49,7 @@ test("a withdrawal is signed against the deposit contract, with ts in seconds", 
   const account = privateKeyToAccount(key).address;
   const args = {
     account,
-    token: "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB",
+    token: "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB", // pUSD's public contract address. gitleaks:allow
     amount: 10_000_000n,
     to: account,
   } as const;

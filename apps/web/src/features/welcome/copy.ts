@@ -1,7 +1,6 @@
 /**
  * The first-run story: one picture, one headline and one sentence a scene, then three actions
- * (Mitoshi's and Senryo's welcome grammar: value first, sign last). Each line says only what the
- * product does.
+ * (value first, sign last). Each line says only what the product does.
  */
 export const WELCOME = {
   scenes: [

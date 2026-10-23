@@ -1,7 +1,6 @@
-# Agent research, notes and prompts stay out of git
+# Local notes, research and tool state stay out of git
 context/
 .firecrawl/
-codex-*.md
 .claude/
 
 # OS / editors

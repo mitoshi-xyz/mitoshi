@@ -1,7 +1,6 @@
 /*
- * Mitoshi's design tokens: the values of the Mitoshi design system (crypto-world-fair packages/tokens/src/tokens.json,
- * read 2026-10-22). Dark is the default; [data-theme="light"] is the cream world. Vermilion is the only brand colour;
- * up and down are for direction only.
+ * Mitoshi's design tokens. Dark is the default; [data-theme="light"] is the cream world. Vermilion is the only brand
+ * colour; up and down are for direction only.
  */
 :root {
   --bg: #050505;
