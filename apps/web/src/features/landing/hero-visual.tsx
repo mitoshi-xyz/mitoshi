@@ -58,7 +58,7 @@ export function HeroVisual() {
   useEffect(() => {
     chart.current?.reset();
     if (!market) return;
-    return DRIVERS[market.venue].subscribePrice(market, (p) => chart.current?.pushPrice(p));
+    return DRIVERS[market.venue].subscribePrice(market, (p) => chart.current?.pushPrice(p), true);
     // One subscription per market; the list refreshing does not restart it.
   }, [key]);
 

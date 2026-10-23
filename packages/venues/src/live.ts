@@ -7,8 +7,9 @@ export type LiveSub =
   | { type: "bbo"; coin: string }
   | { type: "activeAssetCtx"; coin: string }
   | { type: "market"; assetId: string }
-  // Polymarket Perps: `coin` is the instrument id ("all" for every ticker).
-  | { type: "tickers"; coin: string }
+  // Polymarket Perps: `coin` is the instrument id ("all" for every instrument). `tickers` is not carried: it pushes
+  // about 8 updates a second per market (~700 a second for all of them); `statistics` brings the price ~1 in 10 s.
+  | { type: "statistics"; coin: string }
   | { type: "klines"; coin: string; interval: string };
 
 export type LiveStatus = "connecting" | "live" | "reconnecting";

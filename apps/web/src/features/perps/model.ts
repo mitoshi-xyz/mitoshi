@@ -114,11 +114,17 @@ export interface PerpDriver {
   intervals: readonly string[];
   markets(): Promise<PerpMarket[]>;
   onStatus(l: (s: LiveStatus) => void): () => void;
-  /** Every trade and top-of-book change for one market. */
-  subscribePrice(m: PerpMarket, cb: (px: number) => void): () => void;
+  /**
+   * Every trade and top-of-book change for one market. `lean` follows trades only: enough for a page that shows just a
+   * price line (the heroes), and every upstream message counts against the relay's quota.
+   */
+  subscribePrice(m: PerpMarket, cb: (px: number) => void, lean?: boolean): () => void;
   subscribeStats(m: PerpMarket, cb: (s: PerpStats) => void): () => void;
-  /** Live marks for every market, by id. */
-  subscribeMarks(cb: (marks: Record<string, number>) => void): () => void;
+  /**
+   * Live marks by market id: for `ids` only when given (what is on screen), else every market. A venue whose one stream
+   * already covers every market cheaply may ignore `ids`.
+   */
+  subscribeMarks(cb: (marks: Record<string, number>) => void, ids?: readonly string[]): () => void;
   candles(m: PerpMarket, interval: string, end?: number, count?: number): Promise<Bar[]>;
   subscribeCandle(m: PerpMarket, interval: string, cb: (b: Bar) => void): () => void;
   account(w: PrivateWallet): Promise<PerpAccount>;

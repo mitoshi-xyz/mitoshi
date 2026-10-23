@@ -22,6 +22,17 @@ const CREDIT_TRIES = 40;
 const PUSD_UNITS = 10 ** PUSD_DECIMALS;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** A statistics update: 24h volume (USD), the price 24h ago, and hourly candles; the last one closes at the latest trade. */
+interface StatsUpdate {
+  iid: number;
+  vol: string;
+  open: string;
+  klines?: unknown[][];
+}
+/** Where a raw candle keeps its close: [time, open, high, low, close, volume, trades]. */
+const CLOSE = 4;
+const lastPrice = (d: StatsUpdate) => Number(d.klines?.at(-1)?.[CLOSE] ?? Number.NaN);
+
 const bySymbol = new Map<string, PerpsMarket>();
 const symbolOf = new Map<number, string>();
 
@@ -124,14 +135,16 @@ export const pmDriver: PerpDriver = {
 
   onStatus: (l) => ppLive().onStatus(l),
 
-  subscribePrice(m, cb) {
+  subscribePrice(m, cb, lean) {
     return once(instrumentOf(m), (i) => {
       const coin = String(i.id);
       const feed = ppLive();
-      const a = feed.subscribe({ type: "bbo", coin }, (data) => {
-        const d = data as { bp?: string; ap?: string };
-        if (d.bp && d.ap) cb((Number(d.bp) + Number(d.ap)) / 2);
-      });
+      const a = lean
+        ? () => undefined
+        : feed.subscribe({ type: "bbo", coin }, (data) => {
+            const d = data as { bp?: string; ap?: string };
+            if (d.bp && d.ap) cb((Number(d.bp) + Number(d.ap)) / 2);
+          });
       const b = feed.subscribe({ type: "trades", coin }, (data) => {
         const last = (data as { p: string }[]).at(-1);
         if (last) cb(Number(last.p));
@@ -144,23 +157,52 @@ export const pmDriver: PerpDriver = {
   },
 
   subscribeStats(m, cb) {
-    return once(instrumentOf(m), (i) =>
-      ppLive().subscribe({ type: "tickers", coin: String(i.id) }, (data) => {
-        const d = data as { mark: string; oi: string; fr: string };
-        const markPx = Number(d.mark);
-        cb({ markPx, funding: Number(d.fr), openInterestUsd: Number(d.oi) * markPx });
-      }),
-    );
+    // The price comes from the book, the 24h open and volume from statistics. Funding and open interest are left to the
+    // market list (refreshed every 30 s): only `tickers` streams them, at about 8 updates a second.
+    return once(instrumentOf(m), (i) => {
+      const coin = String(i.id);
+      const feed = ppLive();
+      let day: { prevDayPx: number; dayVolumeUsd: number } | null = null;
+      let markPx = Number.NaN;
+      const emit = () => {
+        if (Number.isFinite(markPx)) cb({ markPx, ...(day ?? {}) });
+      };
+      const a = feed.subscribe({ type: "statistics", coin }, (data) => {
+        const d = data as StatsUpdate;
+        day = { prevDayPx: Number(d.open), dayVolumeUsd: Number(d.vol) };
+        if (!Number.isFinite(markPx)) markPx = lastPrice(d);
+        emit();
+      });
+      const b = feed.subscribe({ type: "bbo", coin }, (data) => {
+        const d = data as { bp?: string; ap?: string };
+        if (!d.bp || !d.ap) return;
+        markPx = (Number(d.bp) + Number(d.ap)) / 2;
+        emit();
+      });
+      return () => {
+        a();
+        b();
+      };
+    });
   },
 
-  subscribeMarks(cb) {
-    return once(ready(), () =>
-      ppLive().subscribe({ type: "tickers", coin: "all" }, (data) => {
-        const d = data as { iid: number; mark: string };
-        const id = symbolOf.get(d.iid);
-        if (id) cb({ [id]: Number(d.mark) });
-      }),
-    );
+  subscribeMarks(cb, ids) {
+    // statistics is about one update in 10 s per market (statistics::all, every market, about 9 a second).
+    return once(ready(), () => {
+      const feed = ppLive();
+      const coins = ids ? ids.flatMap((id) => (bySymbol.has(id) ? [String(bySymbol.get(id)?.id)] : [])) : ["all"];
+      const stops = coins.map((coin) =>
+        feed.subscribe({ type: "statistics", coin }, (data) => {
+          const d = data as StatsUpdate;
+          const id = symbolOf.get(d.iid);
+          const px = lastPrice(d);
+          if (id && Number.isFinite(px)) cb({ [id]: px });
+        }),
+      );
+      return () => {
+        for (const stop of stops) stop();
+      };
+    });
   },
 
   async candles(m, interval, end, count) {

@@ -35,16 +35,20 @@ export function usePerpMarkets(venue: PerpVenue) {
 }
 
 /** Live marks for every market on a venue, flushed to React at most once a second. */
-export function useLiveMarks(venue: PerpVenue): Record<string, number> {
+export function useLiveMarks(venue: PerpVenue, ids?: readonly string[]): Record<string, number> {
   const [marks, setMarks] = useState<Record<string, number>>({});
+  const only = ids?.join(",") ?? null;
   useEffect(() => {
     setMarks({});
     let pending: Record<string, number> = {};
     let dirty = false;
-    const stop = DRIVERS[venue].subscribeMarks((m) => {
-      pending = { ...pending, ...m };
-      dirty = true;
-    });
+    const stop = DRIVERS[venue].subscribeMarks(
+      (m) => {
+        pending = { ...pending, ...m };
+        dirty = true;
+      },
+      only === null ? undefined : only.split(",").filter(Boolean),
+    );
     const flush = setInterval(() => {
       if (!dirty) return;
       dirty = false;
@@ -55,7 +59,7 @@ export function useLiveMarks(venue: PerpVenue): Record<string, number> {
       stop();
       clearInterval(flush);
     };
-  }, [venue]);
+  }, [venue, only]);
   return marks;
 }
 

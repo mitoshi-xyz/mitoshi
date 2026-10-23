@@ -139,9 +139,13 @@ const polymarket: Protocol = {
   },
 };
 
-const PERPS_TYPES = new Set(["bbo", "trades", "tickers", "klines", "statistics"]);
-/** Channels that also come as one stream for every instrument (`tickers::all`). */
-const PERPS_ALL = new Set(["tickers", "statistics"]);
+/**
+ * Channels the feed carries. `tickers` is refused: it pushes about 8 updates a second per market (~700 a second for
+ * `tickers::all`), and every one counts against the Durable Object's request quota; `statistics` gives the price.
+ */
+const PERPS_TYPES = new Set(["bbo", "trades", "klines", "statistics"]);
+/** Channels that also come as one stream for every instrument (`statistics::all`). */
+const PERPS_ALL = new Set(["statistics"]);
 const PERPS_INTERVALS = new Set(["1m", "5m", "15m", "30m", "1h", "4h", "12h", "1d", "1w"]);
 const INSTRUMENT = /^\d{1,6}$/;
 /** Our key "klines:6:1m" is Polymarket's channel "klines::6::1m". */

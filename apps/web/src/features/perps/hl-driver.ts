@@ -64,16 +64,19 @@ export const hlDriver: PerpDriver = {
 
   onStatus: (l) => hlLive().onStatus(l),
 
-  subscribePrice(m, cb) {
+  subscribePrice(m, cb, lean) {
     const feed = hlLive();
     const stopTrades = feed.subscribe({ type: "trades", coin: m.id }, (data) => {
       const last = (data as { px: string }[]).at(-1);
       if (last) cb(Number(last.px));
     });
-    const stopBbo = feed.subscribe({ type: "bbo", coin: m.id }, (data) => {
-      const [bid, ask] = (data as { bbo: [{ px: string } | null, { px: string } | null] }).bbo;
-      if (bid && ask) cb((Number(bid.px) + Number(ask.px)) / 2);
-    });
+    // bbo is about 4 updates a second on BTC; a price line alone does well on trades.
+    const stopBbo = lean
+      ? () => undefined
+      : feed.subscribe({ type: "bbo", coin: m.id }, (data) => {
+          const [bid, ask] = (data as { bbo: [{ px: string } | null, { px: string } | null] }).bbo;
+          if (bid && ask) cb((Number(bid.px) + Number(ask.px)) / 2);
+        });
     return () => {
       stopTrades();
       stopBbo();
@@ -94,6 +97,7 @@ export const hlDriver: PerpDriver = {
     });
   },
 
+  // allMids covers every market in one stream, about one update in 5 s: `ids` needs no narrowing here.
   subscribeMarks(cb) {
     return hlLive().subscribe({ type: "allMids" }, (data) => {
       const mids = (data as { mids: Record<string, string> }).mids;

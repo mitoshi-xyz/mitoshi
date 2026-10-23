@@ -71,7 +71,7 @@ export function Terminal() {
   const driver = DRIVERS[at.venue];
   const markets = usePerpMarkets(at.venue);
   const market = markets.data?.find((m) => m.id === at.id);
-  const marks = useLiveMarks(at.venue);
+  const marks = useLiveMarks(at.venue, [at.id]);
   const stats = useLiveStats(market);
   const { wallet, pending, live } = useTradingWallet(at.venue, at.id);
   const account = usePerpAccount(at.venue, wallet);

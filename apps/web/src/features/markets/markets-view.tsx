@@ -29,7 +29,6 @@ export function MarketsView() {
   });
   const [venue, setVenue] = useState<PerpVenue>("hyperliquid");
   const perps = usePerpMarkets(venue);
-  const marks = useLiveMarks(venue);
   const tokens = useTokens("");
   const [allPerps, setAllPerps] = useState(false);
   const topPerps = useMemo(
@@ -40,6 +39,11 @@ export function MarketsView() {
         .sort((a, b) => b.dayVolumeUsd - a.dayVolumeUsd)
         .slice(0, allPerps ? undefined : PERPS_ON_HOME),
     [perps.data, allPerps],
+  );
+  // Live marks only for the rows on screen.
+  const marks = useLiveMarks(
+    venue,
+    topPerps.map((p) => p.id),
   );
   const venueLabel = (v: PerpVenue, label: string) => (
     <span className="flex items-center gap-1.5">

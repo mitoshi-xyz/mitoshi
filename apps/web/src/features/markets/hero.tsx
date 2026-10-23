@@ -50,7 +50,7 @@ export function MarketsHero() {
   useEffect(() => {
     chart.current?.reset();
     if (!market) return;
-    return DRIVERS[market.venue].subscribePrice(market, (px) => chart.current?.pushPrice(px));
+    return DRIVERS[market.venue].subscribePrice(market, (px) => chart.current?.pushPrice(px), true);
     // One subscription per market; the list refreshing does not restart it.
   }, [key, Boolean(market)]);
 

@@ -14,7 +14,7 @@ const EVERY = 2;
 export function Tape() {
   const mids = useLiveMids();
   const stocks = usePerpMarkets("pmperps");
-  const marks = useLiveMarks("pmperps");
+  const marks = useLiveMarks("pmperps", STOCKS);
   const items = COINS.flatMap((c, i) => {
     const coin = { key: c, name: c, logo: null as string | null, px: mids[c] };
     const stockId = i % EVERY === 1 ? STOCKS[(i - 1) / EVERY] : undefined;
