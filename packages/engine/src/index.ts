@@ -13,4 +13,4 @@ export {
 export { between, cryptoRandom } from "./random.ts";
 export * from "./registry.ts";
 export { planRest, type RestNote, type RestPlan, type RestRef, restBlocks, restEndsAt, restKey } from "./rest.ts";
-export { fundingTime } from "./schedule.ts";
+export { fundingTime, refillTime, retimed } from "./schedule.ts";

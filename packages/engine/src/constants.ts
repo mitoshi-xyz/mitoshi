@@ -31,6 +31,13 @@ export const BLOCK_SECONDS = { main: 75, test: 25 } as const;
 export const FUND_DELAY_MIN_MS = 20_000;
 export const FUND_DELAY_MAX_MS = 3 * MS_PER_MINUTE;
 
+/**
+ * A keep-ready refill starts after an exponential delay with this mean, at most REFILL_MAX_MS (the shape ZIP 318 gives
+ * migration transfers). The refill is needed because a ready wallet was just used, so its start must not follow that use.
+ */
+export const REFILL_MEAN_MS = 90 * MS_PER_MINUTE;
+export const REFILL_MAX_MS = 12 * MS_PER_HOUR;
+
 /** The leak meter compares a withdrawal with payouts received in this window. */
 export const PAYOUT_MEMORY_MS = 48 * MS_PER_HOUR;
 

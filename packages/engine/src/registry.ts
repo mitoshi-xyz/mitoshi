@@ -98,6 +98,8 @@ export interface PrivateWallet {
   swaps: SwapRecord[];
   /** Funding scheduled for this moment (random, never immediate). */
   fundAt?: number;
+  /** Made by "keep one ready" to replace a used wallet, so it starts after a long random delay (refillTime). */
+  refill?: boolean;
   /** Trades made from this wallet, oldest first. */
   trades?: TradeRecord[];
   /** Found again from the recovery words (its funding record was not on this device). */

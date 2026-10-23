@@ -7,7 +7,7 @@ import { evmAddress, evmKey, slip10, solanaKey, walletPath } from "./keys.ts";
 import { checkFunding, checkWithdrawal } from "./leak.ts";
 import { advance, emptyRegistry, type PrivateWallet } from "./registry.ts";
 import { planRest, restBlocks, restKey } from "./rest.ts";
-import { fundingTime } from "./schedule.ts";
+import { fundingTime, refillTime, retimed } from "./schedule.ts";
 
 const ZEC = 100_000_000;
 
@@ -72,6 +72,36 @@ describe("timing", () => {
     assert.equal(
       fundingTime(0, () => 1),
       180_000,
+    );
+  });
+});
+
+describe("refill timing", () => {
+  it("waits at least 20 s and at most 12 h", () => {
+    assert.equal(
+      refillTime(0, () => 0),
+      20_000,
+    );
+    assert.equal(
+      refillTime(0, () => 0.999_999_999),
+      12 * 3_600_000,
+    );
+  });
+  it("is exponential with a 90-minute mean", () => {
+    // The median of an exponential is mean × ln 2.
+    assert.equal(
+      refillTime(0, () => 0.5),
+      Math.round(90 * 60_000 * Math.LN2),
+    );
+  });
+  it("retimes an overdue funding from now, by its kind", () => {
+    assert.equal(
+      retimed(1_000, false, () => 0),
+      21_000,
+    );
+    assert.equal(
+      retimed(1_000, true, () => 0.5),
+      1_000 + Math.round(90 * 60_000 * Math.LN2),
     );
   });
 });

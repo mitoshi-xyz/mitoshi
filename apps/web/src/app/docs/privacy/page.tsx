@@ -21,7 +21,7 @@ export default function PrivacyDocs() {
           [
             "Mitoshi gateway (Vercel, Ireland)",
             "One request's content, like an address's balance",
-            "Who sent it: no IP, no cookies, no account. It keeps no logs",
+            "Who sent it: no IP, no cookies, no account. It writes no logs; Vercel's request log sees only the relay's address",
           ],
           [
             "Venues (Polymarket, Hyperliquid, Jupiter)",
@@ -53,10 +53,11 @@ export default function PrivacyDocs() {
         items={[
           "One wallet per position, each on its own hardened key path.",
           "Fundings only at standard sizes (0.01 to 1 ZEC), started at a random moment 20 seconds to 3 minutes after you ask.",
+          "A keep-ready replacement starts after a random delay, 90 minutes on average and at most 12 hours, never right after the trade that used the last one. A funding that came due while the app was closed gets a new random start instead of going out when the app opens.",
           "Value from a public address rests 2–6 hours (sampled per note) before it can fund anything.",
           "Every swap gets a fresh shielded refund address, and every trip home a fresh shielded payout address.",
           "No memos, and the standard transaction shape.",
-          "No builder code on orders. Portfolio reads for different wallets run on independent random schedules, so no venue sees them asked about together.",
+          "No builder code on orders. Portfolio reads for different wallets run on independent random schedules (what remains is under What stays public, below).",
           "The recovery scan asks about one address at a time, seconds apart.",
         ]}
       />

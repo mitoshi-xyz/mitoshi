@@ -30,6 +30,11 @@ export default function FeesDocs() {
         head={["Step", "Typical time", "Source"]}
         rows={[
           ["A new wallet starts funding", "20 s to 3 min after you ask, at random", "Mitoshi's scheduler"],
+          [
+            "A keep-ready replacement starts funding",
+            "90 min on average after the last one is used, at most 12 h",
+            "Mitoshi's scheduler",
+          ],
           ["Funding (ZEC in, venue asset out)", "About 7.5 minutes", "1Click time estimates, 452–465 s (2026-10-22)"],
           ["Polymarket credit (USDC to pUSD)", "About 30 seconds", "Polymarket bridge quote, 27 s"],
           ["Trip home (venue asset to ZEC)", "About 2.5 minutes", "1Click time estimates, 140–150 s"],

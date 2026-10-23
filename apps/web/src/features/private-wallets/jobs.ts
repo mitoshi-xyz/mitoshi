@@ -8,6 +8,8 @@ import {
   latestSwap,
   liveWallets,
   type PrivateWallet,
+  refillTime,
+  retimed,
   type SwapRecord,
   type SwapStatus,
   type Venue,
@@ -44,8 +46,11 @@ const TICK_MS = 5_000;
 const POLL_MS = 15_000;
 const TERMINAL: SwapStatus[] = ["SUCCESS", "REFUNDED", "FAILED"];
 
-/** Adds a wallet that will fund itself at a random moment in the next few minutes. */
-export async function prepareWallet(venue: Venue, sizeZat: number): Promise<PrivateWallet> {
+/**
+ * Adds a wallet that will fund itself at a random moment: within a few minutes when a trade asked for it, or after a
+ * long random delay when "keep one ready" is replacing a wallet that was just used (`refill`).
+ */
+export async function prepareWallet(venue: Venue, sizeZat: number, refill = false): Promise<PrivateWallet> {
   const allowed = canFund();
   if (!allowed.ok) throw new Error(allowed.why);
   if (!isCanonical(sizeZat)) throw new Error("wallets are funded with standard sizes only");
@@ -62,7 +67,8 @@ export async function prepareWallet(venue: Venue, sizeZat: number): Promise<Priv
     createdAt: now,
     timeline: [{ status: "preparing", at: now, note: "Waiting for a random moment to start" }],
     swaps: [],
-    fundAt: fundingTime(now),
+    fundAt: refill ? refillTime(now) : fundingTime(now),
+    ...(refill ? { refill } : {}),
   };
   mutate((r) => ({ ...r, nextIndex: { ...r.nextIndex, [venue]: index + 1 }, wallets: [wallet, ...r.wallets] }));
   return wallet;
@@ -272,15 +278,21 @@ function keepReady() {
     const size = r.keepReady[venue];
     if (!size || liveWallets(r, venue).some((w) => w.status !== "trading")) continue;
     if (size + FUNDING_FEE_RESERVE_ZAT > spendable) continue;
-    void prepareWallet(venue, size).catch(() => undefined);
+    void prepareWallet(venue, size, true).catch(() => undefined);
   }
 }
+
+/** When this app session's jobs began. A funding due before then came due while the app was closed. */
+let sessionStart = 0;
 
 function tick() {
   if (walletState().phase !== "ready") return;
   const now = Date.now();
   for (const w of currentRegistry().wallets) {
-    if (w.status === "preparing" && (w.fundAt ?? 0) <= now) once(w.id, fund);
+    const due = w.status === "preparing" && (w.fundAt ?? 0) <= now;
+    // Sending it now would time the public hop to the app opening: it gets a new random start instead.
+    if (due && (w.fundAt ?? 0) < sessionStart) putWallet({ ...w, fundAt: retimed(now, w.refill === true) });
+    else if (due) once(w.id, fund);
     if (w.status === "funding" || w.status === "returning") once(w.id, poll);
     if (w.status === "funding" && w.venue === "polymarket") once(`${w.id}:bridge`, () => credit(w.id));
   }
@@ -293,6 +305,7 @@ let started = false;
 export function startJobs() {
   if (started) return;
   started = true;
+  sessionStart = Date.now();
   setInterval(tick, TICK_MS);
 }
 
@@ -310,7 +323,10 @@ export function retryWallet(id: string) {
     putWallet(advance(rest, "funding", now, "Checking the swap on NEAR again"));
     return;
   }
-  putWallet({ ...advance(rest, "preparing", now, "Trying again at a new random moment"), fundAt: fundingTime(now) });
+  putWallet({
+    ...advance(rest, "preparing", now, "Trying again at a new random moment"),
+    fundAt: retimed(now, w.refill === true),
+  });
 }
 
 export function setKeepReady(venue: Venue, sizeZat: number | null) {

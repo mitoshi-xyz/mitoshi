@@ -52,7 +52,8 @@ export default function HowItWorks() {
       <H3>Keep one ready</H3>
       <P>
         While Mitoshi is open, it can hold a funded wallet per venue at a size you pick, so a trade never waits for a
-        funding.
+        funding. Once a ready wallet is used, its replacement starts at a random moment, 90 minutes later on average and
+        at most 12 hours, so a new wallet never appears on the venue right after your trade.
       </P>
       <H3>Coming home</H3>
       <P>

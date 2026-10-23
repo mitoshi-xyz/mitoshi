@@ -9,6 +9,9 @@ import { VENUES } from "./venues";
 
 const MS_PER_SECOND = 1000;
 const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+/** From 90 min a wait reads in hours ("about 2 h"); a keep-ready refill can be hours away. */
+const MINUTES_SHOWN_AS_HOURS = 90;
 const PROOF_SECONDS = 20;
 const TXID_HEAD = 10;
 const ZEC_DIGITS = 8;
@@ -20,6 +23,7 @@ const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.
 
 export function inMinutes(ms: number): string {
   const m = Math.round(ms / MS_PER_SECOND / SECONDS_PER_MINUTE);
+  if (m >= MINUTES_SHOWN_AS_HOURS) return `about ${Math.round(m / MINUTES_PER_HOUR)} h`;
   return m <= 0 ? "under a minute" : m === 1 ? "about 1 min" : `about ${m} min`;
 }
 
