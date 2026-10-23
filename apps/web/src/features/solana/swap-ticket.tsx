@@ -4,7 +4,7 @@ import type { PrivateWallet } from "@mitoshi/engine";
 import { SOL_MINT, type SolToken } from "@mitoshi/venues/solana";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { cue, cx, TxCta, type TxPhase } from "@/kit";
+import { cue, cx, Keypad, pressKey, TxCta, type TxPhase } from "@/kit";
 import { openFund } from "../private-wallets/drawers";
 import { recordTrade } from "../private-wallets/home";
 import { BUY_SOL, SELL_SHARES } from "./constants";
@@ -18,6 +18,10 @@ const DECIMAL_BASE = 10;
 const LAMPORT_DECIMALS = 9;
 const OUT_SIG = 6;
 const IMPACT_DIGITS = 2;
+/** Room after the typed digits, so the amount stays centred as it grows. */
+const CARET_CH = 0.5;
+/** Amounts are typed to this many places (SOL; a token's own decimals cap it further). */
+const AMOUNT_DECIMALS = 6;
 
 function toUnits(amount: string, decimals: number): bigint {
   const [whole = "0", frac = ""] = amount.trim().split(".");
@@ -33,15 +37,22 @@ const fromUnits = (v: bigint, decimals: number) => Number(v) / DECIMAL_BASE ** d
 export function SwapTicket({
   token,
   wallet,
-  waiting,
+  side,
+  onSide,
+  keypad = false,
+  sideInHeader = false,
 }: {
   token: SolToken;
   wallet: PrivateWallet | undefined;
-  waiting: string;
+  side: "buy" | "sell";
+  onSide: (s: "buy" | "sell") => void;
+  /** Phones: the amount uses the keypad. */
+  keypad?: boolean;
+  /** In the sheet the side sits in its header. */
+  sideInHeader?: boolean;
 }) {
   const queries = useQueryClient();
   const holdings = useHoldings(wallet);
-  const [side, setSide] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [debounced, setDebounced] = useState("");
   const [phase, setPhase] = useState<TxPhase>("idle");
@@ -50,6 +61,8 @@ export function SwapTicket({
     const t = setTimeout(() => setDebounced(amount), QUOTE_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [amount]);
+  // A new side starts from an empty amount (SOL in, or the token in).
+  useEffect(() => setAmount(""), [side]);
 
   const held = holdings.data?.tokens.find((t) => t.mint === token.mint);
   const inDecimals = side === "buy" ? LAMPORT_DECIMALS : token.decimals;
@@ -96,88 +109,115 @@ export function SwapTicket({
   }
 
   const impact = quote.data?.priceImpact ?? 0;
+  const unit = side === "buy" ? "SOL" : token.symbol;
+  const cells = [
+    {
+      label: "You get",
+      value: quote.isFetching
+        ? "…"
+        : out
+          ? `${out.toPrecision(OUT_SIG)} ${side === "buy" ? token.symbol : "SOL"}`
+          : "–",
+    },
+    {
+      label: "Impact",
+      value: quote.data ? `${(impact * PCT).toFixed(IMPACT_DIGITS)}%` : "–",
+      tone: impact > HIGH_IMPACT ? "text-warning" : "",
+    },
+    { label: "Route", value: quote.data?.route.join(" → ") || "Jupiter" },
+  ];
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-1 rounded-lg bg-surface-1 p-1">
-        {(["buy", "sell"] as const).map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => {
-              setSide(s);
-              setAmount("");
-            }}
-            className={cx(
-              "h-10 rounded-md font-semibold capitalize",
-              side === s ? (s === "buy" ? "bg-up text-bg" : "bg-down text-bg") : "text-ink-2 hover:text-ink",
-            )}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-col gap-2">
-        <span className="type-label text-muted">{side === "buy" ? "Pay" : "Sell"}</span>
-        <div className="relative">
+    <div className="flex flex-col gap-3">
+      {sideInHeader ? null : (
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1">
+          {(["buy", "sell"] as const).map((x) => (
+            <button
+              key={x}
+              type="button"
+              onClick={() => onSide(x)}
+              className={cx(
+                "h-10 rounded-lg font-semibold capitalize",
+                side === x ? (x === "buy" ? "bg-up text-bg" : "bg-down text-bg") : "text-ink-2 hover:text-ink",
+              )}
+            >
+              {x}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-col items-center gap-1 py-1">
+        <label className="flex items-baseline justify-center gap-1.5">
           <input
-            className="h-12 w-full rounded-lg border border-hairline bg-surface-1 px-3 font-mono text-[18px] outline-none focus:border-strong"
-            inputMode="decimal"
+            inputMode={keypad ? "none" : "decimal"}
+            readOnly={keypad}
+            aria-label={`Amount in ${unit}`}
             placeholder="0"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))}
+            style={{ width: `${Math.max(1, amount.length || 1) + CARET_CH}ch` }}
+            className="num max-w-[10ch] bg-transparent text-center font-semibold text-[48px] leading-none outline-none placeholder:text-muted"
           />
-          <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[13px] text-muted">
-            {side === "buy" ? "SOL" : token.symbol}
-          </span>
-        </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          {side === "buy"
-            ? BUY_SOL.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setAmount(String(a))}
-                  className="h-8 rounded-full bg-surface-1 text-[12px] text-ink-2 hover:text-ink"
-                >
-                  {a} SOL
-                </button>
-              ))
-            : SELL_SHARES.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  disabled={!held}
-                  onClick={() => held && setAmount(String((held.uiAmount * p) / PCT))}
-                  className="h-8 rounded-full bg-surface-1 text-[12px] text-ink-2 hover:text-ink disabled:opacity-40"
-                >
-                  {p === PCT ? "All" : `${p}%`}
-                </button>
-              ))}
-        </div>
+          <span className="font-semibold text-[18px] text-muted">{unit}</span>
+        </label>
+        {side === "sell" && held ? (
+          <button
+            type="button"
+            onClick={() => setAmount(String(held.uiAmount))}
+            className="num text-[13px] text-ink-2 hover:text-ink"
+          >
+            {held.uiAmount} held · Max
+          </button>
+        ) : null}
       </div>
-      <dl className="grid grid-cols-2 gap-y-1.5 rounded-lg bg-surface-1 p-3 text-[13px]">
-        <dt className="text-ink-2">You get ≈</dt>
-        <dd className="num text-right">
-          {quote.isFetching ? "…" : out ? `${out.toPrecision(OUT_SIG)} ${side === "buy" ? token.symbol : "SOL"}` : "–"}
-        </dd>
-        <dt className="text-ink-2">Price impact</dt>
-        <dd className={cx("num text-right", impact > HIGH_IMPACT ? "text-warning" : "")}>
-          {quote.data ? `${(impact * PCT).toFixed(IMPACT_DIGITS)}%` : "–"}
-        </dd>
-        <dt className="text-ink-2">Route</dt>
-        <dd className="truncate text-right">{quote.data?.route.join(" → ") || "–"}</dd>
-        <dt className="text-ink-2">Mitoshi fee</dt>
-        <dd className="text-right">none on trades</dd>
-      </dl>
-      {quote.isError ? <p className="text-[12px] text-down">No route for that amount: {quote.error.message}</p> : null}
+      <div className="grid grid-cols-4 gap-1.5">
+        {side === "buy"
+          ? BUY_SOL.map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAmount(String(a))}
+                className="h-8 rounded-full bg-surface-2 text-[12px] text-ink-2 hover:text-ink"
+              >
+                {a}
+              </button>
+            ))
+          : SELL_SHARES.map((p) => (
+              <button
+                key={p}
+                type="button"
+                disabled={!held}
+                onClick={() => held && setAmount(String((held.uiAmount * p) / PCT))}
+                className="h-8 rounded-full bg-surface-2 text-[12px] text-ink-2 hover:text-ink disabled:opacity-40"
+              >
+                {p === PCT ? "All" : `${p}%`}
+              </button>
+            ))}
+      </div>
+      {keypad ? (
+        <Keypad
+          onKey={(k) =>
+            setAmount(
+              pressKey(amount, k, Math.min(AMOUNT_DECIMALS, side === "buy" ? LAMPORT_DECIMALS : token.decimals)),
+            )
+          }
+        />
+      ) : null}
+      <div className="grid grid-cols-3 divide-x divide-[var(--hairline)] rounded-xl bg-surface-2 py-2.5">
+        {cells.map((c) => (
+          <span key={c.label} className="flex min-w-0 flex-col items-center px-1 leading-tight">
+            <span className="text-[11px] text-muted">{c.label}</span>
+            <span className={cx("num max-w-full truncate font-semibold text-[13px]", c.tone)}>{c.value}</span>
+          </span>
+        ))}
+      </div>
+      {quote.isError ? <p className="text-center text-[12px] text-down">No route for that amount</p> : null}
       <TxCta
         tone={side === "buy" ? "up" : "down"}
         phase={phase === "confirmed" || phase === "failed" ? "idle" : phase}
         label={`${side === "buy" ? "Buy" : "Sell"} ${token.symbol}`}
         onClick={() => void swap()}
-        {...(!wallet ? { fix: { label: "Fund a Solana wallet first", onClick: () => openFund("solana") } } : {})}
+        {...(!wallet ? { fix: { label: "Fund a private wallet", onClick: () => openFund("solana") } } : {})}
       />
-      {!wallet ? <p className="text-center text-[12px] text-ink-2">{waiting}</p> : null}
       {result ? (
         <p
           className={cx(

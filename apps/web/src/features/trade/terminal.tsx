@@ -5,16 +5,16 @@ import { type PrivateWallet, readyWallet } from "@mitoshi/engine";
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Layers } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cue, cx, Segmented, Sheet, Skeleton, useMedia, usePhone } from "@/kit";
-import { compactUsd, funding } from "../format";
+import { compactUsd, funding, usd } from "../format";
 import { DRIVERS, useLiveMarks, useLiveStats, usePerpAccount, usePerpMarkets } from "../perps/hooks";
 import { type PerpMarket, type PerpVenue, parseTerminalHash, terminalHref } from "../perps/model";
 import { useRegistry } from "../private-wallets/registry-store";
+import { WalletChip } from "../private-wallets/wallet-chip";
 import { ChartPanel } from "./chart-panel";
 import { AssetChip, MarketPicker } from "./market-picker";
 import { useOrder } from "./order";
 import { Positions } from "./positions";
 import { Ticket } from "./ticket";
-import { WalletChip } from "./wallet-card";
 
 const DEFAULT_COIN = "BTC";
 /** From here the ticket sits beside the chart; below it, trading opens in sheets. */
@@ -161,10 +161,10 @@ export function Terminal() {
             </div>
           ) : null}
           <WalletChip
-            driver={driver}
+            venue={driver.wallet}
             wallet={wallet}
             pending={pending}
-            free={account.data?.free}
+            value={account.data ? usd(account.data.free) : undefined}
             loading={account.isPending}
             className="lg:hidden"
           />
@@ -218,10 +218,10 @@ export function Terminal() {
             ]}
           />
           <WalletChip
-            driver={driver}
+            venue={driver.wallet}
             wallet={wallet}
             pending={pending}
-            free={account.data?.free}
+            value={account.data ? usd(account.data.free) : undefined}
             loading={account.isPending}
           />
         </div>

@@ -1,35 +1,34 @@
 "use client";
 
-import { latestSwap, type PrivateWallet } from "@mitoshi/engine";
+import { latestSwap, type PrivateWallet, type Venue } from "@mitoshi/engine";
 import { Plus } from "lucide-react";
 import { CountdownRing, cx, Skeleton } from "@/kit";
-import { usd } from "../format";
 import { VenueMark } from "../marks/mark";
-import type { PerpDriver } from "../perps/model";
-import { openFund } from "../private-wallets/drawers";
-import { useNow } from "../private-wallets/use-now";
 import { MASK, useHideAmounts } from "../shell/prefs";
+import { openFund } from "./drawers";
+import { useNow } from "./use-now";
 
 const MS_PER_SECOND = 1000;
 const SECONDS_PER_MINUTE = 60;
 const VENUE_MARK = { hyperliquid: "hyperliquid", polymarket: "polymarket", solana: "solana" } as const;
 
 /**
- * The private wallet this terminal trades from, as one chip: its venue and what is free, the funding ring while one is
- * on its way, or "Fund" when there is none. One wallet per position, so nobody can link two of them.
+ * The private wallet a screen trades from, as one chip: its venue and what it holds, the funding ring while one is on
+ * its way, or "Fund" when there is none. One wallet per position, so nobody can link two of them.
  */
 export function WalletChip({
-  driver,
+  venue,
   wallet,
   pending,
-  free,
+  value,
   loading,
   className,
 }: {
-  driver: PerpDriver;
+  venue: Venue;
   wallet: PrivateWallet | undefined;
   pending: PrivateWallet | undefined;
-  free: number | undefined;
+  /** What the wallet holds, formatted ("$12.40", "0.0812 SOL"). */
+  value: string | undefined;
   loading: boolean;
   className?: string;
 }) {
@@ -40,11 +39,11 @@ export function WalletChip({
   if (wallet) {
     return (
       <span className={cx(base, "border-hairline bg-surface-1/85", className)}>
-        <VenueMark venue={VENUE_MARK[driver.wallet]} size={30} />
-        {loading && free === undefined ? (
+        <VenueMark venue={VENUE_MARK[venue]} size={30} />
+        {loading && value === undefined ? (
           <Skeleton className="h-4 w-14" />
         ) : (
-          <span className="num font-semibold text-[14px]">{hidden ? MASK : usd(free ?? 0)}</span>
+          <span className="num font-semibold text-[14px]">{hidden ? MASK : (value ?? "–")}</span>
         )}
       </span>
     );
@@ -66,11 +65,11 @@ export function WalletChip({
   return (
     <button
       type="button"
-      onClick={() => openFund(driver.wallet)}
+      onClick={() => openFund(venue)}
       className={cx(base, "border-hairline bg-surface-1/85 hover:border-accent", className)}
     >
       <span className="relative">
-        <VenueMark venue={VENUE_MARK[driver.wallet]} size={30} />
+        <VenueMark venue={VENUE_MARK[venue]} size={30} />
         <Plus
           size={12}
           strokeWidth={3}
