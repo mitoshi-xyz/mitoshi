@@ -38,9 +38,9 @@ export function Dock({ onMore }: { onMore: () => void }) {
       {item(ITEMS[0])}
       {item(ITEMS[1])}
       <Link
-        href="/wallet"
-        aria-label="Balance"
-        className={cx("-mt-6 rounded-full p-1", here === "balance" ? "shadow-[var(--glow-live)]" : "")}
+        href="/portfolio"
+        aria-label="Your money"
+        className={cx("-mt-6 rounded-full p-1", here === "portfolio" ? "shadow-[var(--glow-live)]" : "")}
       >
         <Seal size={50} />
       </Link>

@@ -9,7 +9,6 @@ import {
   LayoutGrid,
   type LucideIcon,
   Settings,
-  ShieldCheck,
   Target,
   WalletCards,
 } from "lucide-react";
@@ -91,30 +90,27 @@ export interface Page {
   icon: LucideIcon;
   description: string;
   group: "money" | "mitoshi";
+  /** A drawer that opens in place, on whatever screen you are (`href` is the fallback link). */
+  open?: "deposit" | "withdraw";
 }
 
 /** Pages off the rail: in More, and in ⌘K. */
 export const PAGES: readonly Page[] = [
   {
-    name: "Balance",
-    href: "/wallet",
-    icon: ShieldCheck,
-    description: "Your shielded ZEC and its history.",
-    group: "money",
-  },
-  {
     name: "Deposit",
-    href: "/wallet#deposit",
+    href: "/portfolio#deposit",
     icon: ArrowDownToLine,
     description: "A fresh shielded address.",
     group: "money",
+    open: "deposit",
   },
   {
     name: "Withdraw",
-    href: "/wallet#withdraw",
+    href: "/portfolio#withdraw",
     icon: ArrowUpFromLine,
     description: "Send ZEC out, with the leak meter.",
     group: "money",
+    open: "withdraw",
   },
   {
     name: "Privacy",

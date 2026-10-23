@@ -56,7 +56,7 @@ export function MoneyPlate() {
           Wallet offline · open
         </Link>
       ) : (
-        <Link href="/wallet" className="flex flex-col">
+        <Link href="/portfolio" className="flex flex-col">
           <span className="flex items-baseline gap-1.5">
             {hidden ? (
               <span className="num font-semibold text-[22px]">{MASK}</span>
@@ -103,7 +103,7 @@ export function NetworkStamp() {
   const test = ZEC_NETWORK !== "main";
   return (
     <Link
-      href="/wallet"
+      href="/portfolio"
       title={test ? "Testnet: test coins only" : "Mainnet"}
       className={cx(
         "flex size-10 items-center justify-center rounded-full font-stamp text-[17px]",

@@ -2,7 +2,7 @@
 
 import type { PrivateWallet } from "@mitoshi/engine";
 import { useQueries } from "@tanstack/react-query";
-import { Eye, EyeOff, History as HistoryIcon, WalletCards } from "lucide-react";
+import { Eye, History as HistoryIcon, WalletCards } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cx, EmptyState, RollingNumber, Segmented, Skeleton } from "@/kit";
 import { usd } from "../format";
@@ -13,7 +13,11 @@ import { STATUS, shortAddress } from "../private-wallets/venues";
 import { StatusPill } from "../private-wallets/wallet-card";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { solMarket } from "../solana/sol";
+import { History } from "../wallet/history";
+import { SyncStrip } from "../wallet/sync-strip";
+import type { WalletState } from "../wallet/wallet-store";
 import { useBooks, type WalletBook, withCostBasis } from "./book";
+import { MoneyCard } from "./money-card";
 import { Positions } from "./positions";
 
 const TOKEN_STALE_MS = 300_000;
@@ -32,12 +36,11 @@ function Signed({ v, hidden, className }: { v: number | null; hidden: boolean; c
 /** A wallet's whole result: what it holds now plus what came home, less what funded it. */
 const allTime = (b: WalletBook) => (b.fundedUsd === null ? null : b.valueUsd + b.homeUsd - b.fundedUsd);
 
-function Stat({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg bg-black/25 p-3">
-      <span className="text-[12px] text-cream/60">{label}</span>
-      <span className="num font-semibold text-[16px]">{children}</span>
-      {hint ? <span className="text-[11px] text-cream/45">{hint}</span> : null}
+    <div className="flex flex-col gap-0.5 rounded-lg bg-surface-2 px-3 py-2.5">
+      <span className="text-[11px] text-muted">{label}</span>
+      <span className="num font-semibold text-[14px]">{children}</span>
     </div>
   );
 }
@@ -131,10 +134,13 @@ function HistoryRows({ wallets }: { wallets: PrivateWallet[] }) {
   );
 }
 
-/** Portfolio: one private view across every venue and wallet, put together only in this browser. */
-export function Portfolio() {
+/**
+ * Portfolio: your money in one private view, put together only in this browser. The shielded balance and the ways in
+ * and out, then every private wallet on every venue: value, P&L, positions and history.
+ */
+export function Portfolio({ state }: { state: WalletState }) {
   const registry = useRegistry();
-  const [hidden, setHidden] = useHideAmounts();
+  const [hidden] = useHideAmounts();
   const [tab, setTab] = useState<"positions" | "wallets" | "history">("positions");
   const books = useBooks(registry.wallets);
   const mints = [...new Set(books.flatMap((b) => b.positions.filter((p) => p.kind === "token").map((p) => p.asset)))];
@@ -161,59 +167,39 @@ export function Portfolio() {
   const loading = books.some((b) => b.loading);
 
   return (
-    <section className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="type-headline-lg">Portfolio</h1>
-        <p className="text-ink-2">Every wallet on every venue, in one view that only this browser can put together.</p>
-      </div>
+    <section className="flex flex-col gap-6">
+      <h1 className="type-headline-lg">Portfolio</h1>
+      <MoneyCard state={state} />
+      <SyncStrip state={state} />
 
-      <div className="relative overflow-hidden rounded-xl bg-[#141210] p-6 text-cream">
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -right-4 -bottom-12 select-none font-stamp text-[180px] text-cream/[0.04] leading-none"
-        >
-          通
-        </span>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-[13px] text-cream/60">
-              Value on venues · {live.length} wallet{live.length === 1 ? "" : "s"} · {rows.length} position
-              {rows.length === 1 ? "" : "s"}
-            </span>
-            {hidden ? (
-              <span className="num font-semibold text-[44px] leading-tight">{MASK}</span>
-            ) : loading && value === 0 ? (
-              <Skeleton className="h-12 w-48 bg-cream/10" label="Reading each wallet, privately" />
-            ) : (
-              <RollingNumber
-                value={value}
-                format={{ style: "currency", currency: "USD" }}
-                className="font-semibold text-[44px] leading-tight"
-              />
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setHidden(!hidden)}
-            aria-label={hidden ? "Show amounts" : "Hide amounts"}
-            className="rounded-full p-2 text-cream/60 hover:bg-cream/10 hover:text-cream"
-          >
-            {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
+      <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface-1 p-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[13px] text-ink-2">
+            On venues · {live.length} wallet{live.length === 1 ? "" : "s"}
+          </span>
+          {hidden ? (
+            <span className="num font-semibold text-[24px]">{MASK}</span>
+          ) : loading && value === 0 ? (
+            <Skeleton className="h-7 w-28" label="Reading each wallet, privately" />
+          ) : (
+            <RollingNumber
+              value={value}
+              format={{ style: "currency", currency: "USD" }}
+              className="font-semibold text-[24px]"
+            />
+          )}
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-4">
-          <Stat label="Today" hint="Hyperliquid's own 24 h record">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+          <Stat label="Today">
             <Signed v={day} hidden={hidden} />
           </Stat>
-          <Stat label="Open P&L" hint="live, at the latest prices">
+          <Stat label="Open P&L">
             <Signed v={rows.length ? open : null} hidden={hidden} />
           </Stat>
-          <Stat label="All-time P&L" hint="now + home − funded">
+          <Stat label="All-time">
             <Signed v={total} hidden={hidden} />
           </Stat>
-          <Stat label="Swap costs" hint="NEAR Intents, in and out">
-            {hidden ? MASK : usd(costs)}
-          </Stat>
+          <Stat label="Swap costs">{hidden ? MASK : usd(costs)}</Stat>
         </div>
       </div>
 
@@ -229,7 +215,12 @@ export function Portfolio() {
         />
         {tab === "positions" ? <Positions rows={rows} loading={loading} tokens={tokens} /> : null}
         {tab === "wallets" ? <WalletRows books={books} /> : null}
-        {tab === "history" ? <HistoryRows wallets={registry.wallets} /> : null}
+        {tab === "history" ? (
+          <div className="flex flex-col gap-5">
+            <History entries={state.history} tip={state.summary?.tip ?? null} />
+            <HistoryRows wallets={registry.wallets} />
+          </div>
+        ) : null}
       </section>
     </section>
   );

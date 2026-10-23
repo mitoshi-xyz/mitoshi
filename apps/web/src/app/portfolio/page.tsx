@@ -1,8 +1,9 @@
 "use client";
 
-import { AlertTriangle, KeyRound } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Portfolio } from "@/features/portfolio/portfolio";
 import { AppShell } from "@/features/shell/app-shell";
+import { Onboarding } from "@/features/wallet/onboarding";
 import { useWallet } from "@/features/wallet/wallet-store";
 import { EmptyState, Skeleton } from "@/kit";
 
@@ -11,14 +12,9 @@ export default function PortfolioPage() {
   return (
     <AppShell>
       {state.phase === "ready" || state.phase === "syncing" ? (
-        <Portfolio />
+        <Portfolio state={state} />
       ) : state.phase === "empty" || state.phase === "creating" ? (
-        <EmptyState
-          icon={KeyRound}
-          title="Make your private balance first"
-          body="The portfolio is put together from your private wallets, which live in this browser."
-          action={{ label: "Set it up", href: "/wallet" }}
-        />
+        <Onboarding />
       ) : state.phase === "error" ? (
         <EmptyState
           icon={AlertTriangle}

@@ -7,7 +7,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { cx, Skeleton } from "@/kit";
 import { usePerps } from "../hyperliquid/hooks";
 import { Mark, type Venue, VenueMark } from "../marks/mark";
+import { usePerpMarkets } from "../perps/hooks";
+import { CATEGORY_LABEL, terminalHref } from "../perps/model";
 import { pmMarket } from "../polymarket/pm";
+import { openDeposit, openWithdraw } from "../private-wallets/drawers";
 import { solMarket } from "../solana/sol";
 import { PAGES, PLACES } from "./places";
 
@@ -20,6 +23,8 @@ interface Hit {
   label: string;
   hint: string;
   href: string;
+  /** Opens a drawer in place instead of going to `href`. */
+  run?: () => void;
   mark: React.ReactNode;
 }
 
@@ -42,6 +47,7 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
   const [active, setActive] = useState(0);
   const query = useDebounced(q.trim(), SEARCH_DEBOUNCE_MS);
   const perps = usePerps();
+  const stocks = usePerpMarkets("pmperps");
   const remote = query.length >= MIN_REMOTE_QUERY;
   const events = useQuery({
     queryKey: ["polymarket", "events", `q:${query}`],
@@ -71,6 +77,7 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
         label: p.name,
         hint: p.description,
         href: p.href,
+        ...("open" in p && p.open ? { run: p.open === "deposit" ? openDeposit : openWithdraw } : {}),
         mark: <p.icon size={18} className="text-ink-2" />,
       }));
     const perpHits: Hit[] = (perps.data ?? [])
@@ -83,6 +90,17 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
         hint: `up to ${p.maxLeverage}×`,
         href: `/trade#${p.name}`,
         mark: <Mark symbol={p.name} size={22} />,
+      }));
+    const stockHits: Hit[] = (stocks.data ?? [])
+      .filter((m) => needle && m.category !== "crypto" && m.name.toLowerCase().includes(needle))
+      .sort((a, b) => b.dayVolumeUsd - a.dayVolumeUsd)
+      .slice(0, PER_GROUP)
+      .map((m) => ({
+        key: `pmperp-${m.id}`,
+        label: m.name,
+        hint: `${CATEGORY_LABEL[m.category] ?? m.category} · up to ${m.maxLeverage}×`,
+        href: terminalHref(m),
+        mark: <Mark symbol={m.name} src={m.logo} size={22} />,
       }));
     const eventHits: Hit[] = (remote ? (events.data ?? []) : []).slice(0, PER_GROUP).map((e) => ({
       key: `event-${e.id}`,
@@ -101,16 +119,18 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
     return [
       { title: "Pages", venue: null, hits: needle ? pages : pages.slice(0, PER_GROUP) },
       { title: "Perps", venue: "hyperliquid" as const, hits: perpHits },
+      { title: "Stocks · gold · oil", venue: "polymarket" as const, hits: stockHits },
       { title: "Predictions", venue: "polymarket" as const, hits: eventHits },
       { title: "Tokens", venue: "solana" as const, hits: tokenHits },
     ].filter((g) => g.hits.length > 0);
-  }, [query, perps.data, events.data, tokens.data, remote]);
+  }, [query, perps.data, stocks.data, events.data, tokens.data, remote]);
 
   const flat = groups.flatMap((g) => g.hits);
   const go = (hit: Hit | undefined) => {
     if (!hit) return;
     onClose();
-    router.push(hit.href);
+    if (hit.run) hit.run();
+    else router.push(hit.href);
   };
 
   if (!open) return null;

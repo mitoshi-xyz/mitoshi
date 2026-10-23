@@ -66,8 +66,7 @@ export function SyncStrip({ state }: { state: WalletState }) {
     <div className="flex items-center gap-3 text-[13px] text-ink-2">
       <LiveDot />
       <span>
-        Up to date at block <span className="num">{state.summary.tip.toLocaleString()}</span> · checks every{" "}
-        {WALLET_SYNC_INTERVAL_MS / MS_PER_SECOND} s, over OHTTP
+        Synced · block <span className="num">{state.summary.tip.toLocaleString()}</span>
       </span>
     </div>
   );

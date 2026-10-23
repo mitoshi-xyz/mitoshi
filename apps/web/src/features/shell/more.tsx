@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Drawer } from "@/kit";
+import { openDeposit, openWithdraw } from "../private-wallets/drawers";
 import { applyTheme, currentTheme } from "../theme/theme";
 import { MoneyPlate } from "./money-plate";
 import { PAGES, type Page, PLACES } from "./places";
@@ -13,17 +14,33 @@ function Group({ title, items, onClose }: { title: string; items: readonly Page[
     <section className="flex flex-col gap-2">
       <h3 className="type-label text-muted">{title}</h3>
       <div className="flex flex-col overflow-hidden rounded-lg bg-surface-2">
-        {items.map((i) => (
-          <Link
-            key={i.href}
-            href={i.href}
-            onClick={onClose}
-            className="flex items-center gap-3 border-hairline border-b px-3.5 py-3 text-[14px] last:border-b-0 hover:bg-surface-3"
-          >
-            <i.icon size={17} className="text-ink-2" />
-            {i.name}
-          </Link>
-        ))}
+        {items.map((i) => {
+          const row =
+            "flex w-full items-center gap-3 border-hairline border-b px-3.5 py-3 text-left text-[14px] last:border-b-0 hover:bg-surface-3";
+          const body = (
+            <>
+              <i.icon size={17} className="text-ink-2" />
+              {i.name}
+            </>
+          );
+          return i.open ? (
+            <button
+              key={i.href}
+              type="button"
+              onClick={() => {
+                onClose();
+                (i.open === "deposit" ? openDeposit : openWithdraw)();
+              }}
+              className={row}
+            >
+              {body}
+            </button>
+          ) : (
+            <Link key={i.href} href={i.href} onClick={onClose} className={row}>
+              {body}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
