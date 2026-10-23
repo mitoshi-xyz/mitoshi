@@ -1,7 +1,7 @@
 ---
 title: FAQ
 description: Short answers to the questions people ask first about Mitoshi, its privacy and its limits.
-icon: MessageCircleQuestion
+icon: MessageCircleQuestionMark
 ---
 
 {/* Sources: README.md; the pages of this site and the code they cite. */}
@@ -21,24 +21,26 @@ That wallet's own trades, its one funding from a NEAR swap and its one trip home
 or your IP. See [What stays public](/docs/privacy/what-stays-public).
 </Accordion>
 <Accordion title="Does Mitoshi take a fee?">
-No. A 0.2% funding fee exists in the code but is switched off. You pay the venues' own fees, the swap spread and the
-Zcash network fee. See [Fees and timing](/docs/guide/fees-and-timing).
+Mitoshi adds none: a 0.2% funding fee exists in the code but is switched off, so its quotes carry no app fee. You pay
+the venues' own fees, the swap spread and NEAR's own fees inside each quote, and the Zcash network fee. See [Fees and timing](/docs/guide/fees-and-timing).
 </Accordion>
 <Accordion title="Why does funding take minutes?">
 The swap through NEAR Intents takes about 8 minutes by its own estimate, and the funding starts at a random moment 20
-seconds to 3 minutes after you ask. Turn on **Keep one ready** to have a funded wallet waiting.
+seconds to 3 minutes after you ask. Turn on **Keep one ready** and Mitoshi funds one ahead of time,
+after a random wait (90 minutes on average), while the app is open.
 </Accordion>
 <Accordion title="Why does my ZEC have to rest?">
 ZEC that arrives from a public address, including NEAR's payouts when a wallet comes home, rests 2–6 hours before it can
-fund a wallet. Otherwise its arrival could be matched to your next trade. A deposit from a shielded wallet doesn't rest.
+fund a wallet. Otherwise its arrival could be matched to your next trade. A deposit from a shielded wallet doesn't rest; it
+only needs 10 confirmations, about 12–13 minutes.
 </Accordion>
 <Accordion title="Can I try it on testnet?">
 The app runs on Zcash testnet locally (`pnpm --filter @mitoshi/web dev`), but private wallets need mainnet ZEC: NEAR
 Intents only takes mainnet ZEC.
 </Accordion>
 <Accordion title="Has a full mainnet trade run yet?">
-Not yet. The browser wallet's sends are verified on testnet, and each venue's reads and quotes over Oblivious HTTP are
-verified; the full round trip on mainnet waits for test funds. See [Verify it yourself](/docs/privacy/verify).
+Not yet. The browser wallet's sends are verified on testnet, and Polymarket reads, a bridge quote and a NEAR quote
+over Oblivious HTTP are verified; the full round trip on mainnet waits for test funds. See [Verify it yourself](/docs/privacy/verify).
 </Accordion>
 <Accordion title="Is there a demo video?">
 Not yet: [mitoshi.xyz/demo](https://mitoshi.xyz/demo) says "Recording soon" and links to the live screens.

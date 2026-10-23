@@ -8,7 +8,7 @@ icon: Cpu
    prover.rs:1-79, wallet.rs:27-77); packages/zwallet/src (constants.ts:4-34, core.ts:14-42, worker.ts:20-67, sync.ts:28-144);
    apps/web/src/constants.ts:17-36; apps/web/src/features/wallet/wallet-store.ts; packages/engine/src/rest.ts. */}
 
-<Screen name="portfolio" alt="The Portfolio screen of a new wallet on mitoshi.xyz: Shielded ZEC 0.00, the Deposit, Withdraw and Wallet buttons, and the empty Positions tab." caption="A brand-new wallet on mainnet: 0.00 shielded ZEC, synced, nothing on any venue yet." />
+<Screen name="portfolio" alt="The Portfolio screen of a new wallet on mitoshi.xyz: Shielded ZEC 0.00, the Deposit, Withdraw and Wallet buttons, and the sync line." caption="A brand-new wallet on mainnet: 0.00 shielded ZEC, synced, nothing on any venue yet." />
 
 ## Inside the worker
 
@@ -39,7 +39,7 @@ message, because even a block range says something about a wallet (where its sca
 compact blocks come from ChainSafe's public gRPC-web servers, which only ever see Mitoshi's gateway.
 
 <Callout type="warn" title="One residual, written down">
-Sends may spend Orchard and Ironwood notes together, with change to Ironwood. A wallet that still holds Orchard notes
-from before Ironwood (for example, after restoring an older wallet) can make a send that crosses from Orchard to
-Ironwood, and a pool crossing makes that value public. A wallet made in Mitoshi receives only into Ironwood.
+Sends may spend Orchard and Ironwood notes together, with change to Ironwood. If a wallet holds Orchard notes, a send
+can cross from Orchard to Ironwood, and a pool crossing makes that value public (librustzcash's own input-selection
+notes say so).
 </Callout>

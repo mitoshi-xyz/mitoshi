@@ -9,12 +9,12 @@ icon: LifeBuoy
 
 Mitoshi keeps nothing for you on a server, so recovery is yours.
 
-<Screen name="settings" alt="Settings on mitoshi.xyz: Security with Recovery words, Backup file and Passphrase lock, Find wallets from your words, Feel, and Forget this browser." caption="Settings: everything about your keys lives here." />
+<Screen name="settings" alt="Settings on mitoshi.xyz: Security with Recovery words, Backup file and Passphrase lock, then Find wallets from your words." caption="Settings: everything about your keys lives here." />
 
 | Way back | Brings back | Speed |
 | --- | --- | --- |
 | **24 words** | Your shielded balance, and your Hyperliquid and Solana wallets | Slow: a private scan of the chain, then of those two venues |
-| **Backup file** | Your words and your whole private-wallet list, Polymarket's included, with each wallet's funding record | At once, no scan |
+| **Backup file** | Your words and your whole private-wallet list, Polymarket's included, with each wallet's funding record | The wallet list at once, with no venue scan; the balance still needs the private chain scan |
 
 ## The 24 words
 
@@ -33,7 +33,8 @@ backup file puts them back on your list.
 
 **Settings → Backup file → Make a backup file** asks for a passphrase of 8 characters or more and downloads
 `mitoshi-backup-YYYY-MM-DD.json`: your words and your private-wallet list, encrypted with AES-GCM under a key from your
-passphrase (PBKDF2-SHA-256, 600,000 iterations). Restoring from it brings every wallet back with no scan. There is no
+passphrase (PBKDF2-SHA-256, 600,000 iterations). Restoring from it brings the whole wallet list back at once, with no venue scan; the shielded balance still comes
+back through the private chain scan from Ironwood. There is no
 reset: if the passphrase is lost, only your 24 words get you back in.
 
 ## The passphrase lock
@@ -65,5 +66,5 @@ them (blurred until you hold), so don't open that with anyone watching.
 | --- | --- |
 | A funding failed before anything was sent | It says so; **Try again** waits for a new random start |
 | A funding's ZEC was sent | It goes back to following the swap; NEAR refunds to a fresh shielded address if it can't complete |
-| NEAR refunded a trip home | The money is back in the venue wallet; send it home again |
+| NEAR refunded a trip home | The money is back in the venue wallet: send it home again on Hyperliquid and Solana; on Polymarket it is USDC on Polygon, which Send home doesn't pick up yet |
 | The tab closed during a funding | Every quote is saved before any ZEC moves, so the swap is found again on the next open; a funding that came due while closed gets a new random start |

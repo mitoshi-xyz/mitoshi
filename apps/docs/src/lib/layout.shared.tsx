@@ -22,13 +22,13 @@ export function baseOptions(): BaseLayoutProps {
     githubUrl: SITE.repo,
     nav: {
       title: (
-        <span className="flex items-center gap-2.5">
+        <span className="flex items-center gap-2.5 whitespace-nowrap">
           <Seal />
           <span className="font-heading font-semibold text-[16px] tracking-tight">{SITE.name}</span>
-          <span className="font-stamp text-[13px] text-fd-muted-foreground" lang="ja">
+          <span className="font-stamp text-[13px] text-fd-muted-foreground max-sm:hidden" lang="ja">
             見通し
           </span>
-          <span className="rounded-full border border-fd-border px-2 py-0.5 font-mono text-[11px] text-fd-muted-foreground">
+          <span className="rounded-full border border-fd-border px-2 py-0.5 font-mono text-[11px] text-fd-muted-foreground max-sm:hidden">
             docs
           </span>
         </span>

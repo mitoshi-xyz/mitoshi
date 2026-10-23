@@ -46,8 +46,13 @@ function Wide(p: string) {
         lines={["Signed quote, checked", "Refunds: fresh address"]}
       />
       <Wire d={`M${C2 + BW} ${MID1} H${C3 - 4}`} p={p} tone="accent" />
-      <Pill x={(C2 + BW + C3) / 2} y={MID1} text="~7.5 min" tone="accent" />
-      <Note x={(C2 + BW + C3) / 2} y={MID1 + 32} anchor="middle" lines={["USDC or SOL", "to the new key"]} />
+      <Pill x={(C2 + BW + C3) / 2} y={MID1} text="~8 min" tone="accent" />
+      <Note
+        x={(C2 + BW + C3) / 2}
+        y={MID1 + 32}
+        anchor="middle"
+        lines={["USDC or SOL;", "Polymarket's", "bridge adds pUSD"]}
+      />
 
       <Box
         x={C3}
@@ -67,10 +72,10 @@ function Wide(p: string) {
         w={BW}
         kicker="THE VENUE'S MARKET"
         title="Trade"
-        lines={["Signed by its own key", "No builder code"]}
+        lines={["Signed by its own key", "(on Perps, by its proxy)"]}
       />
       <Wire d={`M${C3} ${MID2} H${C2 + BW + 4}`} p={p} tone="accent" />
-      <Pill x={(C2 + BW + C3) / 2} y={MID2} text="~2.5 min" tone="accent" />
+      <Pill x={(C2 + BW + C3) / 2} y={MID2} text="trip home" tone="accent" />
       <Note
         x={(C2 + BW + C3) / 2}
         y={MID2 + 32}
@@ -127,20 +132,20 @@ const TALL_STEPS = [
     kicker: "NEAR INTENTS",
     title: "1Click deposit address",
     lines: ["The one public hop in. Signed quote,", "checked; refunds to a fresh address"],
-    pill: "about 7.5 min",
+    pill: "about 8 min",
   },
   {
     kicker: "NEW KEY, NEVER USED",
     title: "Fresh venue wallet",
-    lines: ["m/44'/coin'/6874'/venue'/index'", "USDC, pUSD or SOL arrives here"],
+    lines: ["m/44'/coin'/6874'/venue'/index'", "USDC or SOL arrives (Polymarket: pUSD)"],
     pill: "trade",
     mono: [0],
   },
   {
     kicker: "THE VENUE'S OWN MARKET",
     title: "Trade",
-    lines: ["Orders signed by this wallet's key;", "under ~$1 left at close stays as dust"],
-    pill: "close · about 2.5 min",
+    lines: ["Signed by its key (Perps: its proxy);", "under ~$1 left at close stays as dust"],
+    pill: "close, then send home",
   },
   {
     kicker: "NEAR INTENTS",
@@ -198,8 +203,8 @@ export function FundingFlow() {
   return (
     <Figure
       id="funding-flow"
-      label="The funding round trip. One standard amount of ZEC leaves the shielded pool at a random moment for a NEAR Intents 1Click deposit address, which delivers the venue's asset to a brand-new wallet in about 7.5 minutes. That wallet trades once on the venue's own market. Closing swaps the proceeds back to ZEC at a fresh shielded address in about 2.5 minutes, where it rests 2 to 6 hours before it can be spent."
-      caption="The money's whole route. Only the two hops through NEAR are public, both at standard sizes; the wallet in between has one trade and no history."
+      label="The funding round trip. One standard amount of ZEC leaves the shielded pool at a random moment for a NEAR Intents 1Click deposit address, which delivers the venue's asset to a brand-new wallet in about 8 minutes. That wallet holds one position on the venue's own market. Coming home swaps the proceeds back to ZEC at a fresh shielded address, where they rest 2 to 6 hours before they can be spent."
+      caption="The money's whole route. Two hops go through NEAR: the funding, always at a standard size, and the trip home, at whatever the wallet holds. The wallet in between holds one position and no history."
       wide={{ w: 840, h: 462, body: Wide }}
       tall={{ x: TALL_X, w: TALL_W, h: 16 + 5 * T_STEP + T_H + 56, body: Tall }}
     />

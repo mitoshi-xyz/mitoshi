@@ -25,12 +25,6 @@ WebSockets on `/relay/live/*`, list pictures are `GET /relay/img`, and fonts and
 </Step>
 <Step>
 
-**Confidential swaps.** The Privacy screen says whether NEAR's confidential mode is on for your swaps, and the funding
-sheet's route line ends in "confidential" when it is.
-
-</Step>
-<Step>
-
 **What a copy trader sees.** Every private wallet has a "What the public sees" view, read live from the venue's own
 public data over Oblivious HTTP.
 
@@ -70,17 +64,18 @@ It prints `401`. The allowlist, every host and path the gateway will call for yo
 
 ## What is verified
 
-Dated, from the README's evidence table; the testnet transactions were checked again for these docs.
+Dated, from the README's evidence table except where marked; the testnet transactions were checked again for these
+docs.
 
 | What | Evidence |
 | --- | --- |
 | The browser wallet builds, proves and broadcasts Ironwood spends (NU7 testnet) | Three transactions at blocks 4,529,708, 4,529,789 and 4,529,846: see [Testnet proof](/docs/zcash/testnet-proof), with a script to check them |
 | No third-party request from the page | On mitoshi.xyz the resource list holds one host; every user call is `POST /relay/ohttp` |
-| Live public data on every venue | Polymarket, Polymarket Perps, Hyperliquid and Jupiter, all through the relay |
+| Live public data on every venue | Polymarket, Polymarket Perps, Hyperliquid and Jupiter, all through the relay (seen on the live site while making these docs) |
 | Gateway egress | Ireland (Vercel dub1), for every visitor |
 | Polymarket over OHTTP | Market lookups, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and the builder signer returning signed relayer headers |
 | Confidential swaps on NEAR | A dry 1Click quote over OHTTP accepted in confidential mode: 0.01 ZEC → 11.86 USDC on HyperCore, about 465 s |
-| Unit tests | 36 passing: engine 22, rails 7, venues 7 (4 Polymarket Perps signing, 3 Solana transactions) |
+| Unit tests | 36 passing: engine 22, rails 7, venues 7 (4 Polymarket Perps signing, 3 Solana transactions; counted from the code) |
 
 <Callout type="warn" title="Not yet run on mainnet">
 The full round trip on each venue (fund a fresh wallet, trade, close, come home) has not run on mainnet yet. Until it

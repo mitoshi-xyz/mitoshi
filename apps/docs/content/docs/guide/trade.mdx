@@ -1,7 +1,7 @@
 ---
 title: Trade
 description: A live perps terminal for Hyperliquid crypto and Polymarket Perps stocks, gold and indices, with a ticket that starts with the amount.
-icon: CandlestickChart
+icon: ChartCandlestick
 ---
 
 {/* Sources: apps/web/src/features/trade (terminal.tsx:19-257, chart-panel.tsx:12-137, market-picker.tsx, ticket.tsx:84-268,
@@ -25,7 +25,7 @@ icon: CandlestickChart
 
 The ticket starts with how much margin you put in, not how many contracts.
 
-<Shot src="/shots/wide/order-nvda.webp" alt="The NVDA ticket on mitoshi.xyz: Long, $25 margin, $125.00 · 0.58768 NVDA, leverage 5×, TP / SL off, Market, Liq 180.795 · fee $0.05, and Fund a private wallet." caption="$25 at 5× on NVIDIA, as the ticket showed it on 2026-10-23." />
+<Shot src="/shots/wide/order-nvda.webp" alt="The NVDA ticket on mitoshi.xyz: Long, $25 margin, $125.00 · 0.5877 NVDA, leverage 5×, TP / SL off, Market, Liq 180.7908 · fee $0.05, and Fund a private wallet." caption="$25 at 5× on NVIDIA, as the ticket showed it on 2026-10-23." />
 
 <Receipt
   kicker="Polymarket Perps · Long NVDA"
@@ -34,9 +34,9 @@ The ticket starts with how much margin you put in, not how many contracts.
     ["Margin", "$25"],
     ["Leverage (default)", "5×"],
     ["Position = margin × leverage", "$125.00"],
-    ["Size = position ÷ price", "0.58768 NVDA"],
+    ["Size = position ÷ price", "0.5877 NVDA"],
     ["Fee = position × the venue's taker fee", "$0.05"],
-    ["Liquidation, estimated", "180.795"],
+    ["Liquidation, estimated", "180.7908"],
   ]}
   source="From the ticket on mitoshi.xyz, 2026-10-23, at NVIDIA's mark then. Arithmetic: apps/web/src/features/trade/order.ts."
 />
@@ -69,7 +69,7 @@ on Polymarket Perps.
 ## Positions and coming home
 
 **Positions** lists each wallet's position (side, leverage, entry → mark, liquidation) with **Close**, and its
-take-profit and stop-loss with **Cancel**. Closing and coming home are two steps on perps: **Close** first, then
-**Send home** appears once the wallet holds nothing.
+take-profit and stop-loss with **Cancel**. Closing and coming home are two steps on perps: **Close** first (and cancel
+any open orders), then **Send home** appears once the wallet holds nothing.
 
 Venue details: [Polymarket Perps](/docs/venues/polymarket-perps) · [Hyperliquid](/docs/venues/hyperliquid).

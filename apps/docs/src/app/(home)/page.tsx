@@ -13,7 +13,7 @@ import { DOCS } from "@/lib/site";
 /** Proof a judge can check, each with the page that shows how. */
 const PROOF = [
   { figure: "1 host", line: "in the browser's resource list on mitoshi.xyz", href: "/docs/privacy/verify" },
-  { figure: "14 hosts", line: "on the gateway's allowlist, nothing else", href: "/docs/privacy/oblivious-http" },
+  { figure: "14 hosts", line: "on the gateway's API allowlist, nothing else", href: "/docs/privacy/oblivious-http" },
   { figure: "3 sends", line: "proved in the browser, mined on Zcash testnet", href: "/docs/zcash/testnet-proof" },
   { figure: "36 tests", line: "engine 22, rails 7, venues 7, all passing", href: "/docs/build/code-map" },
 ] as const;
@@ -54,10 +54,17 @@ export default function Home() {
         line="On a public venue your wallet is your track record. Mitoshi gives each position a brand-new wallet, funded from Zcash's shielded pool through NEAR Intents, so the trail stops at the pool."
       >
         <Story />
+        <p className="text-[14px] text-fd-muted-foreground">
+          The app, its Zcash wallet and every venue's live data run on mainnet today; the full round trip (fund, trade,
+          close, come home) has not run there yet.{" "}
+          <Link href="/docs/privacy/verify" className="font-semibold text-fd-primary">
+            What is verified →
+          </Link>
+        </p>
         <Diagram
           name="funding-flow"
           alt="Funding round trip: at a random moment, your shielded ZEC sends one standard amount with a fresh shielded refund address to NEAR Intents, which pays USDC, pUSD or SOL to a fresh wallet in a confidential swap; the wallet opens one position on the venue, closes it, sends the proceeds back through NEAR Intents to a fresh shielded address."
-          caption="The money's whole route: only the two hops through NEAR are public, both at standard sizes."
+          caption="The money's whole route. Two hops go through NEAR: the funding, always at a standard size, and the trip home, at whatever the wallet holds."
         />
       </Section>
 
@@ -65,7 +72,7 @@ export default function Home() {
         n="02"
         kicker="Every screen"
         title="Four venues, one private balance."
-        line="Predictions, US stocks, gold, indices, crypto perps and Solana tokens, all on the venues' own markets, from a balance that never leaves your browser."
+        line="Predictions, US stocks, gold, indices, crypto perps and Solana tokens, all on the venues' own markets, from one shielded balance whose keys never leave your browser."
       >
         <div className="grid gap-4 md:grid-cols-6">
           <Tile

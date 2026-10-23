@@ -1,13 +1,13 @@
 ---
 title: Portfolio
 description: Your shielded balance and every position on every venue in one private view, with every transaction as a receipt.
-icon: PieChart
+icon: ChartPie
 ---
 
 {/* Sources: apps/web/src/features/portfolio (portfolio.tsx:113-215, money-card.tsx:63-131, positions.tsx:28-210);
    apps/web/src/features/wallet (sync-strip.tsx:23-72, history.tsx:57-150). */}
 
-<Screen name="portfolio" alt="The Portfolio screen on mitoshi.xyz for a new wallet: Shielded ZEC 0.00 with Deposit, Withdraw and Wallet, the venues card at $0.00, and the Positions tab saying No open positions." caption="Portfolio for a brand-new wallet: nothing on any venue yet." eager />
+<Screen name="portfolio" alt="The Portfolio screen on mitoshi.xyz for a new wallet: Shielded ZEC 0.00 with Deposit, Withdraw and Wallet, synced, and the venues card at $0.00." caption="Portfolio for a brand-new wallet: nothing on any venue yet." eager />
 
 | Part | What it shows |
 | --- | --- |
@@ -16,7 +16,7 @@ icon: PieChart
 | **On venues** | How many wallets and their value; **Today**, **Open P&L**, **All-time** and **Swap costs** |
 | **Positions** | Every open position in every wallet: market, size, entry, mark, P&L, with **What the public sees**, **Close** for perps and **Sell** or **Redeem** for the rest |
 | **Wallets** | Each private wallet's value, P&L and story |
-| **History** | Every deposit, funding, trade and trip home; tap one for its **Receipt**: status, time, block, network fee, where it came from, and the transaction id |
+| **History** | Your Zcash transactions (tap one for its **Receipt**: status, time, block, network fee, where it came from, and the transaction id), and each wallet's fundings, trades and trips home |
 
 <Shot src="/shots/wide/portfolio-history.webp" alt="The History tab of Portfolio on mitoshi.xyz with No transactions yet." caption="History, before the first deposit." />
 

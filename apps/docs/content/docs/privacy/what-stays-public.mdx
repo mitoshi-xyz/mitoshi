@@ -14,15 +14,15 @@ icon: Eye
 | What | Why it is public |
 | --- | --- |
 | **Each wallet's own trades** on its venue | The venues are public markets; Mitoshi hides who traded, not what |
-| **One hop in and one hop out** per wallet, at a standard size, through NEAR's deposit addresses | A swap has to pay a deposit address; the standard size makes it look like many others |
+| **One hop in and one hop out** per wallet, through NEAR | The funding pays NEAR's deposit address at a standard size many swaps share. The trip home carries whatever the wallet holds, so its amount is public; it lands at a fresh shielded address, and the leak meter warns if you later withdraw a matching amount publicly |
 | **NEAR's record of each swap** | Confidential mode, where a deposit and its payout can't be matched, covers every funding and every trip home except Polymarket's. That one pays out through Polymarket's bridge with a flexible-input quote, and 1Click has no confidential mode for those |
 | **Polymarket's builder attribution** on each wallet's gasless relayer calls (creating it, approvals, redeeming, moving pUSD into Perps, the trip home) | Polymarket can tell these come from Mitoshi users, and when, not which one |
 | **Which public markets an IP looks at** | Prices, books and list pictures come through the relay unsealed. Your wallets, orders, balances and the pictures of what you hold go sealed |
 
-<Callout title="When confidential mode is off">
-Confidential quotes need NEAR's partner key on the gateway. If 1Click refuses one (HTTP 401), the app switches to
-public quotes for the rest of the session and says so: the Privacy screen and the funding sheet both show whether
-confidential mode is on for your swaps.
+<Callout title="What 'confidential' means in the app">
+Mitoshi asks for confidential mode on every quote it can; that needs NEAR's partner key on the gateway. If 1Click
+refuses a confidential quote (HTTP 401), the app uses public quotes for the rest of the session. The Privacy screen and
+the funding sheet's route line show which mode the app is asking for; Mitoshi doesn't read the mode back from the quote.
 </Callout>
 
 ## What Mitoshi cannot hide
@@ -32,13 +32,14 @@ confidential mode is on for your swaps.
 - **One operator** runs the relay and the gateway and serves the app. Keeping the two apart is a promise you can check
   in the source, not something the code enforces.
 - **Reading your wallets.** While Portfolio or a terminal is open, the gateway and the venues see those balances asked
-  about in the same stretch of time. Each wallet is read on its own random 4–8 s rhythm, through one gateway address
+  about in the same stretch of time. Each wallet is read on its own random rhythm (every 4–8 s on a terminal, every
+  20–60 s on Portfolio), through one gateway address
   shared by everyone, but a watcher of many sessions could still notice two addresses always asked about together.
 - **Timing analysis.** Random starts and rests make it hard, not impossible, for someone with the whole public record.
 - **The recovery scan** asks about one derived address at a time, 3–9 s apart. Someone watching the gateway during a
   restore could still group them, so it runs only after a restore from words or when you ask for it.
-- **Pool crossings.** A wallet that still holds Orchard notes from before Ironwood can spend them with change to
-  Ironwood, and that crossing's value is public. Wallets made in Mitoshi receive only into Ironwood.
+- **Pool crossings.** Sends may spend Orchard notes with change to Ironwood; if a wallet holds Orchard notes, that
+  crossing's value is public.
 - **Block explorers.** Opening one for your wallet from your own browser shows it your IP. Mitoshi's "What the public
   sees" reads the same data through the gateway; use Tor or a VPN for explorers.
 - **Light servers.** Compact blocks come from ChainSafe's public servers, which only ever see the gateway, until Mitoshi

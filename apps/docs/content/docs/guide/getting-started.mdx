@@ -60,7 +60,7 @@ wallets on a new browser.
 
 ## 3. Deposit from Zodl
 
-<Screen name="deposit" alt="The Deposit ZEC drawer on mitoshi.xyz: a QR code with the Zcash mark, a fresh shielded address, Copy address, Open in wallet, Another fresh address, and Waiting for your deposit." caption="Deposit ZEC: a fresh shielded address and its QR code, every time you open it." />
+<Screen name="deposit" alt="The Deposit ZEC drawer on mitoshi.xyz: a QR code with the Zcash mark and a fresh shielded address (both blurred here), Copy address, Open in wallet, Another fresh address, and Waiting for your deposit." caption="Deposit ZEC: a fresh shielded address and its QR code, every time you open it (blurred in this picture)." />
 
 <Steps>
 <Step>
@@ -71,7 +71,8 @@ with only an Orchard receiver, never reused.
 In Zodl (or any shielded Zcash wallet), scan the QR code or paste the address and send ZEC.
 </Step>
 <Step>
-Wait for one block. Mainnet blocks come about every 75 seconds, and the wallet checks for new ones every 30 seconds.
+It shows up once it's mined (mainnet blocks come about every 75 seconds; the wallet checks every 30). It can fund a
+wallet after **10 confirmations**, about 12–13 minutes; until then Portfolio shows it under **Confirming**.
 </Step>
 </Steps>
 
@@ -79,8 +80,8 @@ What happens next depends on where the ZEC came from:
 
 | Your deposit came from | It can fund a wallet |
 | --- | --- |
-| A shielded address (Zodl's default) | Once it confirms: "Fully shielded: ready to use now" |
-| A public (transparent) address, such as an exchange | After resting 2–6 hours, picked per note: "From a public address: resting 2–6 h" |
+| A shielded address (Zodl's default) | After 10 confirmations, about 12–13 minutes |
+| A public (transparent) address, such as an exchange | After resting 2–6 hours, picked per note ("From a public address: resting 2–6 h") |
 
 The rest keeps an arrival from a public address from being matched to your next trade.
 
@@ -88,5 +89,5 @@ The rest keeps an arrival from a public address from being matched to your next 
 
 Pick a market on [Markets](/docs/guide/markets), [Predict](/docs/guide/predict), [Trade](/docs/guide/trade) or
 [Tokens](/docs/guide/tokens). Your first trade on a venue asks you to fund a
-[private wallet](/docs/guide/private-wallets) for it, which takes a few minutes; **Keep one ready** skips the wait
-next time.
+[private wallet](/docs/guide/private-wallets) for it, which takes a few minutes. **Keep one ready** funds one
+ahead of time, after a random wait, so a later trade needn't wait.

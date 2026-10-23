@@ -8,7 +8,7 @@ icon: Compass
    private-wallets/fund-drawer.tsx, jobs.ts); packages/engine/src (constants.ts, registry.ts:168-187). Values from the
    captures taken on mitoshi.xyz on 2026-10-23. */}
 
-Your money stays in Zcash's shielded pool, in a real Zcash wallet that runs in your browser. When you open a position,
+Your balance stays in Zcash's shielded pool between trades, in a real Zcash wallet that runs in your browser. When you open a position,
 Mitoshi gives it a **brand-new wallet**, funds it through **NEAR Intents** with one standard amount at a random moment,
 and trades on the venue's own market. When you're done, the money comes home to a fresh shielded address.
 
@@ -32,22 +32,22 @@ of them. No account, no sign-up. → [Getting started](/docs/guide/getting-start
 </Step>
 <Step>
 
-**Deposit ZEC** from Zodl or any shielded wallet to the fresh address Mitoshi shows. A fully shielded deposit is
-usable once it confirms.
+**Deposit ZEC** from Zodl or any shielded wallet to the fresh address Mitoshi shows. It shows up once it's mined
+and can fund a wallet after 10 confirmations, about 12–13 minutes.
 
 </Step>
 <Step>
 
 **Pick a market**, say NVIDIA on Polymarket Perps. The ticket starts with the amount: **$25 at 5×** is a **$125.00**
-position, **0.58768 NVDA** at the price when this was captured, fee **$0.05**. → [Trade](/docs/guide/trade)
+position, **0.5877 NVDA** at the price when this was captured, fee **$0.05**. → [Trade](/docs/guide/trade)
 
 </Step>
 <Step>
 
 **Fund a private wallet.** With no ready wallet for that venue, the ticket says **Fund a private wallet**. Pick a
 standard size (0.05 ZEC by default); Mitoshi derives a new key and, at a random moment 20 s to 3 min later, pays
-exactly that much from the shielded pool into NEAR Intents. On 2026-10-23 a confidential quote for 0.05 ZEC gave
-**≈ 60.79 USDC on Hyperliquid in about 8 minutes**. → [Private wallets](/docs/guide/private-wallets)
+exactly that much from the shielded pool into NEAR Intents. On 2026-10-23 a dry quote for 0.05 ZEC, asked in
+confidential mode, came back at **≈ 61.43 USDC on Hyperliquid in about 8 minutes**. → [Private wallets](/docs/guide/private-wallets)
 
 </Step>
 <Step>
@@ -58,8 +58,8 @@ key (on Polymarket Perps, by a short-lived key that wallet authorised).
 </Step>
 <Step>
 
-**See what a copy trader sees.** "What the public sees" reads the wallet's public record from the venue: one funding,
-one position, no links to your other wallets.
+**See what a copy trader would see.** "What the public sees" reads the wallet's activity live from the venue and
+checks it on your device against your other wallets: one funding, one position, no links.
 
 </Step>
 <Step>
@@ -70,15 +70,15 @@ one position, no links to your other wallets.
 </Steps>
 
 <Callout title="Skip the wait">
-Turn on **Keep one ready** for a venue and Mitoshi keeps a funded wallet waiting while the app is open, so the next
-position doesn't wait for a funding.
+Turn on **Keep one ready** for a venue and, while the app is open, Mitoshi funds a wallet there after a random wait
+(90 minutes on average, at most 12 hours), then keeps replacing it the same way, so a later position needn't wait.
 </Callout>
 
 ## Where things stand
 
 The app is live on Zcash mainnet at [mitoshi.xyz](https://mitoshi.xyz), with live data from every venue through the
-relay. The browser wallet's proofs and sends are verified on testnet, and confidential NEAR quotes are verified over
-Oblivious HTTP. **The full round trip on mainnet (fund, trade, close, come home) has not run yet**, so no live trade is
+relay. The browser wallet's proofs and sends are verified on testnet; over Oblivious HTTP, Polymarket reads, a bridge quote,
+the builder signer and a confidential-mode NEAR quote are verified. **The full round trip on mainnet (fund, trade, close, come home) has not run yet**, so no live trade is
 claimed here. [Verify it yourself](/docs/privacy/verify) lists the evidence.
 
 <Cards>

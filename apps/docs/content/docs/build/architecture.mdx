@@ -38,7 +38,7 @@ The details of each hop, what it forwards and what it drops, are on [Oblivious H
 | Vault | `apps/web` | IndexedDB, every record AES-GCM encrypted under a non-extractable key, optionally wrapped by a passphrase |
 | Engine | `packages/engine` | Standard sizes, rest rules, random scheduling, the wallet registry, the leak meter, key paths (BIP 32, SLIP-0010) |
 | Rails | `packages/rails` | NEAR 1Click quotes, deposits and status; every quote's ed25519 signature checked |
-| Venues | `packages/venues` | Polymarket (official SDK in its own worker), Polymarket Perps, Hyperliquid (official SDK), Solana (Jupiter Ultra) |
+| Venues | `packages/venues` | Polymarket (official SDK in its own worker), Polymarket Perps, Hyperliquid (`@nktkas/hyperliquid` SDK), Solana (Jupiter Ultra) |
 | OHTTP | `packages/net` | The RFC 9458 client and the gateway's pinned key |
 | Chart | `packages/chart` | A canvas engine for live lines and candles |
 
@@ -46,7 +46,7 @@ The details of each hop, what it forwards and what it drops, are on [Oblivious H
 
 | Service | Where | What it does |
 | --- | --- | --- |
-| `mitoshi-web` | Cloudflare Worker, placed in AWS eu-west-1 | Serves the static app with strict headers, relays sealed messages, proxies public pictures, holds one live feed per venue in a Durable Object |
+| `mitoshi-web` | Cloudflare Worker, targeted placement near AWS eu-west-1 | Serves the static app with strict headers, relays sealed messages, proxies public pictures, holds one live feed per venue in a Durable Object |
 | `mitoshi-gateway` | Vercel Function, Dublin (`dub1`) | Opens each sealed message, calls only the allowlist, seals the answer; holds the NEAR partner key and the Polymarket builder secret |
 | `mitoshi-docs` | Cloudflare Worker, static assets | This site |
 

@@ -32,8 +32,8 @@ builds the zero-knowledge proof for each payment and signs it, all on your devic
 
 Every private wallet is funded from this balance, and every trip home lands back in it at a fresh address. On the
 Zcash chain an outside observer sees that a shielded transaction happened, not its amount, its sender or its receiver.
-The one public step is the payment from the pool to NEAR Intents' deposit address, always at a
-[standard size](/docs/privacy/rules).
+Two steps per wallet are public: the payment to NEAR Intents' deposit address, always at a
+[standard size](/docs/privacy/rules), and NEAR's payout into a fresh shielded address when the wallet comes home.
 
 <Callout title="Mainnet and testnet">
 mitoshi.xyz runs on Zcash mainnet. The browser wallet's proofs and sends were checked on testnet, where blocks come

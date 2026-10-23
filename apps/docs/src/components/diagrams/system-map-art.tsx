@@ -52,7 +52,7 @@ function Wide(p: string) {
         w={COL}
         kicker="VERCEL · DUBLIN"
         title="Gateway"
-        lines={["Opens each request", "Sees content, not IP", "Writes no logs"]}
+        lines={["Opens each request", "Sees content, not IP", "No logs of its own"]}
         tone="accent"
       />
       <Note

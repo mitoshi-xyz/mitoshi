@@ -12,6 +12,7 @@ Start at [Service status](/docs/guide/status): it shows whether each hop is answ
 | What you see | Why | What to do |
 | --- | --- | --- |
 | "From a public address: resting 2–6 h" | It came from a transparent address | Wait; it can fund wallets once rested. Deposit from a shielded wallet next time |
+| A deposit sits under **Confirming** | Received ZEC needs 10 confirmations, about 12–13 min | Wait; it moves to your spendable balance on its own |
 | The balance hasn't moved | The wallet checks every 30 s and pauses 1–10 min after each send | Wait a minute; the pause after a send is on purpose |
 | A wallet stays **Preparing** for minutes | It starts at a random moment, 20 s to 3 min after you ask | Wait. A keep-ready replacement can wait hours (90 min on average, 12 h at most) |
 | **blocked** on a funding | The size isn't standard, or it would spend more than is ready | Pick a standard size, deposit, or wait for resting ZEC |
@@ -19,8 +20,8 @@ Start at [Service status](/docs/guide/status): it shows whether each hop is answ
 | "Private wallets are funded through NEAR Intents, which only takes mainnet ZEC." | The app is running on testnet | Use mitoshi.xyz (mainnet) |
 | A wallet shows **Refunded** | NEAR couldn't complete the funding | The ZEC went to a fresh shielded address in your balance |
 | A wallet shows **Needs you** | A step stopped | **Try again**; a funding that never sent anything waits for a new random start |
-| **Send home** isn't there on a perps wallet | It still holds a position | **Close** it first; Send home appears once the wallet holds nothing |
-| A trip home was refunded | NEAR couldn't complete the swap home | The money is back in the venue wallet; send it home again |
+| **Send home** isn't there on a perps wallet | It still holds a position or an open order (a limit, take-profit or stop-loss) | **Close** the position and cancel the orders; Send home appears once the wallet holds nothing |
+| A trip home was refunded | NEAR couldn't complete the swap home | On Hyperliquid and Solana, send it home again. On Polymarket the refund is USDC on Polygon in the Deposit Wallet, which Send home doesn't pick up yet |
 | Something is left in a retired wallet | It's smaller than the trip home would cost | It stays as [dust](/docs/guide/private-wallets#dust) |
 | A wallet is missing after a restore from words | The scan covers Hyperliquid and Solana, one address every 3–9 s | Let it finish, or Settings → **Find my wallets**. Polymarket wallets come back only from the backup file |
 | **Mitoshi is locked** | The passphrase lock is on | Enter it. There is no reset: without it, start over from the 24 words |

@@ -19,10 +19,10 @@ ZEC.** It hides who traded, not what was traded.
 | --- | --- | --- |
 | **Your browser** | Everything: your words, balance and which wallets are yours, encrypted on this device | — it sends none of it in the clear |
 | **Relay** (Cloudflare, `mitoshi-web`) | Your IP, the size and time of each request, and which public markets you look at | What you ask about your wallets: every such call is sealed |
-| **Gateway** (Vercel, Dublin) | One request's content, such as an address's balance, arriving from the relay | Your IP, cookies, or which requests come from the same person |
+| **Gateway** (Vercel, Dublin) | One request's content, such as an address's balance, arriving from the relay | Your IP or cookies; nothing in a request says who sent it (timing can still group requests, see [What stays public](/docs/privacy/what-stays-public)) |
 | **Each venue** | That one wallet's orders and positions, sent from Ireland | Your other wallets, your balance, your IP or country |
 | **NEAR Intents** | One swap: a standard ZEC amount in and a fresh wallet out (a funding), or a venue asset in and a fresh shielded address out (a trip home) | Who sent it, or your other swaps |
-| **The Zcash chain** | That a shielded transaction happened, and the one hop to NEAR's deposit address | Amounts and addresses inside the pool, or that it was you |
+| **The Zcash chain** | That shielded transactions happened, and two public steps per wallet: the standard-size payment to NEAR's deposit address, and NEAR's payout into a fresh shielded address when the wallet comes home | Amounts and addresses inside the pool, or that it was you |
 | **Mitoshi's servers** | Only what the relay and gateway rows say; there is no database and no account | Your keys, your wallet list, your positions |
 
 <Screen name="privacy" alt="The Privacy screen on mitoshi.xyz: Your wallets as the public sees them, then Who sees what with a row for each party, then what Mitoshi does so nothing links." caption="The app's own Privacy screen says the same thing, party by party, and lists your live wallets as a copy trader would find them." />

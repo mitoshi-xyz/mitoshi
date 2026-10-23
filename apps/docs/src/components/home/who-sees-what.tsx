@@ -6,7 +6,7 @@ const ROWS = [
   ["The venue", "One fresh wallet's own trades, sent from Ireland", "Your other wallets, your balance, your IP"],
   [
     "A copy trader",
-    "A wallet with one funding from a NEAR swap and one trade",
+    "A wallet with one funding from a NEAR swap and one position",
     "Whose it is, or any other wallet of yours",
   ],
   ["Relay · Cloudflare", "Your IP, and which public markets you look at", "What you ask about your wallets"],

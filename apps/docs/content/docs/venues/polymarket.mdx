@@ -20,8 +20,8 @@ icon: Target
 ## Set up
 
 Polymarket's official TypeScript SDK runs in its own Web Worker whose only network is the sealed fetch. The Deposit
-Wallet's address is known before it exists (it is derived from the signer), so NEAR can pay it straight away; the
-wallet is deployed and approved **gasless** through Polymarket's relayer on its first trade. The builder secret that
+Wallet's address is known before it exists (it is derived from the signer), so Polymarket's bridge can give it a
+deposit address before it is deployed; the wallet is deployed and approved **gasless** through Polymarket's relayer on its first trade. The builder secret that
 authorises those relayer calls stays on the gateway, which [signs only Deposit Wallet calls](/docs/privacy/oblivious-http#the-builder-signer).
 
 ## Funding
@@ -50,14 +50,14 @@ The bridge credits **pUSD** to the Deposit Wallet. The wallet is ready when the 
   (good till cancelled); cancel open orders; **redeem** winning shares after the market resolves.
 - **One market per wallet.** Adding to a position or selling it stays on the wallet that holds it; a new market takes
   a ready wallet that has never traded, or asks you to fund one.
-- **No builder code** on orders: Polymarket publishes that field when it is set.
+- **No builder code** on orders (`packages/venues/src/polymarket/account.ts`).
 
 ## Coming home
 
 **Send home** cancels open orders, redeems resolved shares, sells the rest at market and brings any Perps money back
 first. The pUSD then leaves through a one-time **bridge withdrawal** that pays a NEAR deposit address in USDC on
 Polygon, and NEAR swaps it to ZEC at a fresh shielded address. Under 1 pUSD stays behind as dust. If NEAR refunds the
-trip home, the money returns to the Deposit Wallet.
+trip home, the money returns to the Deposit Wallet as USDC on Polygon, which Send home doesn't pick up yet.
 
 <Callout title="Not in NEAR's confidential mode">
 This is the one swap Mitoshi can't make confidential: the bridge pays out an inexact amount, which needs a

@@ -18,7 +18,7 @@ const STEPS = [
   },
   {
     title: "A wallet nobody has seen",
-    body: "A new key for this position, funded with one standard amount at a random moment: 0.05 ZEC quoted at ≈ 60.79 USDC, confidential.",
+    body: "A new key for this position, funded with one standard amount at a random moment: a dry quote for 0.05 ZEC came back at ≈ 61.43 USDC.",
     href: "/docs/guide/private-wallets",
   },
   {
@@ -27,7 +27,7 @@ const STEPS = [
     href: "/docs/venues",
   },
   {
-    title: "What a copy trader sees",
+    title: "What a copy trader would see",
     body: "One funding from a NEAR swap, one position, no history, no link to your other wallets.",
     href: "/docs/privacy",
   },

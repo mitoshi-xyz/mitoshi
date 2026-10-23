@@ -11,7 +11,7 @@ icon: Server
 
 | Site | Host | What it serves |
 | --- | --- | --- |
-| mitoshi.xyz | Cloudflare Worker `mitoshi-web` with static assets, placed in AWS eu-west-1 | The static app, `/relay/*` (sealed messages, public pictures, live feeds), 301s from the old `/docs/*` pages to this site |
+| mitoshi.xyz | Cloudflare Worker `mitoshi-web` with static assets, targeted placement near AWS eu-west-1 | The static app, `/relay/*` (sealed messages, public pictures, live feeds), 301s from the old `/docs/*` pages to this site |
 | mitoshi-gateway.vercel.app | Vercel Function in `dub1` (Dublin), up to 60 s per call | `/ohttp` for the relay only, `/ohttp-keys` for anyone |
 | docs.mitoshi.xyz | Cloudflare Worker `mitoshi-docs`, static assets only | This site |
 

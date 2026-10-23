@@ -22,7 +22,7 @@ icon: Waypoints
 
 ## The relay: knows who, not what
 
-A Cloudflare Worker (`mitoshi-web`), placed in AWS eu-west-1, with its logs off.
+A Cloudflare Worker (`mitoshi-web`) with Cloudflare's targeted placement near AWS eu-west-1, and its logs off.
 
 - Forwards only the sealed body to the gateway, with a fresh header set: no IP, cookies, user agent, referrer or
   language.
@@ -35,7 +35,8 @@ A Cloudflare Worker (`mitoshi-web`), placed in AWS eu-west-1, with its logs off.
 ## The gateway: knows what, not who
 
 A Vercel Function in Dublin (`dub1`, AWS eu-west-1). It accepts only messages that carry the relay's token, opens
-each one, and calls **only an allowlist** of 14 hosts with exact methods and path prefixes:
+each one, and calls **only an allowlist** of 14 API hosts with exact methods and path prefixes (pictures go through a
+separate, checked image fetch, below):
 
 | Upstream | What for |
 | --- | --- |
@@ -49,7 +50,7 @@ each one, and calls **only an allowlist** of 14 hosts with exact methods and pat
 
 Every upstream request leaves with the same browser-like user agent for everyone and drops cookie, origin, referrer,
 user-agent and forwarding headers. Redirects aren't followed. A public answer may be cached and shared between users
-for a few seconds; anything carrying a credential never is.
+for seconds up to a few minutes; anything carrying a credential never is.
 
 <Callout title="Why the gateway isn't on Cloudflare">
 Tests on 2026-10-22 showed that a Cloudflare Worker passes the visitor's own country on to every Cloudflare-hosted site
@@ -62,13 +63,13 @@ from Ireland.
 | Picture | Path | Who sees what |
 | --- | --- | --- |
 | Public ones (market and token lists) | `GET /relay/img?u=…`, cached a day | The relay sees which public picture, like any public price |
-| Pictures of what you hold (positions, orders) | inside an OHTTP message to `img.mitoshi.internal` | Nobody sees which; the browser gets a blob |
+| Pictures of what you hold (positions, orders) | inside an OHTTP message to `img.mitoshi.internal` | The relay can't see which; the gateway fetches it without knowing who asked, and the browser gets a blob |
 
 The image fetch accepts only HTTPS, refuses local and internal hosts and literal IP addresses, re-checks each of up to
 three redirects, and takes PNG, JPEG, WebP, GIF, AVIF or SVG up to 2 MiB.
 
 ## The builder signer
 
-Polymarket's gasless Deposit Wallets need builder headers. The gateway holds that secret and signs **only** Deposit
-Wallet relayer calls to Polymarket's factory (`WALLET-CREATE` and `WALLET` requests on four relayer paths); anything
-else gets a 403. Through OHTTP it sees which wallet asks, never who.
+Polymarket's gasless Deposit Wallets need builder headers. The gateway holds that secret and signs only four relayer
+paths; on `/submit` it signs only `WALLET-CREATE` and `WALLET` requests to the Deposit Wallet factory. Anything else gets
+a 403. Through OHTTP it sees which wallet asks, never who.

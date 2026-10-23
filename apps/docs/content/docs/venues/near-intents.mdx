@@ -1,6 +1,6 @@
 ---
 title: NEAR Intents
-description: Every rail in and out of the shielded pool is a NEAR Intents 1Click swap, in confidential mode, with a signed quote checked before any ZEC moves.
+description: Every rail in and out of the shielded pool is a NEAR Intents 1Click swap, confidential where 1Click allows it, with a signed quote checked before any ZEC moves.
 icon: ArrowLeftRight
 ---
 
@@ -23,7 +23,7 @@ input, 1% slippage, a two-hour deadline.
 
 ## The quote check
 
-<Shot src="/shots/wide/fund-route.webp" alt="The New private wallet sheet with its details open: a new wallet gets an amount of USDC, its dollar value and time estimate, the network fee, Mitoshi fee none, and the route through NEAR Intents marked confidential." caption="The funding sheet asks NEAR Intents for a price over Oblivious HTTP and shows the route." />
+<Shot src="/shots/wide/fund-route.webp" alt="The New private wallet sheet with its details open: a new wallet gets ≈ 61.4258 USDC (≈ $61.40, about 8 min), the network fee 0.00015 ZEC, Mitoshi fee none, and the route NEAR Intents · confidential." caption="The funding sheet asks NEAR Intents for a price over Oblivious HTTP and shows the route." />
 
 Before any ZEC moves, Mitoshi checks each quote:
 
@@ -40,18 +40,20 @@ Then one shielded payment of exactly the wallet's size goes to the deposit addre
 ## Confidential mode
 
 Confidential mode means NEAR doesn't publish which deposit paid which payout. It needs NEAR's partner key, which the
-gateway adds to 1Click calls; the browser never sees it. If 1Click refuses a confidential quote (HTTP 401), the app uses
-public quotes for the rest of the session and says so on the Privacy screen and in the funding sheet.
+gateway adds to 1Click calls; the browser never sees it. Mitoshi asks for it on every quote except Polymarket's trip
+home. If 1Click refuses a confidential quote (HTTP 401), the app uses public quotes for the rest of the session, and the
+route line drops "confidential". The app shows the mode it asked for; it doesn't read the mode back from the quote.
 
 ## Refunds
 
 | Swap | If NEAR can't complete it |
 | --- | --- |
 | A funding | The ZEC comes back to a fresh shielded address made for this swap; the wallet shows **Refunded** |
-| A trip home | The money comes back to the venue wallet, ready to send home again |
+| A trip home | The money comes back to the venue wallet. On Hyperliquid and Solana, send it home again; on Polymarket it returns as USDC on Polygon in the Deposit Wallet, which Send home doesn't pick up yet |
 
 ## Fees
 
-There is no Mitoshi fee. A 0.2% funding fee is built in but switched off: no fee recipient is set
-(`APP_FEE_RECIPIENT` is `null`), and the funding sheet shows "Mitoshi fee: none". You pay the swap spread and NEAR's own
+Mitoshi adds no fee of its own. A 0.2% funding fee is built in but switched off: no fee recipient is set
+(`APP_FEE_RECIPIENT` is `null`), so Mitoshi sends no app fee with its quotes, and the funding sheet shows "Mitoshi fee:
+none". You pay the swap spread and NEAR's own
 fees, which are part of the quote.

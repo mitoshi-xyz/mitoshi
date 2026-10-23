@@ -1,7 +1,7 @@
 ---
 title: Polymarket Perps
 description: Long or short NVIDIA, gold or an index with leverage, from a fresh Polymarket wallet whose orders are signed by its own short-lived key.
-icon: CandlestickChart
+icon: ChartCandlestick
 ---
 
 {/* Sources: packages/venues/src/pmperps (account.ts:103-140,207-217,330-342, signing.ts, constants.ts:10-49);
@@ -51,6 +51,7 @@ Send home refuses while a position is open. Under 1 pUSD withdrawable stays behi
 
 ## Live data
 
-Prices, candles, books and trades come from Polymarket Perps' public feed through the relay's shared live feed. The
+Best bid and offer, trades, candles and daily statistics come from Polymarket Perps' public feed through the relay's
+shared live feed. The
 relay skips the `tickers` channel (about 700 updates a second across every market) and uses `statistics` for the
 price, at most once a second.

@@ -24,7 +24,7 @@ const PARTIES: Party[] = [
     seesLabel: "KEEPS",
     sees: ["Keys, balances and", "your wallet list"],
     neverLabel: "SENDS",
-    never: ["Only sealed requests", "to the pinned key"],
+    never: ["Sealed calls about you", "(public prices plain)"],
   },
   {
     kicker: "HOP 1 · CLOUDFLARE",

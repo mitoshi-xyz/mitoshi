@@ -11,7 +11,7 @@ icon: FileText
 | --- | --- | --- | --- |
 | **ZIP 32** | Shielded hierarchical deterministic wallets | The Zcash account and its spending key come from the 24 words through librustzcash's ZIP 32 derivation | `packages/zwallet/rust/src/wallet.rs`, `send.rs` |
 | **ZIP 317** | Proportional transfer fee | Every payment pays the standard ZIP 317 fee (`FeeRule::standard()`), computed by the wallet before it sends | `send.rs` |
-| **ZIP 318** (draft) | Orchard to Ironwood migration: standard amounts and timing | Fundings use only its denominations (n × 10^k ZEC, n ∈ {1, 2, 5}), start at random times, keep-ready refills wait an exponential delay, and a broadcast and a sync never share a window | `packages/engine/src/constants.ts`, `schedule.ts`, `apps/web/src/constants.ts` |
+| **ZIP 318** (draft) | Migrating funds between pools; Mitoshi borrows its standard amounts and timing | Fundings use only its denominations (n × 10^k ZEC, n ∈ {1, 2, 5}), start at random times, keep-ready refills wait an exponential delay, and a broadcast and a sync never share a window | `packages/engine/src/constants.ts`, `schedule.ts`, `apps/web/src/constants.ts` |
 | **ZIP 321** | Payment request URIs | Each send is built as a ZIP 321 transaction request | `send.rs` |
 
 ## The standard amounts

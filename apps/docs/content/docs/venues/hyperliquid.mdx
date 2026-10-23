@@ -27,7 +27,7 @@ perps when the account keeps them apart.
 <Shot src="/shots/wide/picker.webp" alt="The market picker on mitoshi.xyz: Hyperliquid and Polymarket tabs, a search box, categories, and a list of markets with prices." caption="The market picker switches between Hyperliquid and Polymarket Perps." />
 
 - Long or short with **leverage**, **take-profit** and **stop-loss**, from the live terminal.
-- Market orders are IOC limits 1% through the mid. Orders go through Hyperliquid's official SDK with its transport
+- Market orders are IOC limits 1% through the mid. Orders go through the `@nktkas/hyperliquid` TypeScript SDK with its transport
   replaced by Oblivious HTTP, signed by the wallet's own key.
 - The ticket's fee line uses 0.045% (Hyperliquid's base taker rate); the smallest position is $10.
 - The terminal trades from the wallet that already holds this market, otherwise from a ready wallet that has never
