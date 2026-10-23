@@ -1,12 +1,18 @@
 "use client";
 
-import { checkFunding, type LeakReport, type PrivateWallet, type Venue, walletAddress } from "@mitoshi/engine";
+import {
+  checkFunding,
+  type LeakReport,
+  type PrivateWallet,
+  throwawayAddress,
+  type Venue,
+  walletAddress,
+} from "@mitoshi/engine";
 import { ASSETS, type AssetKey, formatUnits, OneClickError, type QuoteResponse, type SwapInput } from "@mitoshi/rails";
 import { BRIDGE_SOURCES, depositWalletAddress, PUSD_DECIMALS } from "@mitoshi/venues/polymarket";
 import { ZEC_NETWORK } from "@/constants";
 import { pmBridge } from "../polymarket/pm";
-import { deviceSeed, freshAddress, walletState } from "../wallet/wallet-store";
-import { currentRegistry } from "./registry-store";
+import { freshAddress, walletState } from "../wallet/wallet-store";
 import { quote } from "./swaps";
 
 /** Funding routes, previews and addresses: what a new private wallet would get, and where it is sent. */
@@ -98,8 +104,8 @@ export function fundingRecipient(w: Pick<PrivateWallet, "venue" | "address">): P
 export async function previewFunding(venue: Venue, sizeZat: number): Promise<FundingPreview> {
   const allowed = canFund();
   if (!allowed.ok) throw new Error(allowed.why);
-  const seed = await deviceSeed();
-  const recipient = venueAddress(seed, venue, currentRegistry().nextIndex[venue]);
+  // A throwaway recipient: quoting the next wallet's real address would announce it before its random funding time.
+  const recipient = throwawayAddress(venue);
   const refundTo = await freshAddress();
   const { q, to } = await routedQuote(venue, {
     from: "zec",

@@ -1,6 +1,14 @@
 export * from "./constants.ts";
 export { decompose, fundableSizes, isCanonical } from "./denominations.ts";
-export { type EvmKey, evmKey, type SolanaKey, solanaKey, walletAddress, walletPath } from "./keys.ts";
+export {
+  type EvmKey,
+  evmKey,
+  type SolanaKey,
+  solanaKey,
+  throwawayAddress,
+  walletAddress,
+  walletPath,
+} from "./keys.ts";
 export {
   checkFunding,
   checkWithdrawal,

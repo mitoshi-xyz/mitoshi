@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 import { LADDER_ZAT, REST_MAX_MS, REST_MIN_MS, UNKNOWN_ORIGIN_HOLD_BLOCKS } from "./constants.ts";
 import { decompose, fundableSizes, isCanonical } from "./denominations.ts";
-import { evmAddress, evmKey, slip10, solanaKey, walletPath } from "./keys.ts";
+import { evmAddress, evmKey, slip10, solanaKey, throwawayAddress, walletAddress, walletPath } from "./keys.ts";
 import { checkFunding, checkWithdrawal } from "./leak.ts";
 import { advance, emptyRegistry, type PrivateWallet } from "./registry.ts";
 import { planRest, restBlocks, restKey } from "./rest.ts";
@@ -139,6 +139,14 @@ describe("registry", () => {
 });
 
 describe("keys", () => {
+  it("gives previews a fresh well-formed address that is never a wallet's", () => {
+    const seed = hexToBytes("000102030405060708090a0b0c0d0e0f");
+    const evm = throwawayAddress("hyperliquid");
+    assert.match(evm, /^0x[0-9a-fA-F]{40}$/);
+    assert.notEqual(evm, throwawayAddress("hyperliquid"));
+    assert.notEqual(evm, walletAddress(seed, "hyperliquid", 0));
+    assert.match(throwawayAddress("solana"), /^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
+  });
   it("matches SLIP-0010 ed25519 test vector 1", () => {
     const seed = hexToBytes("000102030405060708090a0b0c0d0e0f");
     assert.equal(bytesToHex(slip10(seed, "m/0'")), "68e0fe46dfb67e368c75379acec591dad19df3cde26e63b93a8e704f1dade7a3");

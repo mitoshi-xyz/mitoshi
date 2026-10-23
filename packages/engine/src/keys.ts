@@ -85,3 +85,12 @@ export function solanaKey(seed: Uint8Array, index: number): SolanaKey {
 export function walletAddress(seed: Uint8Array, venue: Venue, index: number): string {
   return venue === "solana" ? solanaKey(seed, index).address : evmKey(seed, venue, index).address;
 }
+
+/**
+ * A well-formed address from a random key that is thrown away, for dry quotes. A preview must not tell 1Click or a
+ * bridge which wallet comes next: that would tie the wallet to the moment the user looked, before its random funding.
+ */
+export function throwawayAddress(venue: Venue): string {
+  if (venue === "solana") return base58.encode(ed25519.getPublicKey(ed25519.utils.randomSecretKey()));
+  return evmAddress(secp256k1.utils.randomSecretKey());
+}
