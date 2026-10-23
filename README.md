@@ -162,7 +162,8 @@ Dated, and checked again on 2026-10-23.
 | No third-party request from the page | On mitoshi.xyz the resource list holds one host, mitoshi.xyz; every user call is `POST /relay/ohttp` |
 | Live public data on every venue | Polymarket events and odds, Polymarket Perps and Hyperliquid prices and candles, Jupiter tokens, all through the relay |
 | Gateway egress | Ireland (Vercel dub1, AWS eu-west-1) for every visitor |
-| Polymarket over OHTTP | SDK market lookup, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and the builder signer refusing without keys |
+| Polymarket over OHTTP | SDK market lookup, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and, with the Builder keys set (2026-10-23), the gateway's builder signer returning signed relayer headers |
+| Confidential swaps on NEAR | With the partner key on the gateway (2026-10-23), a dry 1Click quote over OHTTP is accepted in confidential mode (0.01 ZEC → 11.86 USDC on HyperCore, about 465 s) |
 | Unit tests | 28 passing: engine 14 (denominations, rest rules, scheduler, registry, leak meter), rails 7 (1Click quotes and signature check), venues 7 (Polymarket Perps signing) |
 
 The three testnet transactions were read back with `GetTransaction` from `zcash-testnet.chainsafe.dev`, the light
