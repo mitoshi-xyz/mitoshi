@@ -41,19 +41,20 @@ Then one shielded payment of exactly the wallet's size goes to the deposit addre
 
 Confidential mode means NEAR doesn't publish which deposit paid which payout. It needs NEAR's partner key, which the
 gateway adds to 1Click calls; the browser never sees it. Mitoshi asks for it on every quote except Polymarket's trip
-home. If 1Click refuses a confidential quote (HTTP 401), the app uses public quotes for the rest of the session, and the
-route line drops "confidential". The app shows the mode it asked for; it doesn't read the mode back from the quote.
+home. If 1Click refuses a confidential quote (HTTP 401), the app uses public quotes for the rest of the session. The route line and the
+Privacy screen show the mode NEAR granted, read back from each signed quote, not the one Mitoshi asked for.
 
 ## Refunds
 
 | Swap | If NEAR can't complete it |
 | --- | --- |
 | A funding | The ZEC comes back to a fresh shielded address made for this swap; the wallet shows **Refunded** |
-| A trip home | The money comes back to the venue wallet. On Hyperliquid and Solana, send it home again; on Polymarket it returns as USDC on Polygon in the Deposit Wallet, which Send home doesn't pick up yet |
+| A trip home | The money comes back to the venue wallet: send it home again. On Polymarket it returns as USDC on Polygon; Send home re-bridges it to pUSD through the wallet's own bridge address first |
 
 ## Fees
 
-Mitoshi adds no fee of its own. A 0.2% funding fee is built in but switched off: no fee recipient is set
-(`APP_FEE_RECIPIENT` is `null`), so Mitoshi sends no app fee with its quotes, and the funding sheet shows "Mitoshi fee:
-none". You pay the swap spread and NEAR's own
-fees, which are part of the quote.
+Mitoshi adds no fee of its own: no fee recipient is set (`APP_FEE_RECIPIENT` is `null`), so Mitoshi sends no app fee
+with its quotes. NEAR's 1Click takes **0.2%** of each swap made with a partner key and no app fee (0.25% without a key;
+[NEAR's fee page](https://docs.near-intents.org/resources/fees)), listed in the quote's own `appFees`. The funding
+sheet reads both from the signed quote: **Swap cost** (everything the route takes, in dollars, with NEAR's fee) and
+**Mitoshi fee**. If Mitoshi ever sets a fee, 1Click splits it 50/50 and keeps at least its 20 bps.

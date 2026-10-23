@@ -66,5 +66,5 @@ them (blurred until you hold), so don't open that with anyone watching.
 | --- | --- |
 | A funding failed before anything was sent | It says so; **Try again** waits for a new random start |
 | A funding's ZEC was sent | It goes back to following the swap; NEAR refunds to a fresh shielded address if it can't complete |
-| NEAR refunded a trip home | The money is back in the venue wallet: send it home again on Hyperliquid and Solana; on Polymarket it is USDC on Polygon, which Send home doesn't pick up yet |
+| NEAR refunded a trip home | The money is back in the venue wallet: send it home again. On Polymarket it comes back as USDC on Polygon; Send home turns it back into pUSD through the wallet's own bridge address first (the bridge takes $2 or more) |
 | The tab closed during a funding | Every quote is saved before any ZEC moves, so the swap is found again on the next open; a funding that came due while closed gets a new random start |

@@ -57,7 +57,8 @@ The bridge credits **pUSD** to the Deposit Wallet. The wallet is ready when the 
 **Send home** cancels open orders, redeems resolved shares, sells the rest at market and brings any Perps money back
 first. The pUSD then leaves through a one-time **bridge withdrawal** that pays a NEAR deposit address in USDC on
 Polygon, and NEAR swaps it to ZEC at a fresh shielded address. Under 1 pUSD stays behind as dust. If NEAR refunds the
-trip home, the money returns to the Deposit Wallet as USDC on Polygon, which Send home doesn't pick up yet.
+trip home, the money returns to the Deposit Wallet as USDC on Polygon; the next Send home sends it through the wallet's
+own bridge address, back into pUSD, and out with the rest (the bridge takes $2 or more).
 
 <Callout title="Not in NEAR's confidential mode">
 This is the one swap Mitoshi can't make confidential: the bridge pays out an inexact amount, which needs a

@@ -61,10 +61,12 @@ through the money that funds it; Mitoshi funds each one from the shielded pool.
 3. **A wallet nobody has seen.** Mitoshi derives a new key for this position and pays one standard amount (0.01, 0.02,
    0.05 … ZEC) from the shielded pool into NEAR Intents at a random moment. A confidential quote on 2026-10-23 turned
    **0.01 ZEC into 11.86 USDC in about 465 s**.
-4. **Trade.** The order goes to the venue's real book, signed by that wallet's own key.
+4. **Trade.** The order goes to the venue's real book, signed by that wallet's own key (on Polymarket Perps, by a
+   7-day proxy that key authorises).
 5. **See what a copy trader sees.** "What the public sees" opens the wallet's public record: one funding from a NEAR
    swap, one trade, no history, no link to your other wallets.
-6. **Come home.** Closing sells at market and swaps the proceeds back to a fresh shielded address.
+6. **Come home.** Close the position, then **Send home**: it cancels open orders and swaps what the wallet holds back
+   to a fresh shielded address (on Polymarket it also sells or redeems the shares first).
 
 ### Who sees what
 
@@ -72,13 +74,13 @@ through the money that funds it; Mitoshi funds each one from the shielded pool.
 | --- | --- | --- |
 | **The venue** (Polymarket, Hyperliquid, Jupiter) | One fresh wallet's own trades, sent from Ireland | Your other wallets, your balance, your IP or country |
 | **A copy trader** | A wallet with one funding from a NEAR swap and one trade | Whose it is, or any other wallet of yours |
-| **NEAR Intents** | One swap per funding or trip home, confidential except Polymarket's trip home, with a fresh shielded refund address | Who sent it, or any other swap of yours |
-| **The Zcash chain** | That a shielded transaction happened | Amounts, addresses, or that it was you |
+| **NEAR Intents** | One swap per funding or trip home, confidential except Polymarket's trip home; a funding refunds to a fresh shielded address, a trip home to its own wallet | Who sent it, or any other swap of yours |
+| **The Zcash chain** | Shielded transactions, plus each wallet's hops through NEAR: a standard amount in, its trip home out | Your balance, your addresses, or that it was you |
 | **Relay** (Cloudflare) | Your IP and which public markets you look at | What you ask about your wallets: every user call is an encrypted [Oblivious HTTP](https://www.rfc-editor.org/rfc/rfc9458) message |
 | **Gateway** (Vercel, Dublin) | One decrypted request, from the relay's address | Your IP, or which requests come from the same person |
 
 No server holds your keys, your list of wallets or your positions; they live only in your browser, encrypted. What is
-public on purpose (each wallet's own trades, one hop per funding at a standard amount, NEAR's swap record, and Polymarket's
+public on purpose (each wallet's own trades, one hop in at a standard amount and one hop home, NEAR's swap record, and Polymarket's
 builder attribution on gasless wallet calls) is in the [threat model](https://docs.mitoshi.xyz/docs/privacy).
 
 ## Demo video
@@ -112,7 +114,7 @@ Follow the proof on the live app:
   <a href="https://docs.mitoshi.xyz/docs/guide/private-wallets">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset=".github/assets/funding-flow-dark.png" />
-      <img src=".github/assets/funding-flow-light.png" width="960" alt="Funding round trip: at a random moment, your shielded ZEC sends one standard amount with a fresh shielded refund address to NEAR Intents, which pays USDC, pUSD or SOL to a fresh wallet in a confidential swap; the wallet opens one position on the venue, closes it, sends the proceeds back through NEAR Intents to a fresh shielded address. A copy trader finds one funding, one trade, no history." />
+      <img src=".github/assets/funding-flow-light.png" width="960" alt="Funding round trip: at a random moment, your shielded ZEC sends one standard amount with a fresh shielded refund address to NEAR Intents, which pays USDC or SOL to a fresh wallet in a confidential swap (Polymarket's bridge turns the USDC into pUSD); the wallet opens one position on the venue, closes it, sends whatever it holds back through NEAR Intents to a fresh shielded address. A copy trader finds one funding, one trade, no history." />
     </picture>
   </a>
 </p>
@@ -132,8 +134,8 @@ Follow the proof on the live app:
 | Built on | What it does | Where |
 | --- | --- | --- |
 | **Zcash** · librustzcash | `zcash_client_sqlite` 0.23 and `zcash_client_backend` 0.25 (`zcash_protocol` 0.11, NU7-ready), compiled to `wasm32-wasip1`: sync, Ironwood and Orchard notes, proofs and sends in a Web Worker, encrypted into IndexedDB | [packages/zwallet](packages/zwallet) |
-| **Zcash** · ZIPs 32, 315, 317, 318 | Keys from the 24 words; rest periods; fees; canonical amounts and timing | [packages/engine](packages/engine) |
-| **NEAR Intents** · 1Click | Every rail in and out of the shielded pool, in confidential mode, with signed quotes checked before any deposit | [packages/rails](packages/rails) |
+| **Zcash** · ZIPs 32, 317, 318 | Keys from the 24 words; fees; canonical amounts and timing | [packages/engine](packages/engine) |
+| **NEAR Intents** · 1Click | Every rail in and out of the shielded pool, in confidential mode, with signed quotes checked before any deposit and the granted mode and fees read back from them | [packages/rails](packages/rails) |
 | **Oblivious HTTP** (RFC 9458) | The client, the relay and the gateway with its upstream allowlist | [packages/net](packages/net) · [services/web](services/web) · [services/gateway](services/gateway) |
 | **Venues** | Polymarket (Deposit Wallets, CLOB), Polymarket Perps, Hyperliquid, Solana through Jupiter | [packages/venues](packages/venues) |
 
@@ -145,7 +147,7 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 | --- | --- | --- |
 | **Privacy:** "Does it actually preserve privacy, or does it only look like it does? Leaks are disqualifying, not deductions." | Shielded balance in the browser, one fresh wallet per position, standard amounts at random times, confidential NEAR swaps, every call over Oblivious HTTP, no server-side state. Residuals are written down, not hidden | [Who sees what](#who-sees-what) · [threat model](https://docs.mitoshi.xyz/docs/privacy) · [gateway allowlist](services/gateway/src/constants.ts) |
 | **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet, in their own words; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [Why traders need it](#why-traders-need-it) · [mitoshi.xyz](https://mitoshi.xyz) |
-| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 36 unit tests | [Proof and evidence](#proof-and-evidence) |
+| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 37 unit tests | [Proof and evidence](#proof-and-evidence) |
 | **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
 | **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
 | "All code written during the build window. Libraries are fine; existing products are not." | The repository's history starts on 2026-10-22; libraries are listed above and in the lockfile | [Prior work](#prior-work) |
@@ -163,7 +165,7 @@ Dated; re-checked on 2026-10-23.
 | Confidential swaps on NEAR | A dry 1Click quote over OHTTP accepted in confidential mode: 0.01 ZEC → 11.86 USDC on HyperCore, about 465 s |
 | Polymarket over OHTTP | Market lookup, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and the gateway's builder signer returning signed relayer headers |
 | Gateway egress | Ireland (Vercel dub1) for every visitor, so no venue learns a user's country |
-| Unit tests | 36 passing: engine 22 (denominations, rest rules, scheduling, one wallet per position, registry, keys, leak meter), rails 7 (1Click quotes and signature check), venues 7 (Polymarket Perps signing) |
+| Unit tests | 37 passing: engine 22 (denominations, rest rules, scheduling, one wallet per position, registry, keys, leak meter), rails 8 (1Click quotes, the signature check, the mode and fees read back), venues 7 (4 Polymarket Perps signing, 3 Solana transactions) |
 
 The testnet transactions were read back with `GetTransaction` from the light server the wallet syncs from; public
 testnet explorers follow an older testnet chain and do not show them.

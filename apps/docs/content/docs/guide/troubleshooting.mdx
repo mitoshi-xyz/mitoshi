@@ -20,8 +20,8 @@ Start at [Service status](/docs/guide/status): it shows whether each hop is answ
 | "Private wallets are funded through NEAR Intents, which only takes mainnet ZEC." | The app is running on testnet | Use mitoshi.xyz (mainnet) |
 | A wallet shows **Refunded** | NEAR couldn't complete the funding | The ZEC went to a fresh shielded address in your balance |
 | A wallet shows **Needs you** | A step stopped | **Try again**; a funding that never sent anything waits for a new random start |
-| **Send home** isn't there on a perps wallet | It still holds a position or an open order (a limit, take-profit or stop-loss) | **Close** the position and cancel the orders; Send home appears once the wallet holds nothing |
-| A trip home was refunded | NEAR couldn't complete the swap home | On Hyperliquid and Solana, send it home again. On Polymarket the refund is USDC on Polygon in the Deposit Wallet, which Send home doesn't pick up yet |
+| **Send home** isn't there on a perps wallet | It still holds a position | **Close** it. Open orders don't block it: the button reads **Cancel orders and send home** |
+| A trip home was refunded | NEAR couldn't complete the swap home | Send it home again. On Polymarket the refund is USDC on Polygon; Send home re-bridges it to pUSD first (under the bridge's $2 minimum it stays as dust) |
 | Something is left in a retired wallet | It's smaller than the trip home would cost | It stays as [dust](/docs/guide/private-wallets#dust) |
 | A wallet is missing after a restore from words | The scan covers Hyperliquid and Solana, one address every 3–9 s | Let it finish, or Settings → **Find my wallets**. Polymarket wallets come back only from the backup file |
 | **Mitoshi is locked** | The passphrase lock is on | Enter it. There is no reset: without it, start over from the 24 words |

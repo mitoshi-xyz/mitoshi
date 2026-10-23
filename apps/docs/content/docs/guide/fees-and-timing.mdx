@@ -1,10 +1,10 @@
 ---
 title: Fees and timing
-description: What a round trip costs and how long each step takes. Mitoshi adds no fee of its own to trades or quotes.
+description: What a round trip costs and how long each step takes. Mitoshi adds no fee of its own; NEAR Intents takes 0.2% of each swap.
 icon: Timer
 ---
 
-{/* Sources: packages/rails/src/constants.ts:44-58; packages/engine/src/constants.ts:9-48; apps/web/src/constants.ts:17-25;
+{/* Sources: packages/rails/src/constants.ts:44-62, oneclick.ts (swapTerms); docs.near-intents.org/resources/fees; packages/engine/src/constants.ts:9-48; apps/web/src/constants.ts:17-25;
    apps/web/src/features/private-wallets (funding.ts:57-58, fund-drawer.tsx:208-252); apps/web/src/features/perps/hl-driver.ts:9-10;
    packages/rails/src/fixtures/dry-quote.json; the funding-sheet capture of 2026-10-23. */}
 
@@ -13,9 +13,9 @@ icon: Timer
 | What | Charged by | How much |
 | --- | --- | --- |
 | Trading | Mitoshi | **None added.** No fee and no builder code on any order |
-| Funding | Mitoshi | **None added.** A 0.2% funding fee exists in the code but is off: no fee recipient is set (`APP_FEE_RECIPIENT` is `null`), so Mitoshi's quotes carry no app fee, and the funding sheet shows "Mitoshi fee: none" |
+| Funding | Mitoshi | **None added.** A funding fee exists in the code but is off: no fee recipient is set (`APP_FEE_RECIPIENT` is `null`), so the funding sheet shows "Mitoshi fee: none", read from the quote |
 | Venue fees | Polymarket, Hyperliquid, Jupiter | Each venue's own; the perps ticket shows its fee before you trade |
-| The swaps | NEAR Intents | The spread and NEAR's fees, inside the quote you see before you fund |
+| The swaps | NEAR Intents | **0.2% of each swap** (1Click's platform fee for a partner key with no app fee of its own), plus the spread. The funding sheet's **Swap cost** is the whole of it in dollars, read from the signed quote: $0.44 on a 0.05 ZEC Hyperliquid funding on 2026-10-23, of which 0.2% is NEAR's fee. The cost has a fixed part, so it weighs more on 0.01 ZEC |
 | Zcash network fee | Zcash miners | The ZIP 317 fee; the funding sheet reserves 0.00015 ZEC for it |
 | Polymarket bridge | Polymarket's bridge | Shown in the funding sheet for Polymarket |
 
@@ -24,7 +24,7 @@ icon: Timer
 | Step | Typical time | From |
 | --- | --- | --- |
 | A new wallet starts funding | 20 s to 3 min after you ask, at random | Mitoshi's scheduler |
-| A keep-ready wallet starts funding | After a random wait, 90 min on average, at most 12 h (the first one too) | Mitoshi's scheduler |
+| A keep-ready wallet starts funding | The first, when you turn the switch on with ZEC to spend: like one you asked for. Every one after it: a random wait, 90 min on average, at most 12 h | Mitoshi's scheduler |
 | Funding: ZEC in, venue asset out | About 8 minutes | 1Click's estimate (465 s in a quote of 2026-10-22; "about 8 min" in the funding sheet on 2026-10-23) |
 | Polymarket credit: USDC to pUSD | Not estimated; the wallet turns Ready when the bridge reports it (its fee is in the sheet) | Polymarket's bridge |
 | A deposit shows up | One block, about 75 s on mainnet | Zcash |

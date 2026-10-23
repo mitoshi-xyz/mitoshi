@@ -21,8 +21,9 @@ icon: Eye
 
 <Callout title="What 'confidential' means in the app">
 Mitoshi asks for confidential mode on every quote it can; that needs NEAR's partner key on the gateway. If 1Click
-refuses a confidential quote (HTTP 401), the app uses public quotes for the rest of the session. The Privacy screen and
-the funding sheet's route line show which mode the app is asking for; Mitoshi doesn't read the mode back from the quote.
+refuses a confidential quote (HTTP 401), the app uses public quotes for the rest of the session. The funding sheet's
+route line and the Privacy screen show the mode NEAR **granted**, read back from the signed quote: "confidential" or
+"public", in amber when public.
 </Callout>
 
 ## What Mitoshi cannot hide

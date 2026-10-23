@@ -5,9 +5,9 @@ sequenceDiagram
   participant V as Venue
   Note over Y: A random moment,<br/>never at a deposit or app open
   Y->>N: One standard amount (0.01 … 1 ZEC),<br/>fresh shielded refund address
-  N->>F: USDC, pUSD or SOL (confidential swap)
-  F->>V: One position, signed by its own key
+  N->>F: USDC or SOL (confidential swap),<br/>Polymarket's bridge turns USDC into pUSD
+  F->>V: One position, signed by its own key<br/>(on Polymarket Perps, by its proxy)
   V->>F: Close
-  F->>N: Proceeds
+  F->>N: Proceeds, whatever the wallet holds
   N->>Y: Back to a fresh shielded address
   Note over F,V: A copy trader finds one funding,<br/>one trade, no history

@@ -21,13 +21,13 @@ That wallet's own trades, its one funding from a NEAR swap and its one trip home
 or your IP. See [What stays public](/docs/privacy/what-stays-public).
 </Accordion>
 <Accordion title="Does Mitoshi take a fee?">
-Mitoshi adds none: a 0.2% funding fee exists in the code but is switched off, so its quotes carry no app fee. You pay
-the venues' own fees, the swap spread and NEAR's own fees inside each quote, and the Zcash network fee. See [Fees and timing](/docs/guide/fees-and-timing).
+Mitoshi adds none: a funding fee exists in the code but is switched off. You pay NEAR Intents' 0.2% on each swap and
+the spread (the funding sheet's **Swap cost**), the venues' own fees, and the Zcash network fee. See [Fees and timing](/docs/guide/fees-and-timing).
 </Accordion>
 <Accordion title="Why does funding take minutes?">
 The swap through NEAR Intents takes about 8 minutes by its own estimate, and the funding starts at a random moment 20
-seconds to 3 minutes after you ask. Turn on **Keep one ready** and Mitoshi funds one ahead of time,
-after a random wait (90 minutes on average), while the app is open.
+seconds to 3 minutes after you ask. Turn on **Keep one ready** and Mitoshi funds one ahead of time while the app is
+open; each one after the first waits a random 90 minutes on average, so it can't be matched to your last trade.
 </Accordion>
 <Accordion title="Why does my ZEC have to rest?">
 ZEC that arrives from a public address, including NEAR's payouts when a wallet comes home, rests 2–6 hours before it can

@@ -33,9 +33,10 @@ it. On 2026-10-23, for an empty account:
   kicker="New private wallet · Hyperliquid"
   title="0.05 ZEC"
   rows={[
-    ["A new wallet gets", "≈ 61.4258 USDC (≈ $61.40)"],
+    ["A new wallet gets", "≈ 61.9942 USDC (≈ $61.97)"],
     ["Time", "about 8 min"],
     ["Network fee", "0.00015 ZEC"],
+    ["Swap cost", "$0.44 · NEAR fee 0.2%"],
     ["Mitoshi fee", "none"],
     ["Route", "NEAR Intents · confidential"],
     ["Leak meter", "blocked: only 0 ZEC is ready to spend"],
@@ -66,9 +67,11 @@ to the **Done** tab.
 <Shot src="/shots/wide/keep-ready.webp" alt="Keep one ready on mitoshi.xyz with the Hyperliquid switch on, a 0.05 ZEC size chip and Waiting for ZEC." caption="Keep one ready, on for Hyperliquid at 0.05 ZEC. With no ZEC to spend, it waits." />
 
 A trade waits for a funding unless a wallet is already ready. **Keep one ready** funds one wallet per venue, at the
-size you pick, while Mitoshi is open and there is ZEC to spend. Every keep-ready funding, the first one included, starts
-after a random wait from an exponential spread, **90 minutes on average and never more than 12 hours**, so a new wallet
-never shows up on the venue minutes after your trade. Use one, and its replacement waits the same way.
+size you pick, while Mitoshi is open and there is ZEC to spend. Turn the switch on with ZEC to spend and the first
+wallet starts like one you asked for, 20 s to 3 min later. Every wallet after it, the replacement for one you used or
+one made later when ZEC arrives, starts after a random wait from an exponential spread, **90 minutes on average and
+never more than 12 hours**, so a new wallet never shows up on the venue minutes after your trade. The switch's line
+says when the waiting wallet starts.
 
 ## Dust
 
