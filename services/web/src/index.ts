@@ -85,6 +85,7 @@ async function relay(request: Request, env: Env, path: string, search: string): 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    // The zone's redirect rule answers www first; this covers the relay if that rule is ever lost.
     if (url.hostname === WWW_HOST) {
       url.hostname = CANONICAL_HOST;
       return Response.redirect(url.toString(), HTTP_MOVED);

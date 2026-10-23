@@ -5,7 +5,11 @@
   // workers.dev stays on: local development uses it as its relay (DEV_ORIGINS).
   "workers_dev": true,
   "preview_urls": false,
-  // mitoshi.xyz (its zone is on Cloudflare); www redirects to it.
+  // mitoshi.xyz (its zone is on Cloudflare). Zone settings that live outside this file, set 2026-10-23:
+  //   - a redirect rule sends www.mitoshi.xyz/* to the apex with a 301, before assets or this Worker;
+  //   - Web Analytics for the zone is off (automatic setup disabled), and so are NEL, email obfuscation
+  //     and server-side excludes. Every page also says no-transform (apps/web/scripts/headers.mjs), so
+  //     the proxy cannot add a script to it even if one of these is switched back on.
   "routes": [
     { "pattern": "mitoshi.xyz", "custom_domain": true },
     { "pattern": "www.mitoshi.xyz", "custom_domain": true }

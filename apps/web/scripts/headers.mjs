@@ -3,7 +3,7 @@
  *
  * Every page gets a Content-Security-Policy that allows its own inline scripts by SHA-256 hash and
  * nothing else inline, so there is no 'unsafe-inline' for scripts. Every response gets cross-origin
- * isolation (COOP/COEP/CORP) and the usual hardening headers.
+ * isolation (COOP/COEP/CORP), the usual hardening headers, and no-transform, so nothing is added on the way.
  */
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -35,6 +35,9 @@ const EVERYWHERE = {
   "Referrer-Policy": "no-referrer",
   "X-Frame-Options": "DENY",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
+  // no-transform: Cloudflare's proxy may not rewrite a page, so it cannot inject its analytics beacon (on by default for
+  // a proxied zone) or an email-obfuscation script. The rest is the assets default: every load revalidates.
+  "Cache-Control": "public, max-age=0, must-revalidate, no-transform",
 };
 
 function htmlFiles(dir) {
@@ -68,12 +71,25 @@ const lines = ["/*", ...Object.entries(EVERYWHERE).map(([k, v]) => `  ${k}: ${v}
 // /_next/static/* caching is set by the Worker (services/web), which marks only real files immutable: a rule here would
 // also make a missing chunk's 404 immutable, and a browser that loads mid-deploy would keep it for a year.
 
+const policyFor = (html, base) =>
+  [...base, `script-src 'self' 'wasm-unsafe-eval' ${scriptHashes(html).join(" ")}`.trim()].join("; ");
+// A <meta> policy cannot carry frame-ancestors (browsers ignore it there); X-Frame-Options covers framing.
+const META_POLICY = BASE_POLICY.filter((d) => !d.startsWith("frame-ancestors"));
+
 let pages = 0;
 for (const file of htmlFiles(OUT)) {
   const paths = routes(file);
-  if (paths.length === 0) continue;
-  const hashes = scriptHashes(readFileSync(file, "utf8"));
-  const policy = [...BASE_POLICY, `script-src 'self' 'wasm-unsafe-eval' ${hashes.join(" ")}`.trim()].join("; ");
+  const html = readFileSync(file, "utf8");
+  if (paths.length === 0) {
+    // The 404 page answers every unknown path, so no _headers rule names it: it carries its own policy, ahead of
+    // every script. Adding a tag leaves the inline scripts, and so their hashes, unchanged.
+    const meta = `<meta http-equiv="Content-Security-Policy" content="${policyFor(html, META_POLICY)}"/>`;
+    if (!html.includes("<head>")) throw new Error(`${file}: no <head> to put the policy in`);
+    if (!html.includes('http-equiv="Content-Security-Policy"'))
+      writeFileSync(file, html.replace("<head>", `<head>${meta}`));
+    continue;
+  }
+  const policy = policyFor(html, BASE_POLICY);
   const line = `  Content-Security-Policy: ${policy}`;
   if (line.length > MAX_LINE) throw new Error(`${file}: CSP line is ${line.length} characters (limit ${MAX_LINE})`);
   for (const p of paths) lines.push(p, line, "");
