@@ -1,7 +1,7 @@
 {
   "name": "mitoshi",
   "private": true,
-  "description": "Mitoshi 見通し: trade privately from anywhere. Predictions, perps, US stocks, gold and Solana tokens from shielded ZEC, each trade from a wallet that has never existed before.",
+  "description": "Mitoshi 見通し: trade privately from anywhere. Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you.",
   "license": "MIT",
   "packageManager": "pnpm@12.14.0",
   "engines": {

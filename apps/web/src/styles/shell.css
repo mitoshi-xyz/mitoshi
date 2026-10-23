@@ -1,5 +1,5 @@
 /*
- * The app shell's geometry (Mitoshi's AppShell, as Kakure runs it): a floating rail, one framed stage, a phone dock.
+ * The app shell's geometry: a floating rail, one framed stage, a phone dock.
  * Breakpoints: dock < 768 px <= 88 px icon rail < 1280 px <= 248 px rail.
  */
 :root {

@@ -55,7 +55,7 @@ const TICK_MS = 1000;
 
 /**
  * A wait in words: a shimmering verb ("Pricing", "Making the private proof"), the seconds after 3 s, and
- * "Still waiting · Retry" after 15 s (Kawase's wait grammar).
+ * "Still waiting · Retry" after 15 s.
  */
 export function Wait({ verb, onRetry, expectSeconds }: { verb: string; onRetry?: () => void; expectSeconds?: number }) {
   const [elapsed, setElapsed] = useState(0);

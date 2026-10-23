@@ -15,7 +15,7 @@ const PLATE_PAD = 32;
 /**
  * A QR code drawn as dots with rounded finder rings and a mark in the middle, on a light plate so it scans in both
  * themes. Error correction is H, so the hidden centre never costs a scan; dots are a full half-module in radius
- * (smaller dots were found not to decode reliably in Kawase's study).
+ * (smaller dots were found not to decode reliably).
  */
 export function DottedQr({ value, size = 232, mark }: { value: string; size?: number; mark?: string }) {
   const qr = encode(value, { ecc: "H", border: 0 });

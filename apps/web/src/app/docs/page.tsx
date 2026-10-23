@@ -6,9 +6,9 @@ export default function DocsOverview() {
     <>
       <Title kicker="Mitoshi docs">Trade privately from anywhere</Title>
       <Lead>
-        Mitoshi is a private trading app. You hold shielded ZEC in your browser, and every position you open on
-        Polymarket, Hyperliquid or Solana comes from a wallet that has never existed before. When you close, the money
-        comes back to shielded ZEC.
+        Mitoshi is a private trading app. Your balance stays shielded in Zcash, and every position you open on
+        Polymarket, Hyperliquid or Solana comes from a brand-new wallet nobody can link to you. When you close, the
+        money comes back to shielded ZEC.
       </Lead>
       <H2>Why it exists</H2>
       <P>

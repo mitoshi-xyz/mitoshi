@@ -6,7 +6,7 @@ import "./globals.css";
 
 const TITLE = "Mitoshi 見通し · Trade privately from anywhere";
 const DESCRIPTION =
-  "Trade privately from anywhere: Polymarket predictions, perps, US stocks, gold and Solana tokens from shielded ZEC, each trade from a wallet nobody has ever seen.";
+  "Trade privately from anywhere. Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you.";
 /** The link preview (public/og.png), made from the README banner: .github/assets/source/banner.html#og. */
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;

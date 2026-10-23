@@ -1,11 +1,11 @@
 <p align="center">
   <a href="https://mitoshi.xyz">
-    <img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade privately from anywhere. Prediction markets, US stocks, gold and crypto perps, Solana tokens, every trade from a fresh wallet funded from shielded ZEC. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." />
+    <img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade privately from anywhere. Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." />
   </a>
 </p>
 
 <h1 align="center">Mitoshi · 見通し</h1>
-<p align="center">Trade privately from anywhere.<br/>Polymarket, US stocks, gold, crypto perps and Solana tokens from shielded ZEC, each trade from a wallet nobody has seen before.</p>
+<p align="center">Trade privately from anywhere.<br/>Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you.</p>
 
 <p align="center">
   <a href="https://mitoshi.xyz"><b>Open Mitoshi</b></a>

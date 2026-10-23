@@ -13,7 +13,7 @@ export const LANDING = {
     chip: "Live on Zcash mainnet",
     title: ["Trade privately", "from"],
     accent: "anywhere.",
-    line: "Predictions, perps, US stocks, gold and Solana tokens, all from shielded ZEC. Every trade opens a wallet nobody has ever seen.",
+    line: "Your balance stays shielded in Zcash. Every trade opens from a brand-new wallet nobody can link to you.",
     open: "Open Mitoshi",
     how: "How it works",
     small: "No account · no sign-up · your keys stay in this browser",

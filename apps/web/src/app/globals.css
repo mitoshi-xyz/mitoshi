@@ -175,7 +175,7 @@ body {
   }
 }
 
-/* Skeleton pulse (Kawase "states": 1200 ms, never a spinner page). */
+/* Skeleton pulse (1200 ms, never a spinner page). */
 @keyframes mt-pulse {
   0%,
   100% {
