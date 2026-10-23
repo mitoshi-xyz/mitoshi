@@ -4,9 +4,9 @@ import { THEME_INIT } from "@/features/theme/theme";
 import { fontVariables } from "@/lib/fonts";
 import "./globals.css";
 
-const TITLE = "Mitoshi 見通し · Trade Polymarket and Hyperliquid from shielded ZEC";
+const TITLE = "Mitoshi 見通し · Trade predictions, stocks and crypto from shielded ZEC";
 const DESCRIPTION =
-  "Each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. US stocks, gold and Solana tokens too.";
+  "On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history.";
 /** The link preview (public/og.png), made from the README banner: .github/assets/source/banner.html#og. */
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
@@ -14,7 +14,7 @@ const OG_IMAGE = {
   url: "/og.png",
   width: OG_WIDTH,
   height: OG_HEIGHT,
-  alt: "Mitoshi: trade Polymarket and Hyperliquid from shielded ZEC",
+  alt: "Mitoshi: trade predictions, stocks and crypto from shielded ZEC",
 };
 
 export const metadata: Metadata = {

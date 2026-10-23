@@ -11,9 +11,9 @@ export const LANDING = {
   },
   hero: {
     chip: "Live on Zcash mainnet",
-    title: ["Trade Polymarket", "and Hyperliquid"],
+    title: ["Trade predictions,", "stocks and crypto"],
     accent: "from shielded ZEC.",
-    line: "Each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history.",
+    line: "On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history.",
     open: "Open Mitoshi",
     how: "How it works",
     small: "No account · no sign-up · your keys stay in this browser",

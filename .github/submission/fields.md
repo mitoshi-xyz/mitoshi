@@ -15,7 +15,7 @@ Ready to paste into the form at thezecathon.com (SUBMIT PROJECT), in the form's 
 ## Description
 
 ```text
-Trade Polymarket and Hyperliquid from shielded ZEC. Each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Live at mitoshi.xyz.
+Trade predictions, stocks and crypto from shielded ZEC. On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Live at mitoshi.xyz.
 
 What it does: a real Zcash wallet runs in your browser (librustzcash's zcash_client_sqlite and client_backend compiled to WASM; Ironwood and Orchard, NU7-ready). For each position on Polymarket, Polymarket Perps (US stocks, gold, oil), Hyperliquid or Solana, Mitoshi derives a fresh key and funds it from the shielded pool through NEAR Intents 1Click. The order goes to the venue's real book. On close, the money swaps back to a fresh shielded address.
 

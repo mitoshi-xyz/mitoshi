@@ -1,11 +1,11 @@
 <p align="center">
   <a href="https://mitoshi.xyz">
-    <img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade Polymarket and Hyperliquid from shielded ZEC. Each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." />
+    <img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade predictions, stocks and crypto from shielded ZEC. On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." />
   </a>
 </p>
 
 <h1 align="center">Mitoshi · 見通し</h1>
-<p align="center"><b>A new wallet for every trade.</b><br/>Trade Polymarket and Hyperliquid from shielded ZEC.</p>
+<p align="center"><b>A new wallet for every trade.</b><br/>Trade predictions, stocks and crypto from shielded ZEC.</p>
 
 <p align="center">
   <a href="https://mitoshi.xyz"><b>Open Mitoshi</b></a>
