@@ -30,7 +30,8 @@ A Cloudflare Worker (`mitoshi-web`) with Cloudflare's targeted placement near AW
 - Holds **one live WebSocket per venue** (Hyperliquid, Polymarket, Polymarket Perps) in a Durable Object and shares it
   with everyone watching. Only public market channels are allowed: a subscription that names a user is refused. The
   Polymarket Perps `tickers` channel is skipped (about 700 updates a second for all markets); `statistics` gives the
-  price, sent at most once a second.
+  price, sent at most once a second. If a feed is unavailable, the relay answers 503 with `Retry-After: 60` and the app
+  backs off for a minute: live ticks pause, while prices and history still load over Oblivious HTTP.
 
 ## The gateway: knows what, not who
 
@@ -50,7 +51,9 @@ separate, checked image fetch, below):
 
 Every upstream request leaves with the same browser-like user agent for everyone and drops cookie, origin, referrer,
 user-agent and forwarding headers. Redirects aren't followed. A public answer may be cached and shared between users
-for seconds up to a few minutes; anything carrying a credential never is.
+for seconds up to a few minutes; anything carrying a credential never is. Polymarket's event listings are trimmed to the
+fields the app reads before they are sealed back (one evening of sports markets can otherwise pass 10 MB); a single
+event is never trimmed (`services/gateway/src/shape.ts`).
 
 <Callout title="Why the gateway isn't on Cloudflare">
 Tests on 2026-10-22 showed that a Cloudflare Worker passes the visitor's own country on to every Cloudflare-hosted site
