@@ -12,6 +12,8 @@
   &nbsp;·&nbsp;
   <a href="https://mitoshi.xyz/demo"><b>Demo</b></a>
   &nbsp;·&nbsp;
+  <a href="https://mitoshi.xyz/pitch"><b>Pitch</b></a>
+  &nbsp;·&nbsp;
   <a href="https://docs.mitoshi.xyz"><b>Docs</b></a>
   &nbsp;·&nbsp;
   <a href="#who-sees-what"><b>Who sees what</b></a>
