@@ -55,7 +55,7 @@ export function Drawer({
         aria-modal="true"
         className={cx(
           "absolute flex flex-col gap-4 overflow-y-auto border-hairline bg-surface-1 p-5 shadow-[var(--shadow-receipt)] transition-transform duration-[var(--dur-drawer-in)] [transition-timing-function:var(--ease-drawer)]",
-          "inset-x-0 bottom-0 max-h-[88dvh] rounded-t-xl border-t",
+          "inset-x-0 bottom-0 max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top)-16px))] rounded-t-xl border-t",
           "md:inset-y-4 md:right-4 md:left-auto md:max-h-none md:rounded-xl md:border",
           wide ? "md:w-[560px]" : "md:w-[384px]",
           open

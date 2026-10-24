@@ -31,11 +31,15 @@ export const metadata: Metadata = {
     images: [OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: [OG_IMAGE.url] },
+  // Added to a Home Screen, Mitoshi opens as its own app, full screen (the status bar is cleared by the safe-area insets).
+  appleWebApp: { capable: true, title: "Mitoshi" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Full screen on phones, notch and Dynamic Island included: the shell pads itself by the safe-area insets.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#050505" },
     { media: "(prefers-color-scheme: light)", color: "#F4EEE3" },

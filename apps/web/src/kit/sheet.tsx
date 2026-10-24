@@ -58,7 +58,7 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         className={cx(
-          "absolute flex max-h-[92dvh] flex-col border-hairline bg-surface-1 shadow-[var(--shadow-receipt)]",
+          "absolute flex max-h-[min(92dvh,calc(100dvh-env(safe-area-inset-top)-16px))] flex-col border-hairline bg-surface-1 shadow-[var(--shadow-receipt)]",
           "transition-[transform,opacity] duration-[var(--dur-drawer-in)] [transition-timing-function:var(--ease-drawer)]",
           "inset-x-0 bottom-0 rounded-t-[28px] border-t pb-[max(12px,env(safe-area-inset-bottom))]",
           "md:inset-x-auto md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:rounded-[24px] md:border md:pb-0",

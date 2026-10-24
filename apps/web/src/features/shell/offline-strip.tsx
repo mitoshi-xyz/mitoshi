@@ -20,7 +20,7 @@ export function OfflineStrip() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 top-0 z-[var(--z-toast)] flex items-center justify-center gap-2 bg-warning px-4 py-1.5 font-medium text-[13px] text-bg"
+      className="fixed inset-x-0 top-0 z-[var(--z-toast)] flex items-center justify-center gap-2 bg-warning px-4 pt-[calc(env(safe-area-inset-top)+0.375rem)] pb-1.5 font-medium text-[13px] text-bg"
     >
       <WifiOff size={14} /> Offline · prices and balances pause until you are back
     </div>

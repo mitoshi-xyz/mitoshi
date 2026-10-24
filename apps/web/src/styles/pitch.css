@@ -19,6 +19,12 @@
   gap: 16px;
   padding: 20px clamp(16px, 4vw, 48px);
 }
+.pd-head {
+  padding-top: max(20px, env(safe-area-inset-top));
+}
+.pd-foot {
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
 .pd-folio {
   font: 600 12px / 1 var(--font-mono);
   letter-spacing: 0.16em;

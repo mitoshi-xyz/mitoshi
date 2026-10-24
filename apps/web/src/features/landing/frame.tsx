@@ -14,7 +14,7 @@ const LINKS = [
 /** The landing's glass nav, shared by the landing and /demo. Demo stays visible on phones, beside Open. */
 export function LandingNav() {
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] px-3 pt-3">
+    <header className="sticky top-0 z-[var(--z-sticky)] px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
       <nav className="lp-nav" aria-label="Mitoshi">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Mitoshi home">
           <Seal size={34} />

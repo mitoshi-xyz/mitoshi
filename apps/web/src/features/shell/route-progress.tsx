@@ -40,7 +40,10 @@ export function RouteProgress() {
   }, [path]);
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-[var(--z-toast)] h-[3px]">
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-x-0 top-[env(safe-area-inset-top)] z-[var(--z-toast)] h-[3px]"
+    >
       <div
         className="h-full bg-accent shadow-[0_0_8px_var(--accent)]"
         style={{

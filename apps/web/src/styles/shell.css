@@ -47,11 +47,12 @@
   min-width: 0;
   min-height: 100dvh;
   flex-direction: column;
-  padding: 0 12px calc(var(--dock-h) + 28px);
+  /* Clears the status bar and the notch or Dynamic Island when the page runs full screen (0 everywhere else). */
+  padding: env(safe-area-inset-top) 12px calc(var(--dock-h) + 28px + env(safe-area-inset-bottom));
 }
 @media (min-width: 768px) {
   .mt-column {
-    padding: 0 var(--inset) var(--inset) calc(var(--rail-compact) + var(--inset) * 2);
+    padding: env(safe-area-inset-top) var(--inset) var(--inset) calc(var(--rail-compact) + var(--inset) * 2);
   }
 }
 @media (min-width: 1280px) {

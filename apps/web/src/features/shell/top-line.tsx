@@ -30,14 +30,18 @@ export function TopLine({ onSearch }: { onSearch: () => void }) {
           <HealthChip />
         </span>
       </div>
+      {/* A plain round button on phones (a 44 px target, no keyboard hint); the pill with ⌘K from tablets up. */}
       <button
         type="button"
         onClick={onSearch}
-        className="inline-flex h-10 items-center gap-3 rounded-full border border-hairline bg-surface-1/60 pr-2 pl-3.5 text-[13px] text-ink-2 hover:border-strong hover:text-ink"
+        aria-label="Search markets and pages"
+        className="inline-flex size-11 items-center justify-center gap-3 rounded-full border border-hairline bg-surface-1/60 text-[13px] text-ink-2 hover:border-strong hover:text-ink md:h-10 md:w-auto md:justify-start md:pr-2 md:pl-3.5"
       >
-        <Search size={16} />
-        <span className="hidden sm:inline">Search markets and pages</span>
-        <kbd className="num rounded-md border border-hairline px-1.5 py-0.5 text-[11px] text-muted">⌘K</kbd>
+        <Search size={18} />
+        <span className="hidden md:inline">Search markets and pages</span>
+        <kbd className="num hidden rounded-md border border-hairline px-1.5 py-0.5 text-[11px] text-muted md:inline">
+          ⌘K
+        </kbd>
       </button>
     </header>
   );
