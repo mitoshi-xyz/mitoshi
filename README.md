@@ -25,28 +25,43 @@ On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wall
 traders find one trade and no history. From one shielded ZEC balance you bet on prediction markets, trade US stocks,
 indices, gold and oil, go long or short on crypto perps, and buy Solana tokens, with one portfolio across all of them.
 The privacy is the engine: a real Zcash wallet runs in your browser, every funding is one standard amount sent at a
-random moment, every call about your wallets travels over Oblivious HTTP, and closing sends the money home to a fresh
+random moment, every call about your wallets travels over Oblivious HTTP, and Send home swaps the money back to a fresh
 shielded address. The market sees the trade, not who made it.
 
 Built for **[ZECATHON](https://thezecathon.com) · Private Markets** ([how Mitoshi meets the hackathon](#how-mitoshi-meets-the-hackathon)).
 *Mitoshi* (見通し) means **outlook**: the view ahead.
 
-### Why traders need it
+## The problem
 
-In their own words:
+On Polymarket, Hyperliquid and other onchain markets, every trade is public. Each wallet's positions, wins and losses
+can be read by anyone, and tools rank those wallets so others can copy the best ones: one graded 7,756 Polymarket
+wallets for copy trading ([r/Polymarket](https://www.reddit.com/r/Polymarket/comments/1vu93xl/), 2026-08-21). "The copy
+traders literally ruin my trading," one trader said ([via @kai_xbt](https://x.com/kai_xbt/status/2103361144325087380),
+2026-09-25).
 
-- "The copy traders literally ruin my trading. It makes trading 20x harder." Trader Rasmr, quoted by
-  [@kai_xbt](https://x.com/kai_xbt/status/2103361144325087380), 2026-09-25 (21.6k views).
-- "I created another wallet to trade in peace and people found it."
-  [@DegenCapitalLLC](https://x.com/DegenCapitalLLC/status/2105567151352689047), 2026-10-01 (34k views).
-- Copy traders "are basically unavoidable unless you use a new wallet for every trade."
-  [@remusofmars](https://x.com/remusofmars/status/2103484283247530247), 2026-09-25.
+Traders tell each other to "use a new wallet for every trade"
+([@remusofmars](https://x.com/remusofmars/status/2103484283247530247), 2026-09-25). Today that means:
 
-Every Polymarket trade is public, and tools already grade thousands of wallets for copy trading
-([r/Polymarket](https://www.reddit.com/r/Polymarket/comments/1vu93xl/), 2026-08-21). A new wallet alone is found again
-through the money that funds it; Mitoshi funds each one from the shielded pool.
+1. make a new wallet;
+2. send it money from your main wallet or an exchange;
+3. trade, and hope nobody connects the two.
 
-## One trade, start to finish
+Step 2 gives it away. A transfer from your main wallet is public, and an exchange records every withdrawal under your
+name. "I created another wallet to trade in peace and people found it"
+([@DegenCapitalLLC](https://x.com/DegenCapitalLLC/status/2105567151352689047), 2026-10-01). Privacy pools don't fix it
+when they are small: Solana's largest held $1.9M on 2026-10-22 (DefiLlama), so a deposit and a matching withdrawal stand
+out. A few new apps hide positions, but each covers a single venue.
+
+## The idea
+
+Mitoshi keeps your money in shielded ZEC, where nobody can see it, and opens every position from a brand-new wallet
+funded from there. You choose the market and the amount. Mitoshi makes the wallet, pays one standard amount out of the
+shielded pool through NEAR Intents at a random moment, places your order on the venue's real book, and later sends what
+the wallet holds back to a fresh shielded address. Where that money came from hides among every note in Zcash's
+shielded pool: about 4.96 million ZEC on 2026-10-22 ([openzcash.org](https://openzcash.org/zcash-network)). A copy trader who finds the wallet
+sees one funding, one trade and no history.
+
+### One trade, start to finish
 
 <p align="center">
   <img src="apps/web/public/captures/event.jpg" width="250" alt="A Polymarket event in Mitoshi: Republican Presidential Nominee 2028, J.D. Vance at 44.1%, with a one-month odds chart and Yes 44¢ / No 56¢." />
@@ -148,7 +163,7 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 | Requirement or criterion (verbatim) | How Mitoshi meets it | Check it |
 | --- | --- | --- |
 | **Privacy:** "Does it actually preserve privacy, or does it only look like it does? Leaks are disqualifying, not deductions." | Shielded balance in the browser, one fresh wallet per position, standard amounts at random times, confidential NEAR swaps, every call over Oblivious HTTP, no server-side state. Residuals are written down, not hidden | [Who sees what](#who-sees-what) · [threat model](https://docs.mitoshi.xyz/docs/privacy) · [gateway allowlist](services/gateway/src/constants.ts) |
-| **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet, in their own words; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [Why traders need it](#why-traders-need-it) · [mitoshi.xyz](https://mitoshi.xyz) |
+| **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet, in their own words; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [The problem](#the-problem) · [mitoshi.xyz](https://mitoshi.xyz) |
 | **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 40 unit tests | [Proof and evidence](#proof-and-evidence) |
 | **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
 | **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
