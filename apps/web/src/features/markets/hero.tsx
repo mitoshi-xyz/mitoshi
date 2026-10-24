@@ -86,9 +86,11 @@ export function MarketsHero() {
           })}
         </div>
       </div>
-      <div className="relative h-[260px] md:h-[320px]">
+      <div className="px-4">
+        <IntervalSwitch views={views} view={view} onChange={setView} className="w-fit" />
+      </div>
+      <div className="relative h-[240px] md:h-[300px]">
         <div ref={box} className="absolute inset-0" />
-        <IntervalSwitch views={views} view={view} onChange={setView} className="absolute top-2 left-3 z-[1]" />
         {load === "loading" ? <ChartLoading verb="Loading the chart, privately" /> : null}
       </div>
       <div className="grid grid-cols-2 gap-2 p-4">
