@@ -135,7 +135,7 @@ export const LANDING = {
       },
       {
         q: "What can Mitoshi see?",
-        a: "Nothing it can tie together. The relay sees your IP but not your requests; the gateway sees requests but not who sent them, and keeps nothing.",
+        a: "Nothing it can tie together. The relay sees your IP but not your requests; the gateway sees requests but not who sent them, and writes no logs of its own.",
       },
       {
         q: "What stays public?",

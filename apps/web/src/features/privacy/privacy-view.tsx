@@ -48,7 +48,7 @@ const PARTIES: Party[] = [
     name: "Mitoshi gateway (Ireland)",
     icon: Layers,
     sees: "What one request asks, like one address's balance",
-    never: "Who asked: no IP, no cookies, no account. It logs nothing and caches only public market data",
+    never: "Who asked: no IP, no cookies, no account. It writes no logs of its own and caches only public market data",
   },
   {
     name: "Hyperliquid, Solana, Polymarket",
