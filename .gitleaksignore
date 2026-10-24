@@ -1,0 +1,4 @@
+# Public values, not secrets: the gateway's OHTTP public key configuration (published by design) and the
+# public pUSD contract address in a signing test. Both predate their gitleaks:allow markers.
+a0baba2d0b75801d772d66897ea8c1dc3d5a3ead:packages/venues/src/pmperps/signing.test.ts:generic-api-key:52
+956075c9783083c3135e5d6ecfe4be5cc0d91a6c:packages/net/src/constants.ts:generic-api-key:5
