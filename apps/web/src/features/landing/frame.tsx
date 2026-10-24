@@ -58,6 +58,7 @@ export function LandingFooter() {
         {[
           [REPO_URL, L.footer.repo],
           ["/demo", L.footer.demo],
+          ["/pitch", L.footer.pitch],
           [DOCS_URL, L.footer.docs],
           ["/privacy", L.footer.privacy],
           ["/status", L.footer.status],

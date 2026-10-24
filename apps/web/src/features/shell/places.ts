@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   type LucideIcon,
   PlayCircle,
+  Presentation,
   Settings,
   Target,
   WalletCards,
@@ -141,6 +142,13 @@ export const PAGES: readonly Page[] = [
     href: "/demo",
     icon: PlayCircle,
     description: "Mitoshi in two minutes.",
+    group: "mitoshi",
+  },
+  {
+    name: "Pitch",
+    href: "/pitch",
+    icon: Presentation,
+    description: "Why Mitoshi exists and where it goes next.",
     group: "mitoshi",
   },
   {

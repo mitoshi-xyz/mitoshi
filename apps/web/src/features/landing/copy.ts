@@ -169,6 +169,7 @@ export const LANDING = {
     built: "Built for ZECATHON 2026",
     repo: "Source",
     demo: "Demo",
+    pitch: "Pitch",
     docs: "Docs",
     privacy: "Privacy",
     status: "Status",
