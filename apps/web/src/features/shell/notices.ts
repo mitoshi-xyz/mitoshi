@@ -15,7 +15,8 @@ export function recordNotice(t: Toast) {
     title: t.title,
     at: Date.now(),
     ...(t.body ? { body: t.body } : {}),
-    ...(t.action ? { href: t.action.href } : {}),
+    ...(t.href ? { href: t.href } : {}),
+    ...(t.receipt ? { receipt: t.receipt } : {}),
   };
   mutate((r) => ({ ...r, notices: [notice, ...(r.notices ?? [])].slice(0, KEEP) }));
 }

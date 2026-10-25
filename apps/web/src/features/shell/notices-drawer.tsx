@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { cx, Drawer, EmptyState } from "@/kit";
 import { useRegistry } from "../private-wallets/registry-store";
 import { useNow } from "../private-wallets/use-now";
+import { openReceipt } from "../wallet/receipt";
 import { clearNotices, markNoticesSeen } from "./notices";
 
 const ICON = { up: CheckCircle2, info: Info, down: CircleAlert };
@@ -39,10 +40,25 @@ function Row({ n, now, unseen, onOpen }: { n: Notice; now: number; unseen: boole
           <span className="sr-only">New</span>
         </span>
       ) : null}
-      {n.href ? <ChevronRight size={16} className="mt-0.5 shrink-0 text-muted" /> : null}
+      {n.href || n.receipt ? <ChevronRight size={16} className="mt-0.5 shrink-0 text-muted" /> : null}
     </>
   );
   const row = "flex w-full gap-3 rounded-lg px-3 py-3 text-left";
+  if (n.receipt) {
+    const txid = n.receipt;
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          onOpen();
+          openReceipt(txid);
+        }}
+        className={cx(row, "hover:bg-surface-2")}
+      >
+        {body}
+      </button>
+    );
+  }
   return n.href ? (
     <Link href={n.href} onClick={onOpen} className={cx(row, "hover:bg-surface-2")}>
       {body}

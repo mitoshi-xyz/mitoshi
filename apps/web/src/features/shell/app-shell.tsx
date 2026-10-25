@@ -4,11 +4,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
-import { onToast, primeFeedback, Toaster } from "@/kit";
+import { onToast, onToastOpen, primeFeedback, Toaster } from "@/kit";
 import { WalletDrawers } from "../private-wallets/drawers";
 import { startJobs } from "../private-wallets/jobs";
 import { loadRegistry } from "../private-wallets/registry-store";
 import { LockScreen } from "../vault/lock-screen";
+import { openReceipt, ReceiptHost } from "../wallet/receipt";
 import { bootWallet, useWallet } from "../wallet/wallet-store";
 import { Dock } from "./dock";
 import { More } from "./more";
@@ -67,6 +68,16 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
     };
   }, []);
 
+  // A tapped toast opens what it is about: a transaction's receipt over this page, or its page.
+  useEffect(
+    () =>
+      onToastOpen((t) => {
+        if (t.receipt) openReceipt(t.receipt);
+        else if (t.href) router.push(t.href);
+      }),
+    [router],
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -114,6 +125,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         <NoticesDrawer open={notices} onClose={() => setNotices(false)} />
         <PullToRefresh />
         <WalletDrawers />
+        <ReceiptHost />
         <Toaster />
         <RouteProgress />
         <OfflineStrip />

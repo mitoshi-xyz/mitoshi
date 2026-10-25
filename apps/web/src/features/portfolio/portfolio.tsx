@@ -1,15 +1,14 @@
 "use client";
 
-import type { PrivateWallet } from "@mitoshi/engine";
 import { useQueries } from "@tanstack/react-query";
-import { Eye, History as HistoryIcon, WalletCards } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Eye, WalletCards } from "lucide-react";
+import { useState } from "react";
 import { cx, EmptyState, RollingNumber, Segmented, Skeleton } from "@/kit";
 import { usd } from "../format";
 import { VenueMark } from "../marks/mark";
 import { openPublicView } from "../private-wallets/drawers";
 import { useRegistry } from "../private-wallets/registry-store";
-import { STATUS, shortAddress } from "../private-wallets/venues";
+import { shortAddress } from "../private-wallets/venues";
 import { StatusPill } from "../private-wallets/wallet-card";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { solMarket } from "../solana/sol";
@@ -87,53 +86,6 @@ function WalletRows({ books }: { books: WalletBook[] }) {
   );
 }
 
-interface Event {
-  key: string;
-  at: number;
-  w: PrivateWallet;
-  text: string;
-}
-
-function HistoryRows({ wallets }: { wallets: PrivateWallet[] }) {
-  const events: Event[] = useMemo(
-    () =>
-      wallets
-        .flatMap((w) => [
-          ...w.timeline.map((e) => ({
-            key: `${w.id}:t:${e.at}:${e.status}`,
-            at: e.at,
-            w,
-            text: e.note ? `${STATUS[e.status].word} · ${e.note}` : STATUS[e.status].word,
-          })),
-          ...(w.trades ?? []).map((t) => ({ key: `${w.id}:x:${t.at}:${t.ref ?? ""}`, at: t.at, w, text: t.label })),
-        ])
-        .sort((a, b) => b.at - a.at),
-    [wallets],
-  );
-  if (events.length === 0) {
-    return <EmptyState icon={HistoryIcon} title="Nothing yet" body="Fundings, trades and trips home land here." />;
-  }
-  return (
-    <ul className="flex flex-col">
-      {events.map((e) => (
-        <li key={e.key} className="flex items-center gap-3 border-hairline border-b px-3 py-2.5 text-[13px]">
-          <span className="num w-28 shrink-0 text-[12px] text-muted">
-            {new Date(e.at).toLocaleString(undefined, {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-          <VenueMark venue={e.w.venue} size={18} />
-          <span className="min-w-0 flex-1 truncate">{e.text}</span>
-          <span className="num hidden text-[11px] text-muted sm:block">{shortAddress(e.w.address)}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 /**
  * Portfolio: your money in one private view, put together only in this browser. The shielded balance and the ways in
  * and out, then every private wallet on every venue: value, P&L, positions and history.
@@ -141,7 +93,7 @@ function HistoryRows({ wallets }: { wallets: PrivateWallet[] }) {
 export function Portfolio({ state }: { state: WalletState }) {
   const registry = useRegistry();
   const [hidden] = useHideAmounts();
-  const [tab, setTab] = useState<"positions" | "wallets" | "history">("positions");
+  const [tab, setTab] = useState<"history" | "positions" | "wallets">("history");
   const books = useBooks(registry.wallets);
   const mints = [...new Set(books.flatMap((b) => b.positions.filter((p) => p.kind === "token").map((p) => p.asset)))];
   const meta = useQueries({
@@ -206,21 +158,16 @@ export function Portfolio({ state }: { state: WalletState }) {
       <section className="flex flex-col gap-3">
         <Segmented
           options={[
+            { value: "history", label: "History" },
             { value: "positions", label: `Positions · ${rows.length}` },
             { value: "wallets", label: `Wallets · ${books.length}` },
-            { value: "history", label: "History" },
           ]}
           value={tab}
           onChange={setTab}
         />
         {tab === "positions" ? <Positions rows={rows} loading={loading} tokens={tokens} /> : null}
         {tab === "wallets" ? <WalletRows books={books} /> : null}
-        {tab === "history" ? (
-          <div className="flex flex-col gap-5">
-            <History entries={state.history} tip={state.summary?.tip ?? null} />
-            <HistoryRows wallets={registry.wallets} />
-          </div>
-        ) : null}
+        {tab === "history" ? <History entries={state.history} tip={state.summary?.tip ?? null} /> : null}
       </section>
     </section>
   );

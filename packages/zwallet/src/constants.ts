@@ -41,6 +41,7 @@ export const ZAT_PER_ZEC = 100_000_000;
  * (data_api/wallet.rs), 10 for notes from others and 3 for this wallet's own change. The core uses that policy.
  */
 export const RECEIVED_CONFIRMATIONS = 10;
+export const OWN_CHANGE_CONFIRMATIONS = 3;
 
 /** The worker reports the engine download at most once per this many bytes (256 KiB). */
 export const LOAD_REPORT_BYTES = 262_144;

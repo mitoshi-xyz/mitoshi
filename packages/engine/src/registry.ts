@@ -136,6 +136,8 @@ export interface Notice {
   title: string;
   body?: string;
   href?: string;
+  /** The transaction whose receipt the notice opens (a txid of this wallet). */
+  receipt?: string;
   at: number;
 }
 

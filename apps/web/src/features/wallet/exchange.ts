@@ -81,9 +81,9 @@ export function exchangeTick(now: number) {
       put({ ...ok, checkedAt: Date.now(), arrivedZat: found.zat, arrivedAt: a.arrivedAt ?? Date.now() });
       toast({
         tone: "up",
-        title: `${zec(found.zat)} ZEC arrived from your exchange`,
-        body: "Moving it into the shielded pool.",
-        action: { label: "See it", href: "/portfolio" },
+        title: "Exchange deposit arrived",
+        body: `+${zec(found.zat)} ZEC · shielding it next`,
+        href: "/portfolio",
       });
       await refreshWallet();
     })
@@ -104,9 +104,9 @@ async function shield() {
     }
     toast({
       tone: "up",
-      title: "Moved into the shielded pool",
-      body: "Spendable after 10 blocks, then it rests 2–6 h.",
-      action: { label: "See it", href: "/portfolio" },
+      title: "Shielded your exchange deposit",
+      body: "Rests 2–6 h, then it's spendable",
+      receipt: done.txid,
     });
   } catch (e) {
     // Not confirmed enough yet, or the light server is away: say so, and try again at a new random moment.

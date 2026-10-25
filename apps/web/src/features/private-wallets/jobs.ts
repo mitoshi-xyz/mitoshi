@@ -155,13 +155,19 @@ const arrivedNote = (w: PrivateWallet, settled: string | undefined) => {
   return settled ? `Arrived: ${formatUnits(settled, asset.decimals)} ${asset.symbol}` : "Arrived";
 };
 
+/** The Zcash transaction NEAR settled a swap with (a refund or the trip home), for its notice to open. */
+function receiptOf(w: PrivateWallet, kind: "fund" | "return"): { receipt: string } | { href: string } {
+  const tx = w.swaps.find((s) => s.kind === kind)?.settledTx;
+  return tx ? { receipt: tx } : { href: "/portfolio" };
+}
+
 function announceReady(w: PrivateWallet, body: string) {
   const venue = VENUES[w.venue];
   toast({
     tone: "up",
-    title: `Your ${venue.name} wallet is ready`,
+    title: `${venue.name} wallet ready`,
     body,
-    action: { label: venue.trade.label, href: venue.trade.href },
+    href: venue.trade.href,
   });
 }
 
@@ -187,8 +193,9 @@ async function credit(id: string) {
     next = advance(next, "failed", now, "Polymarket's bridge could not credit the funding");
     toast({
       tone: "down",
-      title: "A Polymarket funding is stuck at the bridge",
-      action: { label: "See it", href: "/wallets" },
+      title: "Polymarket funding stuck",
+      body: "At Polymarket's bridge",
+      href: "/wallets",
     });
   }
   putWallet(next);
@@ -232,13 +239,19 @@ async function poll(id: string) {
       toast({
         tone: "info",
         title: "NEAR refunded a funding",
-        body: "The ZEC is back in your balance, resting 2–6 h.",
+        body: "Back in your balance · rests 2–6 h",
+        ...receiptOf(next, "fund"),
       });
       void refreshWallet();
     }
     if (st.status === "FAILED") {
       next = advance(next, "failed", now, "NEAR could not complete the swap");
-      toast({ tone: "down", title: `A ${venue.name} funding stopped`, action: { label: "See it", href: "/wallets" } });
+      toast({
+        tone: "down",
+        title: `${venue.name} funding stopped`,
+        body: "NEAR couldn't finish the swap",
+        href: "/wallets",
+      });
     }
     if (st.status === "PENDING_DEPOSIT" && !swap.depositTx && Date.parse(swap.deadline) < now) {
       next = advance(next, "failed", now, "The deposit was never sent");
@@ -248,16 +261,17 @@ async function poll(id: string) {
     toast({
       tone: "up",
       title: `Home from ${venue.name}`,
-      body: "The ZEC is back in your shielded balance, resting 2–6 h.",
-      action: { label: "Balance", href: "/wallet" },
+      body: "Back in your balance · rests 2–6 h",
+      ...receiptOf(next, "return"),
     });
     void refreshWallet();
   } else if (st.status === "REFUNDED" || st.status === "FAILED") {
     next = advance(next, "failed", now, "The trip home was refunded to the wallet; try again");
     toast({
       tone: "down",
-      title: `The trip home from ${venue.name} was refunded`,
-      action: { label: "Try again", href: "/wallets" },
+      title: `Trip home from ${venue.name} refunded`,
+      body: "Tap to try again",
+      href: "/wallets",
     });
   }
   putWallet(next);

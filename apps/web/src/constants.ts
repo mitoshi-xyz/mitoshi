@@ -44,3 +44,12 @@ export const LOCK_MIN_CHARS = 8;
 
 /** The documentation site (apps/docs). Old /docs links on this site redirect there (services/web). */
 export const DOCS_URL = "https://docs.mitoshi.xyz";
+
+/**
+ * Where a receipt's "Verify it on chain" goes: the Nighthawk Zcash explorer (open source, nighthawk-apps/zcash-explorer).
+ * It is a link the person opens in their own browser, never a request the app makes.
+ */
+export const ZEC_EXPLORER = {
+  main: "https://mainnet.zcashexplorer.app",
+  test: "https://testnet.zcashexplorer.app",
+} as const;

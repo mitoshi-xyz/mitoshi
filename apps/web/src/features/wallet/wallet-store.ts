@@ -166,17 +166,16 @@ function announce(before: HistoryEntry[], after: HistoryEntry[]) {
     if (!old && h.delta > 0) {
       toast({
         tone: "up",
-        title: `Deposit arrived: +${fmt(h.delta)} ${UNIT}`,
-        body: h.fromPublic
-          ? "From a public address: spendable after 10 blocks, then it rests 2–6 h."
-          : "Shielded: spendable after 10 blocks, about 13 min.",
-        action: { label: "Balance", href: "/portfolio" },
+        title: "Deposit arrived",
+        body: `+${fmt(h.delta)} ${UNIT} · confirming`,
+        receipt: h.txid,
       });
     } else if (old && old.minedHeight === null && h.minedHeight !== null && h.delta < 0) {
       toast({
         tone: "up",
-        title: `Withdrawal confirmed: ${fmt(-h.delta)} ${UNIT}`,
-        action: { label: "Receipt", href: "/portfolio" },
+        title: "Withdrawal confirmed",
+        body: `−${fmt(-h.delta)} ${UNIT}`,
+        receipt: h.txid,
       });
     }
   }

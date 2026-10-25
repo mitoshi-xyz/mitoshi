@@ -1,9 +1,9 @@
 "use client";
 
-import { ZAT_PER_ZEC } from "@mitoshi/zwallet";
-import { ArrowDownToLine, ArrowUpFromLine, Eye, EyeOff, Plus } from "lucide-react";
+import { type HistoryEntry, ZAT_PER_ZEC } from "@mitoshi/zwallet";
+import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Eye, EyeOff, Plus } from "lucide-react";
 import { ZEC_NETWORK } from "@/constants";
-import { CountdownRing, RollingNumber } from "@/kit";
+import { CountdownRing, cx, RollingNumber } from "@/kit";
 import { usd } from "../format";
 import { useLiveMids } from "../hyperliquid/hooks";
 import { Mark } from "../marks/mark";
@@ -11,6 +11,8 @@ import { openDeposit, openFund, openWithdraw } from "../private-wallets/drawers"
 import { useRegistry } from "../private-wallets/registry-store";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { OrchardMove } from "../wallet/orchard-move";
+import { openReceipt } from "../wallet/receipt";
+import { arriving, progress } from "../wallet/tx";
 import { money, type WalletState } from "../wallet/wallet-store";
 
 const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
@@ -19,23 +21,76 @@ const MS_PER_MINUTE = 60_000;
 const MINUTES_PER_HOUR = 60;
 const LIVE_WALLETS = ["funding", "ready", "trading", "returning"];
 
-function inWords(ms: number): string {
+/** A rest's time left in a pocket's width: "1h 30m", "12m". */
+function short(ms: number): string {
   const minutes = Math.max(1, Math.round(ms / MS_PER_MINUTE));
-  if (minutes < MINUTES_PER_HOUR) return `${minutes} min`;
   const h = Math.floor(minutes / MINUTES_PER_HOUR);
   const m = minutes % MINUTES_PER_HOUR;
-  return m ? `${h} h ${m} min` : `${h} h`;
+  return h ? `${h}h ${m}m` : `${m}m`;
 }
 
-function Pocket({ label, value, children }: { label: string; value: string; children?: React.ReactNode }) {
+function Pocket({
+  label,
+  value,
+  note,
+  children,
+}: {
+  label: string;
+  value: string;
+  /** A short line under the value (how long a rest has left). */
+  note?: string;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg bg-black/25 px-3 py-2.5">
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-lg bg-black/25 px-3 py-2.5">
       <span className="flex items-center gap-1.5 text-[11px] text-cream/60">
         {children}
         {label}
       </span>
       <span className="num font-semibold text-[14px] text-cream">{value}</span>
+      {note ? <span className="num truncate text-[11px] text-cream/60">{note}</span> : null}
     </div>
+  );
+}
+
+/** ZEC on its way in, counted block by block; it opens the transaction's receipt. */
+function Confirming({
+  zat,
+  hidden,
+  entry,
+  tip,
+}: {
+  zat: number;
+  hidden: boolean;
+  entry: HistoryEntry | undefined;
+  tip: number | null;
+}) {
+  const p = entry ? progress(entry, tip) : null;
+  const what = `${hidden ? MASK : (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "")} confirming`;
+  const count = entry && p ? (entry.minedHeight === null ? "next block" : `${p.done}/${p.need}`) : null;
+  const body = (
+    <>
+      <span className="relative flex size-2 shrink-0">
+        <span className="absolute inset-0 animate-ping rounded-full bg-accent opacity-60" />
+        <span className="relative size-2 rounded-full bg-accent" />
+      </span>
+      <span className="num min-w-0 flex-1 truncate">{what}</span>
+      {count && p ? (
+        <span className="num shrink-0 text-cream/60">
+          {count} · {p.minutesLeft} min
+        </span>
+      ) : null}
+      {entry ? <ChevronRight size={14} className="shrink-0 text-cream/50" /> : null}
+    </>
+  );
+  const pill =
+    "mt-3 flex w-full items-center gap-2 rounded-full bg-accent/15 px-3 py-2 text-left text-[12px] text-cream";
+  return entry ? (
+    <button type="button" onClick={() => openReceipt(entry.txid)} className={cx(pill, "hover:bg-accent/25")}>
+      {body}
+    </button>
+  ) : (
+    <div className={pill}>{body}</div>
   );
 }
 
@@ -48,7 +103,11 @@ export function MoneyCard({ state }: { state: WalletState }) {
   const { spendable, resting, orchard, confirming: pending } = money(b);
   const inWallets = registry.wallets.filter((w) => LIVE_WALLETS.includes(w.status)).reduce((n, w) => n + w.sizeZat, 0);
   const zecUsd = ZEC_NETWORK === "main" ? mids.ZEC : undefined;
-  const total = spendable / ZAT_PER_ZEC;
+  // Everything in the shielded wallet, spendable or not: what isn't yet is said under it (and dims the figure).
+  const total = (spendable + resting + orchard + pending) / ZAT_PER_ZEC;
+  const waiting = spendable === 0 && total > 0;
+  const tip = state.summary?.tip ?? null;
+  const incoming = pending > 0 ? state.history.find((e) => arriving(e, tip)) : undefined;
   const show = (zat: number) => (hidden ? MASK : `${(zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS)}`);
 
   return (
@@ -71,7 +130,7 @@ export function MoneyCard({ state }: { state: WalletState }) {
               <RollingNumber
                 value={total}
                 format={{ minimumFractionDigits: 2, maximumFractionDigits: ZEC_DIGITS }}
-                className="font-semibold text-[40px] leading-tight"
+                className={cx("font-semibold text-[40px] leading-tight", waiting && "text-cream/55")}
               />
               <span className="font-semibold text-[18px] text-cream/60">{UNIT}</span>
             </span>
@@ -89,12 +148,13 @@ export function MoneyCard({ state }: { state: WalletState }) {
           {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
       </div>
+      {pending > 0 ? <Confirming zat={pending} hidden={hidden} entry={incoming} tip={tip} /> : null}
       <div className="mt-4 grid grid-cols-3 gap-2">
+        <Pocket label="Spendable" value={show(spendable)} />
         <Pocket
-          label={
-            resting > 0 && state.restingUntil ? `Resting · ${inWords(state.restingUntil - Date.now())}` : "Resting"
-          }
+          label="Resting"
           value={show(resting)}
+          {...(resting > 0 && state.restingUntil ? { note: short(state.restingUntil - Date.now()) } : {})}
         >
           {resting > 0 && state.restingUntil && state.restingFrom ? (
             <CountdownRing
@@ -106,7 +166,6 @@ export function MoneyCard({ state }: { state: WalletState }) {
             />
           ) : null}
         </Pocket>
-        <Pocket label="Confirming" value={show(pending)} />
         <Pocket label="In wallets" value={show(inWallets)} />
       </div>
       <OrchardMove orchardZat={orchard} hidden={hidden} />

@@ -217,10 +217,25 @@ pub fn history(state: &mut State, args: &Value) -> Result<Value, Error> {
             ))
         })
         .ctx("reading history")?;
+    // ZEC paid to one of our transparent addresses (an exchange withdrawal) arrived in public whatever it spent, and the
+    // store keeps no full copy of such a transaction to read its inputs from.
+    let mut to_transparent = conn
+        .prepare(
+            "SELECT EXISTS (SELECT 1 FROM transparent_received_outputs o
+                            JOIN transactions t ON t.id_tx = o.transaction_id WHERE t.txid = ?1)",
+        )
+        .ctx("preparing the transparent receipt query")?;
     let mut out = Vec::new();
     for row in rows {
         let (txid, mined, expiry, delta, fee, time, expired, sent, received, shielding, full) = row.ctx("reading a row")?;
-        let public = if full { public_origin(state, txid_from_hex(&txid)?)? } else { None };
+        let id = txid_from_hex(&txid)?;
+        let public = if full {
+            public_origin(state, id)?
+        } else if to_transparent.query_row([id.as_ref().to_vec()], |r| r.get::<_, bool>(0)).ctx("reading a receipt")? {
+            Some(true)
+        } else {
+            None
+        };
         out.push(json!({
             "txid": txid,
             "minedHeight": mined,

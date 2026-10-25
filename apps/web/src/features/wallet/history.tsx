@@ -1,219 +1,168 @@
 "use client";
 
-import type { PrivateWallet } from "@mitoshi/engine";
-import { type HistoryEntry, ZAT_PER_ZEC } from "@mitoshi/zwallet";
-import { ArrowDownLeft, ArrowUpRight, Copy, History as HistoryIcon, Repeat, Undo2 } from "lucide-react";
-import { useState } from "react";
-import { ZEC_NETWORK } from "@/constants";
-import { cx, Drawer, EmptyState } from "@/kit";
-import { type Venue, VenueMark } from "../marks/mark";
+import type { PrivateWallet, Registry } from "@mitoshi/engine";
+import type { HistoryEntry } from "@mitoshi/zwallet";
+import { ChevronRight, History as HistoryIcon } from "lucide-react";
+import { useMemo } from "react";
+import { cx, EmptyState } from "@/kit";
+import { VenueMark } from "../marks/mark";
+import { openDeposit, openPublicView } from "../private-wallets/drawers";
 import { useRegistry } from "../private-wallets/registry-store";
+import { shortAddress, VENUES } from "../private-wallets/venues";
 import { MASK, useHideAmounts } from "../shell/prefs";
+import { openReceipt } from "./receipt";
+import { progress, signed, statusLine, story } from "./tx";
 
-const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
-const ZEC_DIGITS = 8;
 const MS = 1000;
-const TXID_HEAD = 10;
-const TXID_TAIL = 8;
-const VENUE_NAMES: Record<string, string> = { hyperliquid: "Hyperliquid", polymarket: "Polymarket", solana: "Solana" };
+const DAY_MS = 86_400_000;
 
-const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
+/** The wallet moments worth a line of their own (fundings and trips home already show as their transactions). */
+const MOMENTS: Partial<Record<PrivateWallet["status"], (venue: string) => string>> = {
+  ready: (v) => `${v} wallet ready`,
+  refunded: (v) => `${v} funding refunded`,
+  failed: (v) => `${v} wallet needs you`,
+};
 
-interface Labelled {
-  title: string;
-  icon: typeof ArrowDownLeft;
-  venue?: Venue;
-  tone: "in" | "out" | "neutral";
+type Item =
+  | { kind: "tx"; key: string; at: number; e: HistoryEntry }
+  | { kind: "wallet"; key: string; at: number; w: PrivateWallet; title: string };
+
+function items(entries: HistoryEntry[], registry: Registry): Item[] {
+  const now = Date.now();
+  const txs: Item[] = entries.map((e) => ({ kind: "tx", key: e.txid, at: e.time ? e.time * MS : now, e }));
+  const moments: Item[] = registry.wallets.flatMap((w) => {
+    const name = VENUES[w.venue].name;
+    return [
+      ...w.timeline.flatMap((t) => {
+        const title = MOMENTS[t.status]?.(name);
+        return title ? [{ kind: "wallet" as const, key: `${w.id}:${t.status}:${t.at}`, at: t.at, w, title }] : [];
+      }),
+      ...(w.trades ?? []).map((t) => ({
+        kind: "wallet" as const,
+        key: `${w.id}:trade:${t.at}:${t.ref ?? ""}`,
+        at: t.at,
+        w,
+        title: t.label,
+      })),
+    ];
+  });
+  return [...txs, ...moments].sort((a, b) => b.at - a.at);
 }
 
-/** What a transaction was, in words: matched against the private wallets' swaps where it can be. */
-function label(e: HistoryEntry, wallets: PrivateWallet[]): Labelled {
-  for (const w of wallets) {
-    for (const s of w.swaps) {
-      if (s.kind === "fund" && s.depositTx === e.txid) {
-        return { title: `Funded a ${VENUE_NAMES[w.venue]} wallet`, icon: ArrowUpRight, venue: w.venue, tone: "out" };
-      }
-      if (s.kind === "return" && s.settledTx === e.txid) {
-        return { title: `Came home from ${VENUE_NAMES[w.venue]}`, icon: ArrowDownLeft, venue: w.venue, tone: "in" };
-      }
-      if (s.kind === "fund" && s.status === "REFUNDED" && s.settledTx === e.txid) {
-        return { title: "Refund from NEAR", icon: Undo2, tone: "in" };
-      }
-    }
-  }
-  if (e.internal) return { title: "Moved between pools", icon: Repeat, tone: "neutral" };
-  return e.delta >= 0
-    ? { title: "Received", icon: ArrowDownLeft, tone: "in" }
-    : { title: "Sent", icon: ArrowUpRight, tone: "out" };
+function dayLabel(at: number): string {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  if (at >= start.getTime()) return "Today";
+  if (at >= start.getTime() - DAY_MS) return "Yesterday";
+  return new Date(at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-function statusOf(e: HistoryEntry, tip: number | null): { text: string; done: boolean } {
-  if (e.expired) return { text: "Expired · nothing moved", done: true };
-  if (e.minedHeight === null) return { text: "Confirming", done: false };
-  return { text: tip ? `${(tip - e.minedHeight + 1).toLocaleString()} confirmations` : "Confirmed", done: true };
-}
+const time = (at: number) => new Date(at).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 
-/** The receipt: a cream stub with everything about one transaction. */
-function Receipt({ e, tip, onClose }: { e: HistoryEntry | null; tip: number | null; onClose: () => void }) {
+function TxRow({ e, tip, hidden }: { e: HistoryEntry; tip: number | null; hidden: boolean }) {
   const registry = useRegistry();
-  const [copied, setCopied] = useState(false);
-  if (!e)
-    return (
-      <Drawer open={false} onClose={onClose} title="Receipt">
-        {null}
-      </Drawer>
-    );
-  const l = label(e, registry.wallets);
-  const st = statusOf(e, tip);
+  const s = story(e, registry);
+  const p = progress(e, tip);
+  const Icon = s.icon;
   return (
-    <Drawer open onClose={onClose} title="Receipt">
-      <div className="flex flex-col gap-4 rounded-xl bg-cream p-5 text-cream-ink shadow-[var(--shadow-receipt)]">
-        <div className="flex items-center justify-between">
-          <span className="font-stamp text-[15px]">見通し</span>
-          <span className="type-label">{l.title}</span>
-        </div>
-        <p className="num font-semibold text-[34px] leading-none">
-          {e.delta >= 0 ? "+" : "−"}
-          {zec(Math.abs(e.delta))} <span className="text-[16px]">{UNIT}</span>
-        </p>
-        <div className="border-cream-hairline border-t border-dashed" />
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-[13px]">
-          <dt className="text-cream-ink/60">Status</dt>
-          <dd className="text-right">{st.text}</dd>
-          {e.time ? (
-            <>
-              <dt className="text-cream-ink/60">When</dt>
-              <dd className="text-right">{new Date(e.time * MS).toLocaleString()}</dd>
-            </>
-          ) : null}
-          {e.minedHeight ? (
-            <>
-              <dt className="text-cream-ink/60">Block</dt>
-              <dd className="num text-right">{e.minedHeight.toLocaleString()}</dd>
-            </>
-          ) : null}
-          {e.fee !== null ? (
-            <>
-              <dt className="text-cream-ink/60">Network fee</dt>
-              <dd className="num text-right">
-                {zec(e.fee)} {UNIT}
-              </dd>
-            </>
-          ) : null}
-          <dt className="text-cream-ink/60">Came from</dt>
-          <dd className="text-right">
-            {e.fromPublic === null
-              ? "checking…"
-              : e.fromPublic
-                ? "a public address (rests 2–6 h)"
-                : "a shielded address"}
-          </dd>
-          <dt className="text-cream-ink/60">Transaction</dt>
-          <dd className="flex items-center justify-end gap-1.5">
-            <span className="num">
-              {e.txid.slice(0, TXID_HEAD)}…{e.txid.slice(-TXID_TAIL)}
-            </span>
-            <button
-              type="button"
-              aria-label="Copy the transaction id"
-              onClick={() => {
-                void navigator.clipboard.writeText(e.txid);
-                setCopied(true);
-              }}
-              className="rounded p-1 hover:bg-cream-ink/10"
-            >
-              <Copy size={13} />
-            </button>
-          </dd>
-        </dl>
-        {copied ? <p className="text-center text-[12px] text-cream-ink/60">Copied</p> : null}
-      </div>
-      <p className="text-[12px] text-muted">
-        Only this browser can read this receipt: on the chain, a shielded transaction shows no amount and no addresses.
-      </p>
-    </Drawer>
+    <button
+      type="button"
+      onClick={() => openReceipt(e.txid)}
+      className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left hover:bg-surface-1"
+    >
+      <span className="relative shrink-0">
+        <span
+          className={cx(
+            "flex size-10 items-center justify-center rounded-full",
+            s.tone === "in" ? "bg-up-wash text-up" : "bg-surface-2 text-ink-2",
+          )}
+        >
+          <Icon size={18} />
+        </span>
+        {s.venue ? (
+          <VenueMark venue={s.venue} size={16} className="absolute -right-1 -bottom-1 ring-2 ring-[var(--stage)]" />
+        ) : null}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+        <span className="truncate font-medium text-[14px]">{s.title}</span>
+        <span className="truncate text-[12px] text-muted">
+          {e.time ? time(e.time * MS) : "Just now"}
+          {" · "}
+          <span className={cx(!p.settled && !e.expired && "text-accent")}>
+            {p.settled ? (e.expired ? statusLine(e, p) : "Confirmed") : statusLine(e, p)}
+          </span>
+          {e.fromPublic && !e.internal ? <span className="text-warning"> · public origin</span> : null}
+        </span>
+      </span>
+      <span className={cx("num shrink-0 text-[14px]", s.tone === "in" && !s.moved ? "text-up" : "text-ink")}>
+        {hidden ? MASK : signed(s)}
+      </span>
+    </button>
   );
 }
 
-/** The wallet's transactions, newest first, each opening its receipt. */
+function WalletRow({ w, title, at }: { w: PrivateWallet; title: string; at: number }) {
+  return (
+    <button
+      type="button"
+      onClick={() => openPublicView(w.id)}
+      className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left hover:bg-surface-1"
+    >
+      <VenueMark venue={w.venue} size={40} />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+        <span className="truncate font-medium text-[14px]">{title}</span>
+        <span className="num truncate text-[12px] text-muted">
+          {time(at)} · {shortAddress(w.address)}
+        </span>
+      </span>
+      <ChevronRight size={16} className="shrink-0 text-muted" />
+    </button>
+  );
+}
+
+/**
+ * Everything that happened, newest first and grouped by day: the shielded wallet's transactions (each opens its
+ * receipt) and the private wallets' moments and trades (each opens what the public sees of that wallet).
+ */
 export function History({ entries, tip }: { entries: HistoryEntry[]; tip: number | null }) {
   const registry = useRegistry();
   const [hidden] = useHideAmounts();
-  const [open, setOpen] = useState<HistoryEntry | null>(null);
-  if (entries.length === 0) {
+  const list = useMemo(() => items(entries, registry), [entries, registry]);
+  if (list.length === 0) {
     return (
       <EmptyState
         icon={HistoryIcon}
-        title="No transactions yet"
-        body="Deposit from a shielded wallet and it shows up here within a block."
+        title="Nothing yet"
+        body="Deposits, fundings, trades and trips home land here."
+        action={{ label: "Deposit", onClick: openDeposit }}
       />
     );
   }
+  const days: { label: string; items: Item[] }[] = [];
+  for (const it of list) {
+    const label = dayLabel(it.at);
+    const day = days.at(-1);
+    if (day?.label === label) day.items.push(it);
+    else days.push({ label, items: [it] });
+  }
   return (
-    <>
-      <ul className="flex flex-col">
-        {entries.map((e) => {
-          const l = label(e, registry.wallets);
-          const st = statusOf(e, tip);
-          const Icon = l.icon;
-          return (
-            <li key={e.txid}>
-              <button
-                type="button"
-                onClick={() => setOpen(e)}
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left hover:bg-surface-1"
-              >
-                <span className="relative">
-                  <span
-                    className={cx(
-                      "flex size-10 items-center justify-center rounded-full",
-                      l.tone === "in"
-                        ? "bg-up-wash text-up"
-                        : l.tone === "out"
-                          ? "bg-surface-2 text-ink"
-                          : "bg-surface-2 text-ink-2",
-                    )}
-                  >
-                    <Icon size={18} />
-                  </span>
-                  {l.venue ? (
-                    <VenueMark
-                      venue={l.venue}
-                      size={16}
-                      className="absolute -right-1 -bottom-1 ring-2 ring-[var(--stage)]"
-                    />
-                  ) : null}
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col leading-tight">
-                  <span className="flex items-center gap-2 font-medium text-sm">
-                    {l.title}
-                    {e.fromPublic ? (
-                      <span className="rounded-full bg-warning/15 px-1.5 py-0.5 text-[10px] text-warning">
-                        public origin
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="text-[12px] text-muted">
-                    {e.time
-                      ? new Date(e.time * MS).toLocaleString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "Just now"}{" "}
-                    · <span className={st.done ? "" : "text-accent"}>{st.text}</span>
-                  </span>
-                </span>
-                <span className={cx("num text-sm", e.delta >= 0 ? "text-up" : "text-ink")}>
-                  {hidden ? MASK : `${e.delta >= 0 ? "+" : "−"}${zec(Math.abs(e.delta))}`}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      <Receipt e={open} tip={tip} onClose={() => setOpen(null)} />
-    </>
+    <div className="flex flex-col gap-4">
+      {days.map((d) => (
+        <section key={d.label} className="flex flex-col gap-1">
+          <h3 className="px-2 font-medium text-[12px] text-muted">{d.label}</h3>
+          <ul className="flex flex-col">
+            {d.items.map((it) => (
+              <li key={it.key}>
+                {it.kind === "tx" ? (
+                  <TxRow e={it.e} tip={tip} hidden={hidden} />
+                ) : (
+                  <WalletRow w={it.w} title={it.title} at={it.at} />
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   );
 }

@@ -134,7 +134,7 @@ function Words() {
                 toast({
                   tone: "up",
                   title: "Words copied",
-                  body: "Paste them somewhere safe, then clear the clipboard",
+                  body: "Clear the clipboard once they're saved",
                 });
                 setTimeout(() => void navigator.clipboard.writeText("").catch(() => undefined), CLIPBOARD_CLEAR_MS);
               },
