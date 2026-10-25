@@ -130,7 +130,7 @@ export function JudgeGate() {
           <p className="lp-line max-w-[34rem]">
             {phase.kind === "ready" || phase.kind === "returning"
               ? "A Hyperliquid wallet funded from shielded ZEC is ready to trade, and there is ZEC to fund a brand-new one."
-              : "Six funded wallets, one per judge. Yours opens with the link in your ZECATHON submission."}
+              : "Judging Mitoshi? Click the Working demo link in our ZECATHON submission: it opens your wallet, with real money in it. Nothing to set up."}
           </p>
         </div>
 
@@ -206,7 +206,7 @@ export function JudgeGate() {
                   <input
                     value={typed}
                     onChange={(e) => setTyped(e.target.value)}
-                    placeholder="Paste your judge link"
+                    placeholder="Or paste that link here"
                     aria-label="Your judge link"
                     autoComplete="off"
                     spellCheck={false}
@@ -225,7 +225,7 @@ export function JudgeGate() {
                 <p className="text-[13px] text-[var(--down)]">{phase.error}</p>
               ) : null}
               <p className="text-[13px] text-[var(--lp-ink-3)]">
-                It's the Working demo link in your submission.{" "}
+                No link to hand?{" "}
                 <Link href="https://mitoshi.xyz/markets" className="underline underline-offset-2">
                   Look around without one
                 </Link>

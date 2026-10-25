@@ -19,14 +19,15 @@ export const LANDING = {
     small: "No account · no sign-up · your keys stay in this browser",
   },
   judges: {
-    strip: "ZECATHON judges: a wallet with real money is waiting for each of you. Trade in 30 seconds.",
-    stripShort: "Judges: your wallet is funded",
-    stripCta: "Open it",
+    strip:
+      "ZECATHON judges: the Working demo link in our submission opens a wallet with real money. Trade in 30 seconds.",
+    stripShort: "Judges: a funded wallet is waiting",
+    stripCta: "How",
     kicker: "ZECATHON · Judge pass",
     title: "Your wallet is funded.",
     line: "Real money on Zcash mainnet, one wallet per judge, ready to trade. No setup, no sign-up.",
-    cta: "Opens with the link in your submission",
-    ctaShort: "Link in your submission",
+    cta: "Open it from the Working demo link in our submission",
+    ctaShort: "Working demo link in our submission",
   },
   problem: {
     kicker: "The problem",
