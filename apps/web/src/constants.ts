@@ -57,11 +57,6 @@ export const DOCS_URL = "https://docs.mitoshi.xyz";
 export const JUDGE_HOST = "judge.mitoshi.xyz";
 export const JUDGE_ORIGIN = `https://${JUDGE_HOST}`;
 export const DESK_COUNT = 6;
-/**
- * The landing points judges at their desks only in a build that ships them (NEXT_PUBLIC_DESKS_LIVE=1, set by the
- * deploy that publishes public/desks), so nobody reads "your desk is funded" before it is.
- */
-export const DESKS_LIVE = process.env.NEXT_PUBLIC_DESKS_LIVE === "1";
 /** Where the sealed desks are served (static files, each encrypted under a key only the judges' link carries). */
 export const DESK_FILES = "/desks";
 /** A desk's ready wallet: 0.01 ZEC to Hyperliquid, funded through Mitoshi before judging. */

@@ -188,11 +188,11 @@ export function SettingsView() {
 function GiveBack({ n }: { n: number }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="type-title">Judge desk {n}</h2>
+      <h2 className="type-title">Judge wallet {n}</h2>
       <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface-1 p-4 text-[13px]">
-        <p className="text-ink-2">This browser forgets the desk. The desk keeps its money and trades.</p>
+        <p className="text-ink-2">This browser forgets the wallet. The wallet keeps its money and trades.</p>
         <Button className="self-start" onClick={() => void leaveDesk()}>
-          Give this desk back
+          Give this wallet back
         </Button>
       </div>
     </section>

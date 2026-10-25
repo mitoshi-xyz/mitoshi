@@ -192,6 +192,13 @@ a.jd-pass:focus-visible {
   font: 600 13px / 1.3 var(--font-sans);
   color: #f4eee3;
 }
+.jd-strip-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  color: #ffb39b;
+}
 .jd-strip:hover .jd-strip-cta {
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -199,11 +206,4 @@ a.jd-pass:focus-visible {
 .jd-strip:focus-visible {
   outline: 2px solid #f4eee3;
   outline-offset: -4px;
-}
-.jd-strip-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  color: #ffb39b;
 }

@@ -44,10 +44,10 @@ function NoDesk() {
   return (
     <section className="mx-auto flex max-w-md flex-col items-center gap-4 py-12 text-center">
       <Hanko size={64} />
-      <h1 className="type-headline-md">Open your judge desk</h1>
+      <h1 className="type-headline-md">Open your judge wallet</h1>
       <p className="text-[14px] text-ink-2">It opens with the link in your ZECATHON submission.</p>
       <a href="/" className="inline-flex h-12 items-center rounded-full bg-accent px-6 font-semibold text-accent-ink">
-        Open my desk
+        Open my wallet
       </a>
       <a href="https://mitoshi.xyz" className="text-[13px] text-muted hover:text-ink hover:underline">
         Your own wallet lives at mitoshi.xyz

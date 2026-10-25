@@ -13,7 +13,7 @@ import "@/styles/landing.css";
 import "@/styles/judge.css";
 
 const DESKS = Array.from({ length: DESK_COUNT }, (_, i) => i + 1);
-const STEP_LABELS = ["Unlocking the desks", "Finding a free desk", "Opening the desk", "Ready"] as const;
+const STEP_LABELS = ["Unlocking the judge wallets", "Finding a free one", "Opening your wallet", "Ready"] as const;
 const TRADE_HREF = "/trade#BTC";
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -27,14 +27,14 @@ type Phase =
 
 function Desks({ checks, mine }: { checks: Record<number, DeskCheck>; mine?: number | undefined }) {
   return (
-    <ol className="jd-desks" aria-label="The six desks">
+    <ol className="jd-desks" aria-label="The six judge wallets">
       {DESKS.map((n) => {
         const state = mine === n ? "yours" : checks[n];
         return (
           <li key={n} className="jd-desk" data-state={state ?? "idle"}>
             {state === "yours" ? <Hanko size={30} press /> : pad(n)}
             <small>
-              {state === "yours" ? "Yours" : state === "used" ? "Taken" : state === "free" ? "Free" : "Desk"}
+              {state === "yours" ? "Yours" : state === "used" ? "Taken" : state === "free" ? "Free" : "Wallet"}
             </small>
           </li>
         );
@@ -104,12 +104,12 @@ export function JudgeGate() {
   const opening = phase.kind === "opening";
   const title =
     phase.kind === "ready"
-      ? `Desk ${phase.n} is yours.`
+      ? `Wallet ${phase.n} is yours.`
       : phase.kind === "returning"
-        ? `Desk ${phase.n ?? ""} is yours.`
+        ? `Wallet ${phase.n ?? ""} is yours.`
         : opening
-          ? "Opening your desk"
-          : "Judge desks";
+          ? "Opening your wallet"
+          : "Judge wallets";
 
   return (
     <main className="lp relative flex min-h-dvh flex-col">
@@ -146,7 +146,7 @@ export function JudgeGate() {
                 steps={STEP_LABELS.map((label, i) => {
                   const states = stepStates(phase.step, phase.error !== undefined);
                   return {
-                    label: i === 2 && phase.n ? `Opening desk ${phase.n}` : label,
+                    label: i === 2 && phase.n ? `Opening wallet ${phase.n}` : label,
                     state: states[i] ?? "pending",
                     ...(i === phase.step && phase.error ? { detail: phase.error } : {}),
                   };
@@ -168,7 +168,7 @@ export function JudgeGate() {
             <div className="flex flex-col gap-3">
               {phase.kind === "ready" && phase.shared ? (
                 <p className="text-[13px] text-[var(--lp-ink-3)]">
-                  Every desk has trades on it already; this one has the fewest.
+                  Every judge wallet has trades on it already; this one has the fewest.
                 </p>
               ) : null}
               <div className="flex flex-wrap gap-3">
@@ -176,7 +176,7 @@ export function JudgeGate() {
                   Trade BTC now <ArrowRight size={18} />
                 </a>
                 <a href="/portfolio" className="lp-btn lp-btn-glass">
-                  Your desk
+                  Your wallet
                 </a>
               </div>
               {phase.kind === "returning" ? (
@@ -185,7 +185,7 @@ export function JudgeGate() {
                   onClick={() => void leaveDesk()}
                   className="self-start text-[13px] text-[var(--lp-ink-3)] underline-offset-2 hover:text-[var(--lp-ink)] hover:underline"
                 >
-                  Give this desk back
+                  Give this wallet back
                 </button>
               ) : null}
             </div>
@@ -213,12 +213,12 @@ export function JudgeGate() {
                     className="num h-[52px] w-full min-w-0 shrink-0 rounded-full sm:w-auto sm:flex-1 bg-[var(--lp-card-2)] px-5 text-[14px] shadow-[inset_0_0_0_1px_var(--lp-line)] outline-none focus:shadow-[inset_0_0_0_1px_#e04d26]"
                   />
                   <button type="submit" className="lp-btn lp-btn-accent">
-                    Open my desk
+                    Open my wallet
                   </button>
                 </form>
               ) : (
                 <a href={JUDGE_ORIGIN} className="lp-btn lp-btn-accent self-start">
-                  Open the judge desks <ArrowRight size={18} />
+                  Open the judge wallets <ArrowRight size={18} />
                 </a>
               )}
               {phase.kind === "ask" && phase.error ? (
@@ -227,7 +227,7 @@ export function JudgeGate() {
               <p className="text-[13px] text-[var(--lp-ink-3)]">
                 It's the Working demo link in your submission.{" "}
                 <Link href="https://mitoshi.xyz/markets" className="underline underline-offset-2">
-                  Look around without a desk
+                  Look around without one
                 </Link>
               </p>
             </div>

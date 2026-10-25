@@ -91,7 +91,7 @@ function JudgeSheet({ open, onClose, n }: { open: boolean; onClose: () => void; 
   const done = steps.filter((s) => s.done).length;
   const [leaving, setLeaving] = useState(false);
   return (
-    <Drawer open={open} onClose={onClose} title={`Judge desk ${n}`}>
+    <Drawer open={open} onClose={onClose} title={`Judge wallet ${n}`}>
       <div className="flex items-center gap-3 rounded-xl bg-cream p-4 text-cream-ink">
         <Hanko size={44} />
         <div className="flex min-w-0 flex-col">
@@ -142,7 +142,7 @@ function JudgeSheet({ open, onClose, n }: { open: boolean; onClose: () => void; 
         </a>
         {leaving ? (
           <span className="flex items-center gap-3">
-            <span className="text-ink-2">This browser forgets the desk.</span>
+            <span className="text-ink-2">This browser forgets the wallet.</span>
             <button type="button" onClick={() => void leaveDesk()} className="font-medium text-down hover:underline">
               Give it back
             </button>
@@ -153,7 +153,7 @@ function JudgeSheet({ open, onClose, n }: { open: boolean; onClose: () => void; 
             onClick={() => setLeaving(true)}
             className="self-start text-muted hover:text-ink hover:underline"
           >
-            Give this desk back
+            Give this wallet back
           </button>
         )}
       </div>
@@ -173,11 +173,11 @@ export function DeskChip() {
       <button
         type="button"
         onClick={openJudgePath}
-        aria-label={`Judge desk ${n}: ${done} of ${steps.length} steps done`}
+        aria-label={`Judge wallet ${n}: ${done} of ${steps.length} steps done`}
         className="inline-flex h-11 items-center gap-2 rounded-full border border-accent/50 bg-accent-wash pr-3 pl-1.5 font-semibold text-[13px] text-ink hover:border-accent md:h-10"
       >
         <Hanko size={28} />
-        <span>Desk {n}</span>
+        <span>Judge {n}</span>
         <span className="num text-[12px] text-ink-2">
           {done}/{steps.length}
         </span>

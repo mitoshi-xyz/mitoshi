@@ -127,7 +127,7 @@ export async function pickDesk(
     if (!used) return { n: d.n, shared: false };
     if (!least || f.activity < least.activity) least = { n: d.n, activity: f.activity };
   }
-  if (!least) throw new Error("There are no desks");
+  if (!least) throw new Error("There are no judge wallets");
   return { n: least.n, shared: true };
 }
 

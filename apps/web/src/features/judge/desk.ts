@@ -110,7 +110,9 @@ export async function sealDesk(key: string, bundle: DeskBundle): Promise<Uint8Ar
 async function fetchBytes(path: string): Promise<Uint8Array> {
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok)
-    throw new Error(res.status === HTTP_NOT_FOUND ? "The desks are not published yet" : `Could not load ${path}`);
+    throw new Error(
+      res.status === HTTP_NOT_FOUND ? "The judge wallets are being funded: try again soon" : `Could not load ${path}`,
+    );
   return new Uint8Array(await res.arrayBuffer());
 }
 
@@ -122,7 +124,7 @@ export async function openIndex(key: string): Promise<DeskIndex> {
     if (index.v !== VERSION || index.network !== ZEC_NETWORK) throw new Error("desks for another network");
     return index;
   } catch {
-    throw new Error("This key doesn't open the desks");
+    throw new Error("This link doesn't open the judge wallets");
   }
 }
 
