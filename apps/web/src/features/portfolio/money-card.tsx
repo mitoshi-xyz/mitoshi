@@ -1,11 +1,13 @@
 "use client";
 
 import { type HistoryEntry, ZAT_PER_ZEC } from "@mitoshi/zwallet";
-import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Eye, EyeOff, Plus } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Eye, EyeOff, ListChecks, Plus } from "lucide-react";
 import { ZEC_NETWORK } from "@/constants";
 import { CountdownRing, cx, RollingNumber } from "@/kit";
 import { usd } from "../format";
 import { useLiveMids } from "../hyperliquid/hooks";
+import { openJudgePath } from "../judge/desk-sheet";
+import { useJudgeDesk } from "../judge/judge";
 import { Mark } from "../marks/mark";
 import { openDeposit, openFund, openWithdraw } from "../private-wallets/drawers";
 import { useRegistry } from "../private-wallets/registry-store";
@@ -98,6 +100,7 @@ function Confirming({
 export function MoneyCard({ state }: { state: WalletState }) {
   const mids = useLiveMids();
   const registry = useRegistry();
+  const desk = useJudgeDesk();
   const [hidden, setHidden] = useHideAmounts();
   const b = state.summary?.balance;
   const { spendable, resting, orchard, confirming: pending } = money(b);
@@ -172,7 +175,10 @@ export function MoneyCard({ state }: { state: WalletState }) {
       <div className="mt-4 grid grid-cols-3 gap-2">
         {(
           [
-            { label: "Deposit", icon: ArrowDownToLine, onClick: openDeposit, tone: "bg-accent text-accent-ink" },
+            // A desk takes no deposits (its money is the judges'): its first button is the judge's path.
+            desk === null
+              ? { label: "Deposit", icon: ArrowDownToLine, onClick: openDeposit, tone: "bg-accent text-accent-ink" }
+              : { label: "Judge path", icon: ListChecks, onClick: openJudgePath, tone: "bg-accent text-accent-ink" },
             { label: "Withdraw", icon: ArrowUpFromLine, onClick: openWithdraw, tone: "bg-cream text-cream-ink" },
             { label: "Wallet", icon: Plus, onClick: () => openFund(), tone: "border border-cream/20 text-cream" },
           ] as const

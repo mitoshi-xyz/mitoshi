@@ -9,13 +9,15 @@ import { WalletDrawers } from "../private-wallets/drawers";
 import { startJobs } from "../private-wallets/jobs";
 import { loadRegistry } from "../private-wallets/registry-store";
 import { LockScreen } from "../vault/lock-screen";
+import { claimTab, onTabLost, useTabOwner } from "../vault/tab-lock";
 import { openReceipt, ReceiptHost } from "../wallet/receipt";
-import { bootWallet, useWallet } from "../wallet/wallet-store";
+import { bootWallet, stopWallet, useWallet } from "../wallet/wallet-store";
 import { Dock } from "./dock";
 import { More } from "./more";
 import { recordNotice } from "./notices";
 import { NoticesDrawer } from "./notices-drawer";
 import { OfflineStrip } from "./offline-strip";
+import { OtherTab } from "./other-tab";
 import { Palette } from "./palette";
 import { PLACES } from "./places";
 import { PullToRefresh } from "./pull-refresh";
@@ -44,11 +46,19 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
   const [more, setMore] = useState(false);
   const [notices, setNotices] = useState(false);
   const wallet = useWallet();
+  const tab = useTabOwner();
 
   useEffect(() => {
     document.documentElement.dataset.network = ZEC_NETWORK;
     primeFeedback();
-    void bootWallet();
+    // One tab holds the wallet: this one opens it only if no other tab has it.
+    onTabLost(stopWallet);
+    void claimTab().then((mine) => {
+      if (!mine) return;
+      void bootWallet();
+      // A locked vault refuses the read; the lock screen loads the registry once it opens.
+      loadRegistry().then(startJobs, () => undefined);
+    });
     // Once the app has run a while, a later chunk failure (a newer deploy) may reload once again. Not at once: an
     // error page renders this shell too, and clearing the guard there would let a missing chunk reload forever.
     const guard = setTimeout(() => {
@@ -58,8 +68,6 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         // Storage blocked: the reload guard simply stays as it is.
       }
     }, CHUNK_GUARD_MS);
-    // A locked vault refuses the read; the lock screen loads the registry once it opens.
-    loadRegistry().then(startJobs, () => undefined);
     // Every toast also goes to the notification list, so nothing is lost when it leaves the screen.
     const stopNotices = onToast(recordNotice);
     return () => {
@@ -116,7 +124,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
             className="mt-stage"
             data-bleed={bleed && wallet.phase !== "locked" ? "" : undefined}
           >
-            {wallet.phase === "locked" ? <LockScreen /> : children}
+            {tab === "elsewhere" ? <OtherTab /> : wallet.phase === "locked" ? <LockScreen /> : children}
           </main>
         </div>
         <Dock onMore={() => setMore(true)} />

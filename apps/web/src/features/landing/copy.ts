@@ -18,6 +18,16 @@ export const LANDING = {
     how: "How it works",
     small: "No account · no sign-up · your keys stay in this browser",
   },
+  judges: {
+    strip: "ZECATHON judges: six funded desks on Zcash mainnet. Trade in 30 seconds.",
+    stripShort: "Judges: your desk is funded",
+    stripCta: "Open your desk",
+    kicker: "ZECATHON · Judge pass",
+    title: "Your desk is funded.",
+    line: "Six wallets on Zcash mainnet, one per judge, each with a Hyperliquid wallet ready to trade.",
+    cta: "Opens with the link in your submission",
+    ctaShort: "Link in your submission",
+  },
   problem: {
     kicker: "The problem",
     title: "On a public venue, your wallet is your track record.",

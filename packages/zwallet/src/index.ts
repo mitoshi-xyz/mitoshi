@@ -7,6 +7,7 @@ export type {
   Network,
   Note,
   NoteRef,
+  Payment,
   PoolBalance,
   Proposal,
   Shielded,

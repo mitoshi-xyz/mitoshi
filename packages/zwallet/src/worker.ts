@@ -133,16 +133,20 @@ async function handle(req: Request): Promise<unknown> {
     case "warmProver":
       return ready().core.call<{ ms: number }>("warmProver");
     case "propose":
-      return ready().core.call<Proposal>("propose", { kind: req.send, to: req.to, zat: req.zat });
+      return ready().core.call<Proposal>("propose", proposeArgs(req));
     case "send": {
       const w = ready();
-      const proposal = w.core.call<Proposal>("propose", { kind: req.send, to: req.to, zat: req.zat });
+      const proposal = w.core.call<Proposal>("propose", proposeArgs(req));
       const built = w.core.call<Built>("build", { id: proposal.id, seed: req.seedHex });
       persist();
       await w.lwd.broadcast(hexToBytes(built.raw));
       return { txid: built.txid, fee: proposal.fee };
     }
   }
+}
+
+function proposeArgs(req: Extract<Request, { kind: "send" | "propose" }>) {
+  return req.payments ? { kind: req.send, payments: req.payments } : { kind: req.send, to: req.to, zat: req.zat };
 }
 
 self.onmessage = (e: MessageEvent<Request>) => {

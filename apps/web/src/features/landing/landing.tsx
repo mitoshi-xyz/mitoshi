@@ -1,5 +1,6 @@
 import { ArrowRight, Check, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { JudgePass, JudgeStrip } from "../judge/pass";
 import { Mark, VenueMark } from "../marks/mark";
 import { Seal } from "../shell/seal";
 import { SceneArt } from "../welcome/scene-art";
@@ -20,6 +21,7 @@ function Hero() {
       <span className="lp-wordmark" aria-hidden>
         見通し
       </span>
+      <JudgeStrip />
       <LandingNav />
       <div className="lp-wrap relative grid items-center gap-12 pt-12 md:pt-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="lp-rise flex flex-col items-start gap-6">
@@ -48,6 +50,7 @@ function Hero() {
               {L.hero.how}
             </a>
           </div>
+          <JudgePass />
           <p className="text-[13px] text-[var(--lp-ink-3)]">{L.hero.small}</p>
         </div>
         <HeroVisual />

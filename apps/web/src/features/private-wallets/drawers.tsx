@@ -2,6 +2,7 @@
 
 import type { Venue } from "@mitoshi/engine";
 import { useEffect, useSyncExternalStore } from "react";
+import { markStep } from "../judge/judge";
 import { DepositDrawer } from "../wallet/deposit-drawer";
 import { WithdrawDrawer } from "../wallet/withdraw-drawer";
 import { FundDrawer } from "./fund-drawer";
@@ -35,6 +36,7 @@ export function openFund(venue: Venue = "polymarket") {
 
 export function openPublicView(id: string) {
   set({ ...CLOSED, publicId: id });
+  markStep("public");
 }
 
 export function openDeposit() {

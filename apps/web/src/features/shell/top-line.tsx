@@ -3,6 +3,7 @@
 import { Bell, ChevronLeft, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { DeskChip } from "../judge/desk-sheet";
 import { useRegistry } from "../private-wallets/registry-store";
 import { HealthChip } from "./health-chip";
 import { unseenCount } from "./notices";
@@ -34,6 +35,7 @@ export function TopLine({ onSearch, onNotices }: { onSearch: () => void; onNotic
         </span>
       </div>
       <div className="flex items-center gap-2">
+        <DeskChip />
         <button
           type="button"
           onClick={onNotices}

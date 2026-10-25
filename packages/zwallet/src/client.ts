@@ -4,6 +4,7 @@ import type {
   Network,
   Note,
   NoteRef,
+  Payment,
   Proposal,
   Request,
   Response,
@@ -152,6 +153,16 @@ export class WalletClient {
   /** Proves, signs and broadcasts a payment from Ironwood notes. */
   send(to: string, zat: number, seedHex: string): Promise<{ txid: string; fee: number }> {
     return this.request({ kind: "send", send: "pay", to, zat, seedHex });
+  }
+
+  /** Plans one payment to several shielded addresses (one transaction, one fee) without sending it. */
+  proposeMany(payments: Payment[]): Promise<Proposal> {
+    return this.request({ kind: "propose", send: "pay", to: "", zat: 0, payments });
+  }
+
+  /** Proves, signs and broadcasts one payment to several shielded addresses. */
+  sendMany(payments: Payment[], seedHex: string): Promise<{ txid: string; fee: number }> {
+    return this.request({ kind: "send", send: "pay", to: "", zat: 0, seedHex, payments });
   }
 
   /** Moves one standard amount of Orchard value into Ironwood (a ZIP 318 canonical crossing), or refuses. */

@@ -70,35 +70,62 @@ fn internal_address(state: &State, account: <crate::Db as WalletRead>::AccountId
     Ok(ua.encode(&state.network))
 }
 
-/// `{kind?, to, zat}` → `{id, fee, minTargetHeight, transparent}`. `kind` is "pay" (the default) or
-/// "migrate" (no `to`: the crossing goes to this account's internal address). The proposal is kept
-/// until `build` uses it.
+/// `{kind?, to, zat}` or `{payments: [{to, zat}…]}` → `{id, fee, minTargetHeight, transparent}`. `kind` is "pay"
+/// (the default) or "migrate" (no `to`: the crossing goes to this account's internal address). Several payments go
+/// in one transaction (setting up the judges' desks pays each its share at once); they must all be shielded, so one
+/// transaction never mixes a public output in with private ones. The proposal is kept until `build` uses it.
 pub fn propose(state: &mut State, args: &Value) -> Result<Value, Error> {
     let migrate = match args.get("kind").and_then(Value::as_str).unwrap_or("pay") {
         "pay" => false,
         "migrate" => true,
         other => return Err(Error::msg(format!("unknown send kind {other}"))),
     };
-    let zat = args.get("zat").and_then(Value::as_u64).ok_or_else(|| Error::msg("missing zat"))?;
     let network = state.network;
     let account = account(state)?;
-    let to = if migrate {
-        internal_address(state, account)?
-    } else {
-        args.get("to").and_then(Value::as_str).ok_or_else(|| Error::msg("missing to"))?.to_owned()
+    let many = args.get("payments").and_then(Value::as_array);
+    let wanted: Vec<(String, u64)> = match (migrate, many) {
+        (true, _) => {
+            let zat = args.get("zat").and_then(Value::as_u64).ok_or_else(|| Error::msg("missing zat"))?;
+            vec![(internal_address(state, account)?, zat)]
+        }
+        (false, Some(list)) => list
+            .iter()
+            .map(|p| {
+                let to = p.get("to").and_then(Value::as_str).ok_or_else(|| Error::msg("a payment is missing to"))?;
+                let zat = p.get("zat").and_then(Value::as_u64).ok_or_else(|| Error::msg("a payment is missing zat"))?;
+                Ok((to.to_owned(), zat))
+            })
+            .collect::<Result<_, Error>>()?,
+        (false, None) => {
+            let to = args.get("to").and_then(Value::as_str).ok_or_else(|| Error::msg("missing to"))?;
+            let zat = args.get("zat").and_then(Value::as_u64).ok_or_else(|| Error::msg("missing zat"))?;
+            vec![(to.to_owned(), zat)]
+        }
     };
-    let to = to.as_str();
-    let transparent = match Address::decode(&network, to) {
-        Some(Address::Transparent(_)) | Some(Address::Tex(_)) => true,
-        Some(Address::Unified(ua)) if ua.has_orchard() => false,
-        Some(_) => return Err(Error::msg("recipient must be a transparent address or a UA with an Orchard receiver")),
-        None => return Err(Error::msg("recipient is not a valid address on this network")),
-    };
-    let recipient = ZcashAddress::from_str(to).ctx("recipient")?;
-    let amount = Zatoshis::from_u64(zat).ctx("amount")?;
-    // No memos, ever: a transparent output cannot carry one, and a shielded memo is a fingerprint.
-    let payment = Payment::new(recipient, Some(amount), None, None, None, vec![]).ctx("payment")?;
-    let request = TransactionRequest::new(vec![payment]).ctx("payment request")?;
+    if wanted.is_empty() {
+        return Err(Error::msg("no payments"));
+    }
+    let mut transparent = false;
+    let mut payments = Vec::with_capacity(wanted.len());
+    for (to, zat) in &wanted {
+        let public = match Address::decode(&network, to) {
+            Some(Address::Transparent(_)) | Some(Address::Tex(_)) => true,
+            Some(Address::Unified(ua)) if ua.has_orchard() => false,
+            Some(_) => {
+                return Err(Error::msg("recipient must be a transparent address or a UA with an Orchard receiver"));
+            }
+            None => return Err(Error::msg("recipient is not a valid address on this network")),
+        };
+        if public && wanted.len() > 1 {
+            return Err(Error::msg("a payment to several recipients pays shielded addresses only"));
+        }
+        transparent |= public;
+        let recipient = ZcashAddress::from_str(to).ctx("recipient")?;
+        let amount = Zatoshis::from_u64(*zat).ctx("amount")?;
+        // No memos, ever: a transparent output cannot carry one, and a shielded memo is a fingerprint.
+        payments.push(Payment::new(recipient, Some(amount), None, None, None, vec![]).ctx("payment")?);
+    }
+    let request = TransactionRequest::new(payments).ctx("payment request")?;
     // The pool spent from is the pool change returns to: a payment never touches Orchard, and a
     // migration's only Ironwood output is the denomination itself.
     let pool = if migrate { ShieldedPool::Orchard } else { ShieldedPool::Ironwood };

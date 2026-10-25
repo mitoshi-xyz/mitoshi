@@ -35,3 +35,6 @@ target/
 *.pem
 *.sqlite
 *.sqlite-journal
+
+# The judges' sealed desks (scripts/desks.mjs): published with the deploy, never committed.
+apps/web/public/desks/

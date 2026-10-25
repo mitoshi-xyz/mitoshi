@@ -16,6 +16,7 @@ import {
 } from "@mitoshi/engine";
 import { ASSETS, formatUnits } from "@mitoshi/rails";
 import { toast } from "@/kit";
+import { judgeDesk } from "../judge/judge";
 import { pmBridge } from "../polymarket/pm";
 import { exchangeTick } from "../wallet/exchange";
 import { deviceSeed, freshAddress, previewSend, refreshWallet, send, walletState } from "../wallet/wallet-store";
@@ -321,7 +322,8 @@ function tick() {
     if (w.status === "funding" || w.status === "returning") once(w.id, poll);
     if (w.status === "funding" && w.venue === "polymarket") once(`${w.id}:bridge`, () => credit(w.id));
   }
-  if (canFund().ok) keepReady();
+  // A judge's desk never starts a funding by itself: only a judge's own tap does.
+  if (canFund().ok && judgeDesk() === null) keepReady();
   migrationTick(now, sessionStart);
   exchangeTick(now);
 }

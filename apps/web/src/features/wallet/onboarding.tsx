@@ -4,6 +4,8 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { Eye, Fingerprint, ShieldAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, cx, TxSteps, Wait } from "@/kit";
+import { Hanko } from "../judge/hanko";
+import { useOnJudgeHost } from "../judge/judge";
 import { Story } from "../welcome/story";
 import { EngineLine, Step } from "./onboarding-parts";
 import { Restore } from "./restore";
@@ -33,7 +35,28 @@ function makeChecks(words: string[]) {
 }
 
 /** First run: the story, then make a wallet (write down 24 words, check three) or restore one. */
+/** First run, or on judge.mitoshi.xyz without a desk yet: the way to the desk instead of making a wallet there. */
 export function Onboarding() {
+  return useOnJudgeHost() ? <NoDesk /> : <FirstRun />;
+}
+
+function NoDesk() {
+  return (
+    <section className="mx-auto flex max-w-md flex-col items-center gap-4 py-12 text-center">
+      <Hanko size={64} />
+      <h1 className="type-headline-md">Open your judge desk</h1>
+      <p className="text-[14px] text-ink-2">It opens with the link in your ZECATHON submission.</p>
+      <a href="/" className="inline-flex h-12 items-center rounded-full bg-accent px-6 font-semibold text-accent-ink">
+        Open my desk
+      </a>
+      <a href="https://mitoshi.xyz" className="text-[13px] text-muted hover:text-ink hover:underline">
+        Your own wallet lives at mitoshi.xyz
+      </a>
+    </section>
+  );
+}
+
+function FirstRun() {
   const w = useWallet();
   const [mode, setMode] = useState<"story" | "words" | "check" | "restore">("story");
   const [phrase, setPhrase] = useState("");

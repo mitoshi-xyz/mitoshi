@@ -49,6 +49,24 @@ export const DOCS_URL = "https://docs.mitoshi.xyz";
  * Where a receipt's "Verify it on chain" goes: the Nighthawk Zcash explorer (open source, nighthawk-apps/zcash-explorer).
  * It is a link the person opens in their own browser, never a request the app makes.
  */
+/**
+ * The judges' desks: six wallets funded before judging, each with a Hyperliquid wallet ready to trade, opened at
+ * judge.mitoshi.xyz with the key in the submission's link. That origin has storage of its own, so a desk never shares
+ * a vault with a wallet on mitoshi.xyz.
+ */
+export const JUDGE_HOST = "judge.mitoshi.xyz";
+export const JUDGE_ORIGIN = `https://${JUDGE_HOST}`;
+export const DESK_COUNT = 6;
+/** Where the sealed desks are served (static files, each encrypted under a key only the judges' link carries). */
+export const DESK_FILES = "/desks";
+/** A desk's ready wallet: 0.01 ZEC to Hyperliquid, funded through Mitoshi before judging. */
+export const DESK_READY_ZAT = 1_000_000;
+/**
+ * What the treasury pays each desk: the ready wallet, 0.01 ZEC to fund a brand-new wallet live, and both fees. Test
+ * desks (a rehearsal of the flow; testnet has no NEAR route to fund anything) get small change.
+ */
+export const DESK_SHARE_ZAT = ZEC_NETWORK === "main" ? 2_030_000 : 150_000;
+
 export const ZEC_EXPLORER = {
   main: "https://mainnet.zcashexplorer.app",
   test: "https://testnet.zcashexplorer.app",

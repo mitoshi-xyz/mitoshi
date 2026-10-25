@@ -4,6 +4,7 @@ import type { PrivateWallet } from "@mitoshi/engine";
 import { Plus, WalletCards } from "lucide-react";
 import { useState } from "react";
 import { Button, EmptyState, Segmented } from "@/kit";
+import { useJudgeDesk } from "../judge/judge";
 import { openFund, openPublicView } from "./drawers";
 import { canFund } from "./jobs";
 import { KeepReady } from "./keep-ready";
@@ -19,6 +20,7 @@ export function PrivateWallets() {
   const now = useNow();
   const [tab, setTab] = useState<"live" | "done">("live");
   const allowed = canFund();
+  const desk = useJudgeDesk();
 
   const live = registry.wallets.filter((w) => !DONE.has(w.status));
   const done = registry.wallets.filter((w) => DONE.has(w.status));
@@ -39,7 +41,7 @@ export function PrivateWallets() {
         <p className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-[13px] text-ink-2">{allowed.why}</p>
       ) : null}
 
-      <KeepReady />
+      {desk === null ? <KeepReady /> : null}
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

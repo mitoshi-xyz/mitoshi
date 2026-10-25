@@ -3,6 +3,7 @@
 import { Moon, ScanSearch, Sun, Trash2, Vibrate, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button, cue, type FeedbackPrefs, feedbackPrefs, Switch, setFeedbackPrefs, Wait } from "@/kit";
+import { leaveDesk, useJudgeDesk } from "../judge/judge";
 import { startRecovery, useRecovery } from "../private-wallets/recover";
 import { useRegistry } from "../private-wallets/registry-store";
 import { VENUES } from "../private-wallets/venues";
@@ -161,7 +162,18 @@ function Forget() {
 /** Settings: security (words, backup, lock, finding wallets from words), feel, and Forget. Status has its own page. */
 export function SettingsView() {
   const w = useWallet();
+  const desk = useJudgeDesk();
   const has = w.phase === "ready" || w.phase === "syncing";
+  // A judge's desk has no words or backup to keep (they are the desk's, not the judge's): it can only be given back.
+  if (desk !== null) {
+    return (
+      <section className="flex flex-col gap-8">
+        <h1 className="type-headline-lg">Settings</h1>
+        <Feel />
+        <GiveBack n={desk} />
+      </section>
+    );
+  }
   return (
     <section className="flex flex-col gap-8">
       <h1 className="type-headline-lg">Settings</h1>
@@ -169,6 +181,20 @@ export function SettingsView() {
       {has ? <Recovery /> : null}
       <Feel />
       {has ? <Forget /> : null}
+    </section>
+  );
+}
+
+function GiveBack({ n }: { n: number }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="type-title">Judge desk {n}</h2>
+      <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface-1 p-4 text-[13px]">
+        <p className="text-ink-2">This browser forgets the desk. The desk keeps its money and trades.</p>
+        <Button className="self-start" onClick={() => void leaveDesk()}>
+          Give this desk back
+        </Button>
+      </div>
     </section>
   );
 }

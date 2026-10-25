@@ -1,4 +1,5 @@
 import { LOCK_PBKDF2_ITERATIONS, LOCK_SALT_BYTES, VAULT_DB, VAULT_IV_BYTES, VAULT_KEY_BITS } from "@/constants";
+import { setupSlot } from "../judge/slot";
 
 /**
  * The device vault: one IndexedDB database where every record is AES-GCM encrypted under a
@@ -50,9 +51,15 @@ function serial<T>(job: () => Promise<T>): Promise<T> {
   return next;
 }
 
+/** The vault's database: one per browser origin, or one per desk-setup frame on a developer machine. */
+export function dbName(): string {
+  const slot = setupSlot();
+  return slot ? `${VAULT_DB.name}:${slot}` : VAULT_DB.name;
+}
+
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(VAULT_DB.name, VAULT_DB.version);
+    const req = indexedDB.open(dbName(), VAULT_DB.version);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(VAULT_DB.keys)) db.createObjectStore(VAULT_DB.keys);
@@ -227,7 +234,7 @@ export async function vaultGet(network: string, name: RecordName): Promise<Uint8
 export function forgetVault(): Promise<void> {
   sessionKey = null;
   return new Promise((resolve, reject) => {
-    const req = indexedDB.deleteDatabase(VAULT_DB.name);
+    const req = indexedDB.deleteDatabase(dbName());
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
     req.onblocked = () => resolve();

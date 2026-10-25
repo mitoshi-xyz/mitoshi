@@ -7,6 +7,7 @@ import {
   type HistoryEntry,
   MNEMONIC_STRENGTH_BITS,
   type Note,
+  type Payment,
   type Shielded,
   type Summary,
   type SyncProgress,
@@ -270,7 +271,9 @@ export function isValidPhrase(phrase: string): boolean {
 
 /** Saves the phrase (encrypted) and creates the wallet. `restore` scans from Ironwood's activation. */
 export async function createWallet(phrase: string, restore: boolean) {
-  if (!client) return;
+  // One wallet at a time: a second call while the first is under way (a double tap, an effect run twice) would save
+  // other words over the first ones and make a second account the saved words don't match.
+  if (!client || state.phase === "creating") return;
   const normalized = phrase.trim().toLowerCase().split(/\s+/).join(" ");
   set({ phase: "creating", creatingStep: "vault", error: null });
   try {
@@ -356,6 +359,22 @@ export async function send(to: string, zat: number): Promise<{ txid: string; fee
   const result = await client.send(to, zat, await seedHex());
   quietUntil = Date.now() + between(SEND_QUIET_MIN_MS, SEND_QUIET_MAX_MS);
   return result;
+}
+
+/**
+ * One payment to several shielded addresses, in one transaction (setting up the judges' desks). Like any broadcast,
+ * the next sync waits a random 1–10 min.
+ */
+export async function sendMany(payments: Payment[]): Promise<{ txid: string; fee: number }> {
+  if (!client) throw new Error("wallet is not open");
+  const result = await client.sendMany(payments, await seedHex());
+  quietUntil = Date.now() + between(SEND_QUIET_MIN_MS, SEND_QUIET_MAX_MS);
+  return result;
+}
+
+/** Reads one record of this vault as it is stored (desk setup seals a desk from them). */
+export async function vaultRecord(name: "mnemonic" | "walletdb" | "registry"): Promise<Uint8Array | null> {
+  return vaultGet(ZEC_NETWORK, name);
 }
 
 /**

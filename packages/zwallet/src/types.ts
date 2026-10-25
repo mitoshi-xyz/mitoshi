@@ -113,12 +113,18 @@ export type Request =
   | { id: number; kind: "lockNotes"; notes: NoteRef[]; untilHeight: number }
   | { id: number; kind: "unlockNotes"; notes: NoteRef[] }
   | { id: number; kind: "history"; limit: number }
-  | { id: number; kind: "send"; send: SendKind; to: string; zat: number; seedHex: string }
-  | { id: number; kind: "propose"; send: SendKind; to: string; zat: number }
+  | { id: number; kind: "send"; send: SendKind; to: string; zat: number; seedHex: string; payments?: Payment[] }
+  | { id: number; kind: "propose"; send: SendKind; to: string; zat: number; payments?: Payment[] }
   | { id: number; kind: "transparentAddress" }
   | { id: number; kind: "transparentAddresses" }
   | { id: number; kind: "checkUtxos"; address: string }
   | { id: number; kind: "shield"; seedHex: string };
+
+/** One recipient of a payment to several shielded addresses at once (one transaction, one fee). */
+export interface Payment {
+  to: string;
+  zat: number;
+}
 
 /**
  * A payment spends Ironwood only. A migration moves one standard amount of Orchard value into Ironwood as a ZIP 318

@@ -12,7 +12,9 @@
   //     the proxy cannot add a script to it even if one of these is switched back on.
   "routes": [
     { "pattern": "mitoshi.xyz", "custom_domain": true },
-    { "pattern": "www.mitoshi.xyz", "custom_domain": true }
+    { "pattern": "www.mitoshi.xyz", "custom_domain": true },
+    // The judges' desks (features/judge): same Worker and app, an origin of its own so a desk never shares storage.
+    { "pattern": "judge.mitoshi.xyz", "custom_domain": true }
   ],
   "compatibility_date": "2026-10-01",
   // The static app. Headers (CSP with per-page script hashes, COOP/COEP) come from out/_headers.

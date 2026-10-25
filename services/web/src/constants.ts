@@ -13,6 +13,9 @@ export const PASS_BACK = ["content-type", "cache-control", "content-security-pol
 /** The one address the app answers at; www redirects there. */
 export const CANONICAL_HOST = "mitoshi.xyz";
 export const WWW_HOST = "www.mitoshi.xyz";
+/** The judges' desks: the same app on an origin of its own, whose front page is the desk gate. */
+export const JUDGE_HOST = "judge.mitoshi.xyz";
+export const JUDGE_HOME = "/judge";
 
 /** Build files are named by their content, so a found one never changes. */
 export const STATIC_PREFIX = "/_next/static/";

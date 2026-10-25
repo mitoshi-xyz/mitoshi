@@ -1,0 +1,206 @@
+/* The judges' pieces (features/judge, and the pass on the landing): the 審 hanko, the desk pass (a ticket stub in the
+   receipt's language: cream paper, a perforation with notches, the seal pressed beside it) and the six desk tiles.
+   They live in the landing's dark world, so they use its tokens. */
+
+/* The hanko: 審 ("judge") cut in vermilion, a double rim like a real seal, pressed a little crooked. */
+.jd-hanko {
+  --size: 56px;
+  display: inline-flex;
+  width: var(--size);
+  height: var(--size);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22%;
+  background: #e04d26;
+  color: #f4eee3;
+  font: 700 calc(var(--size) * 0.56) / 1 var(--font-stamp);
+  box-shadow:
+    inset 0 0 0 calc(var(--size) * 0.05) #e04d26,
+    inset 0 0 0 calc(var(--size) * 0.08) color-mix(in srgb, #f4eee3 70%, transparent);
+  transform: rotate(-8deg);
+}
+.jd-press {
+  animation: jd-press 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes jd-press {
+  0% {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.6);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-8deg) scale(0.94);
+  }
+  100% {
+    transform: rotate(-8deg) scale(1);
+  }
+}
+
+/* The desk pass: a cream stub with a perforation between the body and the seal. */
+.jd-pass {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  border-radius: 18px;
+  background: #f4eee3;
+  color: #141210;
+  box-shadow:
+    0 24px 48px -24px #000,
+    0 0 0 1px color-mix(in srgb, #e04d26 30%, transparent),
+    0 0 40px -12px var(--lp-glow, transparent);
+  transition:
+    transform 300ms cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 300ms;
+}
+a.jd-pass:hover {
+  transform: translateY(-3px) rotate(-0.4deg);
+}
+a.jd-pass:focus-visible {
+  outline: 2px solid #e04d26;
+  outline-offset: 3px;
+}
+.jd-pass-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+}
+.jd-pass-stub {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px 12px 20px;
+  border-left: 2px dashed color-mix(in srgb, #141210 22%, transparent);
+}
+/* The notches, cut in the colour of the ground the pass lies on. */
+.jd-pass-stub::before,
+.jd-pass-stub::after {
+  content: "";
+  position: absolute;
+  left: -9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--lp-ground, #050505);
+}
+.jd-pass-stub::before {
+  top: -8px;
+}
+.jd-pass-stub::after {
+  bottom: -8px;
+}
+.jd-pass-kicker {
+  font: 600 11px / 1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #e04d26;
+}
+.jd-pass-title {
+  font: 800 19px / 1.15 var(--font-heading);
+  letter-spacing: -0.02em;
+}
+.jd-pass-line {
+  font: 400 13px / 1.4 var(--font-sans);
+  color: color-mix(in srgb, #141210 68%, transparent);
+}
+
+/* Six desk tiles: waiting, being checked, taken, and the one that is yours. */
+.jd-desks {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 479px) {
+  .jd-desks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.jd-desk {
+  position: relative;
+  display: flex;
+  aspect-ratio: 1 / 1.1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--lp-card-2, #171717);
+  box-shadow: inset 0 0 0 1px var(--lp-line, rgb(255 255 255 / 0.1));
+  font: 600 18px / 1 var(--font-mono);
+  color: var(--lp-ink-2, #a3a3a3);
+  transition:
+    opacity 300ms,
+    background 300ms;
+}
+.jd-desk small {
+  font: 500 10px / 1 var(--font-sans);
+  letter-spacing: 0.04em;
+  color: var(--lp-ink-3, #737373);
+}
+.jd-desk[data-state="checking"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in srgb, #f4eee3 10%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: mt-shimmer 1200ms linear infinite;
+}
+.jd-desk[data-state="used"] {
+  opacity: 0.45;
+}
+.jd-desk[data-state="yours"] {
+  background: color-mix(in srgb, #e04d26 16%, #050505);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #e04d26 70%, transparent);
+  color: #f4eee3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jd-press,
+  .jd-desk[data-state="checking"]::after {
+    animation: none;
+  }
+  a.jd-pass:hover {
+    transform: none;
+  }
+}
+
+/* The strip above the landing's nav: the one line every judge sees first. */
+.jd-strip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: max(6px, env(safe-area-inset-top)) 16px 6px;
+  background: linear-gradient(90deg, color-mix(in srgb, #e04d26 22%, #050505), color-mix(in srgb, #e04d26 8%, #050505));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, #e04d26 40%, transparent);
+  font: 600 13px / 1.3 var(--font-sans);
+  color: #f4eee3;
+}
+.jd-strip:hover .jd-strip-cta {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.jd-strip:focus-visible {
+  outline: 2px solid #f4eee3;
+  outline-offset: -4px;
+}
+.jd-strip-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  color: #ffb39b;
+}

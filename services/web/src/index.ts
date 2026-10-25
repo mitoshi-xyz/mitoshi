@@ -5,6 +5,8 @@ import {
   DOCS_ORIGIN,
   DOCS_PREFIX,
   IMAGE_CACHE_SECONDS,
+  JUDGE_HOME,
+  JUDGE_HOST,
   MAX_RELAY_BODY_BYTES,
   PASS_BACK,
   RELAY_PREFIX,
@@ -134,6 +136,11 @@ export default {
       out.headers.set("cache-control", res.status === HTTP_OK ? STATIC_CACHE : "no-store");
       out.headers.set("content-security-policy", WORKER_CSP);
       return out;
+    }
+    // On the judges' origin the front page is the desk gate (the rest of the app is the same app).
+    if (url.hostname === JUDGE_HOST && url.pathname === "/") {
+      url.pathname = JUDGE_HOME;
+      return env.ASSETS.fetch(new Request(url, request));
     }
     return env.ASSETS.fetch(request);
   },
