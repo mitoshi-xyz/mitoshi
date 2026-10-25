@@ -4,15 +4,17 @@ import { ZAT_PER_ZEC } from "@mitoshi/zwallet";
 import { Check, Copy, Download } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DESK_COUNT, DESK_READY_ZAT, DESK_SHARE_ZAT, JUDGE_ORIGIN, ZEC_NETWORK } from "@/constants";
-import { Button, cx, Toaster } from "@/kit";
+import { Button, cx, Toaster, type TxStep, TxSteps } from "@/kit";
 import { FUNDING_FEE_RESERVE_ZAT, startJobs } from "../../private-wallets/jobs";
 import { loadRegistry } from "../../private-wallets/registry-store";
 import { STATUS } from "../../private-wallets/venues";
 import { claimTab } from "../../vault/tab-lock";
+import { AddressCard } from "../../wallet/address-card";
 import { DepositDrawer } from "../../wallet/deposit-drawer";
 import {
   bootWallet,
   createWallet,
+  freshAddress,
   money,
   newPhrase,
   sendMany,
@@ -25,6 +27,8 @@ import { type DeskStatus, type FromDesk, SETUP_CHANNEL } from "./protocol";
 
 const KEY_STORE = "mitoshi:desk-setup:key";
 const SEALED_STORE = "mitoshi:desk-setup:sealed";
+const AUTO_STORE = "mitoshi:desk-setup:auto";
+const ADDRESS_STORE = "mitoshi:desk-setup:treasury-address";
 /** What the one payment to the six desks may cost on top of their shares (ZIP 317: seven actions). */
 const PAY_FEE_RESERVE_ZAT = 60_000;
 const NEED_ZAT = DESK_COUNT * DESK_SHARE_ZAT + PAY_FEE_RESERVE_ZAT;
@@ -49,38 +53,21 @@ function deskKey(): string {
   return key;
 }
 
-function Step({ n, title, done, children }: { n: number; title: string; done: boolean; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface-1 p-4">
-      <h2 className="flex items-center gap-2 font-semibold text-[15px]">
-        <span
-          className={cx(
-            "flex size-6 items-center justify-center rounded-full text-[12px]",
-            done ? "bg-up text-black" : "bg-surface-3 text-ink-2",
-          )}
-        >
-          {done ? <Check size={14} /> : n}
-        </span>
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
 function DeskCard({ n, s, sealed }: { n: number; s: DeskStatus | undefined; sealed: boolean }) {
+  const hl = s?.ready?.status;
   return (
     <li className="flex flex-col gap-1 rounded-lg border border-hairline bg-surface-1 p-3 text-[12px]">
       <span className="flex items-center justify-between font-semibold text-[13px]">
         Judge wallet {n}
-        {sealed ? <span className="text-up">sealed</span> : null}
+        {sealed ? <span className="text-up">handed over</span> : null}
       </span>
-      <span className="text-muted">{s ? s.phase : "starting…"}</span>
-      <span className="num">
-        {s ? `${zec(s.spendable)} spendable · ${zec(s.confirming + s.resting)} on the way` : "–"}
+      <span className="num text-ink-2">
+        {s
+          ? `${zec(s.spendable + s.confirming + s.resting)} ZEC${s.confirming > 0 ? " · confirming" : ""}`
+          : "starting…"}
       </span>
-      <span className={cx(s?.ready?.status === "ready" ? "text-up" : "text-ink-2")}>
-        Hyperliquid: {s?.ready ? STATUS[s.ready.status].word : "none yet"}
+      <span className={cx(hl === "ready" ? "text-up" : "text-muted")}>
+        {hl ? `Hyperliquid: ${STATUS[hl].word}` : "Hyperliquid: not yet"}
       </span>
       {s?.ready?.error || s?.error ? <span className="text-down">{s.ready?.error ?? s.error}</span> : null}
     </li>
@@ -88,9 +75,11 @@ function DeskCard({ n, s, sealed }: { n: number; s: DeskStatus | undefined; seal
 }
 
 /**
- * Setting up the judges' desks, on a developer machine (mainnet dev server). The page's own wallet is the treasury,
- * funded once; six frames hold the six desks. One payment from the treasury gives each desk its share, each desk funds
- * a Hyperliquid wallet the ordinary way, and then each seals itself into a desk file under one key.
+ * Setting up the judges' wallets, on a developer machine (the mainnet dev server). The page's own wallet is the
+ * treasury; six frames hold the six judge wallets, each in its own vault. The owner does two things: sends ZEC to the
+ * treasury and presses Start. From there the page runs the rest as each step's money arrives: one shielded payment
+ * fills the six wallets, each one funds a Hyperliquid wallet the ordinary way (a minute apart), and each locks itself
+ * under the judges' link and is saved for the site.
  */
 export function DeskConsole() {
   const dev = process.env.NODE_ENV === "development";
@@ -106,6 +95,8 @@ export function DeskConsole() {
   const [published, setPublished] = useState<string | null>(null);
   const [twice, setTwice] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [auto, setAuto] = useState(false);
+  const [address, setAddress] = useState<string | null>(null);
   const channel = useRef<BroadcastChannel | null>(null);
   const words = useRef<Record<number, string>>({});
   const [backedUp, setBackedUp] = useState<string | null>(null);
@@ -117,10 +108,11 @@ export function DeskConsole() {
     setSlotSet(true);
     try {
       if (localStorage.getItem(SEALED_STORE)) setFrames(false);
+      setAuto(localStorage.getItem(AUTO_STORE) === "1");
     } catch {
-      // No storage: the frames simply open.
+      // No storage: the frames simply open, and Start has to be pressed again.
     }
-    // One console at a time: a second one would run every desk twice.
+    // One console at a time: a second one would run every wallet twice.
     void claimTab().then((mine) => {
       if (!mine) {
         setTwice(true);
@@ -143,13 +135,28 @@ export function DeskConsole() {
 
   useEffect(() => {
     if (w.phase === "empty") void createWallet(newPhrase(), false);
-  }, [w.phase]);
+    // One treasury address for good: the one the owner was given stays the one shown.
+    if (w.phase === "ready" && address === null) {
+      const saved = localStorage.getItem(ADDRESS_STORE);
+      if (saved) setAddress(saved);
+      else
+        freshAddress().then(
+          (a) => {
+            localStorage.setItem(ADDRESS_STORE, a);
+            setAddress(a);
+          },
+          () => undefined,
+        );
+    }
+  }, [w.phase, address]);
 
   const treasury = money(w.summary?.balance);
   const addresses = DESKS.map((n) => desks[n]?.address ?? null);
   const paid = DESKS.every((n) => (desks[n]?.spendable ?? 0) + (desks[n]?.confirming ?? 0) >= DESK_SHARE_ZAT);
   const funded = DESKS.filter((n) => desks[n]?.ready?.status === "ready").length;
+  const started = DESKS.filter((n) => desks[n]?.ready !== undefined && desks[n]?.ready !== null).length;
   const sealed = Object.keys(files).length;
+  const handedOver = published?.startsWith("Saved") ?? false;
   const link = useMemo(() => (slotSet ? `${JUDGE_ORIGIN}/#k=${deskKey()}` : ""), [slotSet]);
 
   // Saved once all six have locked themselves; a wallet that couldn't stops the hand-over (its reason shows).
@@ -160,13 +167,35 @@ export function DeskConsole() {
     else if (sealed === DESK_COUNT) void save.current?.().finally(() => setPublishing(false));
   }, [publishing, sealed, problems]);
 
+  // After Start, each step runs as soon as the one before it has landed. Each runs once per page.
+  const actions = useRef<{ pay: () => Promise<void>; fundAll: () => void; publish: () => void } | null>(null);
+  const ran = useRef({ pay: false, fund: false, publish: false });
+  const enough = treasury.spendable >= NEED_ZAT;
+  const allHaveShare = DESKS.every((n) => (desks[n]?.spendable ?? 0) >= DESK_READY_ZAT + FUNDING_FEE_RESERVE_ZAT);
+  const noneStarted = DESKS.every((n) => !desks[n]?.ready);
+  useEffect(() => {
+    const a = actions.current;
+    if (!auto || !a) return;
+    if (!ran.current.pay && !paid && enough && addresses.every((x) => x !== null)) {
+      ran.current.pay = true;
+      void a.pay();
+    }
+    if (!ran.current.fund && allHaveShare && noneStarted) {
+      ran.current.fund = true;
+      a.fundAll();
+    }
+    if (!ran.current.publish && funded === DESK_COUNT && !handedOver) {
+      ran.current.publish = true;
+      a.publish();
+    }
+  }, [auto, paid, enough, addresses, allHaveShare, noneStarted, funded, handedOver]);
+
   if (!dev) {
     return <p className="p-8 text-center text-muted">Judge wallet setup runs on a developer machine.</p>;
   }
   if (twice) {
     return <p className="p-8 text-center text-muted">Judge wallet setup is open in another tab. Use that one.</p>;
   }
-
   // Every wallet's words to this machine, before any money goes in: the vaults live only in this browser.
   const backUp = async () => {
     words.current = {};
@@ -175,7 +204,7 @@ export function DeskConsole() {
     const treasury = await vaultRecord("mnemonic");
     const got = Object.keys(words.current).length;
     if (!treasury || got < DESK_COUNT) {
-      setBackedUp(`Only ${got} of ${DESK_COUNT} desks answered: try again`);
+      setBackedUp(`Only ${got} of ${DESK_COUNT} wallets answered: try again`);
       return;
     }
     const body = JSON.stringify({
@@ -244,91 +273,97 @@ export function DeskConsole() {
   };
   save.current = download;
 
+  actions.current = { pay, fundAll, publish };
+
+  const start = () => {
+    localStorage.setItem(AUTO_STORE, "1");
+    setAuto(true);
+    void backUp();
+  };
+
+  const moneyLine =
+    treasury.spendable >= NEED_ZAT
+      ? "Arrived"
+      : treasury.confirming + treasury.resting > 0
+        ? `${zec(treasury.confirming + treasury.resting)} ZEC on its way${treasury.resting > 0 ? ", resting 2–6 h" : ", 10 blocks"}`
+        : `Waiting for ${zec(NEED_ZAT)} ZEC`;
+  const progress: TxStep[] = [
+    { label: "Your ZEC arrives", state: paid || enough ? "done" : "active", detail: paid ? "Arrived" : moneyLine },
+    {
+      label: "Filling the six wallets",
+      state: paid
+        ? "done"
+        : paying && !paying.startsWith("Sent") && !paying.startsWith("Proving")
+          ? "failed"
+          : enough
+            ? "active"
+            : "pending",
+      detail: paid ? "One shielded payment, 10 blocks" : (paying ?? undefined),
+    },
+    {
+      label: "Getting them ready to trade",
+      state: funded === DESK_COUNT ? "done" : started > 0 || allHaveShare ? "active" : "pending",
+      detail: `${funded} of ${DESK_COUNT} ready · about 20 min in all`,
+    },
+    {
+      label: "Handing them to the judges",
+      state: handedOver ? "done" : Object.keys(problems).length ? "failed" : publishing ? "active" : "pending",
+      detail: published ?? (Object.keys(problems).length ? "A wallet couldn't lock itself: see its card" : undefined),
+    },
+  ];
+
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
+    <main className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
       <header className="flex items-baseline justify-between">
         <h1 className="type-headline-md">Judge wallets · setup</h1>
         <span className="type-label text-accent">{ZEC_NETWORK === "main" ? "Mainnet" : "Testnet"}</span>
       </header>
 
-      <Step n={0} title="Back up the words" done={backedUp?.startsWith("All") ?? false}>
-        <p className="text-[13px] text-ink-2">
-          The words of the treasury and of each judge wallet, saved on this machine before any money goes in.
-        </p>
-        <Button onClick={() => void backUp()} disabled={w.phase !== "ready"}>
-          Back up the words
-        </Button>
-        {backedUp ? <p className="text-[12px] text-ink-2">{backedUp}</p> : null}
-      </Step>
+      <section className="flex flex-col gap-5 rounded-xl border border-accent/40 bg-surface-1 p-5">
+        <h2 className="font-semibold text-[17px]">Two things to do</h2>
+        <div className="flex flex-col gap-3">
+          <p className="font-medium text-[15px]">1. Send {zec(NEED_ZAT)} ZEC to this address, from Zodl</p>
+          <AddressCard
+            address={address}
+            error={null}
+            onFresh={() => setDeposit(true)}
+            freshLabel="Sending from an exchange instead"
+            loading="Opening the treasury"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="font-medium text-[15px]">2. Press Start</p>
+          {auto ? (
+            <p className="text-[14px] text-up">Started. Leave this tab open: it does the rest.</p>
+          ) : (
+            <Button tone="primary" size="lg" onClick={start} disabled={w.phase !== "ready"} className="self-start">
+              Start
+            </Button>
+          )}
+        </div>
+      </section>
 
-      <Step n={1} title="Fund the treasury" done={treasury.spendable >= NEED_ZAT || paid}>
-        <p className="num text-[13px] text-ink-2">
-          Treasury {zec(treasury.spendable)} spendable · {zec(treasury.confirming + treasury.resting)} on the way ·
-          needs {zec(NEED_ZAT)} ZEC ({DESK_COUNT} × {zec(DESK_SHARE_ZAT)} and the fee)
-        </p>
-        <Button onClick={() => setDeposit(true)} disabled={w.phase !== "ready"}>
-          Deposit to the treasury
-        </Button>
-      </Step>
-
-      <Step n={2} title="Fill the six judge wallets" done={paid}>
-        <p className="text-[13px] text-ink-2">
-          One shielded transaction: {DESK_COUNT} × {zec(DESK_SHARE_ZAT)} ZEC. Each wallet can spend it after 10 blocks.
-        </p>
-        <Button
-          tone="primary"
-          onClick={() => void pay()}
-          disabled={paid || paying !== null || treasury.spendable < NEED_ZAT || addresses.some((a) => a === null)}
-        >
-          Fill the six wallets
-        </Button>
-        {paying ? <p className="num text-[12px] text-muted">{paying}</p> : null}
-      </Step>
-
-      <Step n={3} title="Get each one ready to trade on Hyperliquid" done={funded === DESK_COUNT}>
-        <p className="text-[13px] text-ink-2">
-          {zec(DESK_READY_ZAT)} ZEC each through NEAR Intents, at a random moment: about 8 minutes. {funded} of{" "}
-          {DESK_COUNT} ready.
-        </p>
-        <Button
-          tone="primary"
-          onClick={fundAll}
-          disabled={DESKS.some((n) => (desks[n]?.spendable ?? 0) < DESK_READY_ZAT + FUNDING_FEE_RESERVE_ZAT)}
-        >
-          Get them ready to trade
-        </Button>
-      </Step>
-
-      <Step n={4} title="Hand them to the judges" done={published?.startsWith("Saved") ?? false}>
-        <p className="text-[13px] text-ink-2">
-          Locks each wallet under the judges' link and saves it for the site. After this, this page stops running them.
-        </p>
-        <Button
-          tone="primary"
-          onClick={publish}
-          disabled={publishing || (funded < DESK_COUNT && ZEC_NETWORK === "main")}
-        >
-          <Download size={16} /> Hand them over
-        </Button>
-        {published ? <p className="text-[12px] text-ink-2">{published}</p> : null}
+      <section className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface-1 p-5">
+        <TxSteps steps={progress} />
+        {handedOver ? (
+          <div className="flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2">
+            <span className="num min-w-0 flex-1 truncate text-[12px]">{link}</span>
+            <button
+              type="button"
+              aria-label="Copy the judges' link"
+              onClick={() => void navigator.clipboard.writeText(link).then(() => setCopied(true))}
+              className="rounded p-1 hover:bg-surface-3"
+            >
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+            </button>
+          </div>
+        ) : null}
         {Object.entries(problems).map(([n, why]) => (
           <p key={n} className="text-[12px] text-down">
             Judge wallet {n}: {why}
           </p>
         ))}
-        <div className="flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2">
-          <span className="num min-w-0 flex-1 truncate text-[12px]">{link}</span>
-          <button
-            type="button"
-            aria-label="Copy the judges' link"
-            onClick={() => void navigator.clipboard.writeText(link).then(() => setCopied(true))}
-            className="rounded p-1 hover:bg-surface-3"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
-        </div>
-        <p className="text-[12px] text-muted">The judges' link. It goes only into the sealed submission.</p>
-      </Step>
+      </section>
 
       <ul className="grid grid-cols-2 gap-2 md:grid-cols-3">
         {DESKS.map((n) => (
@@ -336,21 +371,47 @@ export function DeskConsole() {
         ))}
       </ul>
 
+      <details className="rounded-xl border border-hairline bg-surface-1 p-4 text-[13px]">
+        <summary className="cursor-pointer text-ink-2">Run a step by hand</summary>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => void backUp()} disabled={w.phase !== "ready"}>
+            Back up the words
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => void pay()}
+            disabled={paid || paying !== null || !enough || addresses.some((a) => a === null)}
+          >
+            Fill the six wallets
+          </Button>
+          <Button size="sm" onClick={fundAll} disabled={!allHaveShare}>
+            Get them ready to trade
+          </Button>
+          <Button size="sm" onClick={publish} disabled={publishing || (funded < DESK_COUNT && ZEC_NETWORK === "main")}>
+            <Download size={14} /> Hand them over
+          </Button>
+          {frames ? null : (
+            <Button size="sm" onClick={() => setFrames(true)}>
+              Run the judge wallets again
+            </Button>
+          )}
+        </div>
+        {backedUp ? <p className="mt-2 text-ink-2">{backedUp}</p> : null}
+      </details>
+
       {frames && !twice ? (
-        <div aria-hidden className="grid grid-cols-6 gap-1 opacity-60">
+        <div aria-hidden className="grid grid-cols-6 gap-1 opacity-40">
           {DESKS.map((n) => (
             <iframe
               key={n}
               title={`Judge wallet ${n}`}
               name={slotWindowName(`desk-${n}`)}
               src="/desk-setup/frame"
-              className="h-8 w-full rounded border border-hairline"
+              className="h-6 w-full rounded border border-hairline"
             />
           ))}
         </div>
-      ) : (
-        <Button onClick={() => setFrames(true)}>Run the judge wallets again</Button>
-      )}
+      ) : null}
 
       <DepositDrawer open={deposit} onClose={() => setDeposit(false)} />
       <Toaster />
