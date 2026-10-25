@@ -4,7 +4,7 @@ description: Put shielded ZEC in from any Zcash wallet and take it out again, wi
 icon: ArrowDownUp
 ---
 
-{/* Sources: apps/web/src/features/wallet (deposit-drawer.tsx:31-116, withdraw-drawer.tsx:32-266, history.tsx:57-150);
+{/* Sources: apps/web/src/features/wallet (deposit-drawer.tsx, exchange-tab.tsx, exchange.ts; packages/zwallet/rust/src/exchange.rs; withdraw-drawer.tsx:32-266, history.tsx:57-150);
    apps/web/src/features/privacy/leak-meter.tsx; packages/engine/src/leak.ts:60-85; apps/web/src/kit/slide.tsx. */}
 
 ## Deposit
@@ -19,8 +19,23 @@ icon: ArrowDownUp
 | Then | Spendable after 10 confirmations; from a public address, it rests 2–6 h first ("From a public address: resting 2–6 h before it can fund a wallet") |
 
 From a shielded wallet (Zodl, Zashi, Ywallet) a deposit can fund a wallet after 10 confirmations, about 12–13
-minutes (Portfolio shows it under **Confirming** until then). From an exchange or any transparent address it works too,
-but rests 2–6 hours first.
+minutes (Portfolio shows it under **Confirming** until then).
+
+### From an exchange
+
+Exchanges send ZEC only to transparent addresses (`t1…`), so the shielded address above is refused there. Switch
+Deposit to **Exchange**:
+
+| | |
+| --- | --- |
+| Address | A fresh transparent address of your wallet; **New address** makes another. One deposit per address |
+| On the exchange | Withdraw ZEC on the **Zcash** network to that address |
+| Steps | **Waiting for your exchange** → **Arrived** → **Moving into the shielded pool** → **Spendable, after a 2–6 h rest** |
+
+Mitoshi checks the address over Oblivious HTTP, one address per request, 45–120 s apart, and moves what lands into
+the shielded pool by itself at a random moment a few minutes later. The exchange knows that withdrawal was yours, so
+the ZEC then rests 2–6 hours before it can fund a wallet: that keeps the withdrawal from being matched to your next
+trade by time. For no rest at all, send from a shielded wallet instead.
 
 ## Withdraw
 

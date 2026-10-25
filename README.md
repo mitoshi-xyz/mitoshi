@@ -72,7 +72,8 @@ sees one funding, one trade and no history.
 </p>
 
 1. **A private balance.** Create a wallet at [mitoshi.xyz/wallet](https://mitoshi.xyz/wallet): 24 words, made and kept in
-   your browser. Deposit shielded ZEC from Zodl to a fresh address. No account, no sign-up.
+   your browser. Deposit from Zodl to a fresh shielded address, or from an exchange to a fresh `t1…` address that
+   Mitoshi shields for you. No account, no sign-up.
 2. **Pick a market.** Say NVIDIA on Polymarket Perps. The ticket starts with the amount: **$25 at 5×** is a **$125.00**
    position, **0.58164 NVDA**, fee **$0.05**.
 3. **A wallet nobody has seen.** Mitoshi derives a new key for this position and pays one standard amount (0.01, 0.02,

@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Make a private balance in your browser with 24 words, back it up, and deposit shielded ZEC from Zodl. No account, no sign-up.
+description: Make a private balance in your browser with 24 words, back it up, and deposit ZEC from Zodl or an exchange. No account, no sign-up.
 icon: Rocket
 ---
 
@@ -58,7 +58,7 @@ Restoring instead? **I have a recovery phrase** takes your 24 words or a backup 
 Make a backup file once you have private wallets: it is the only way to bring back Polymarket and Polymarket Perps
 wallets on a new browser.
 
-## 3. Deposit from Zodl
+## 3. Deposit
 
 <Screen name="deposit" alt="The Deposit ZEC drawer on mitoshi.xyz: a QR code with the Zcash mark and a fresh shielded address (both blurred here), Copy address, Open in wallet, Another fresh address, and Waiting for your deposit." caption="Deposit ZEC: a fresh shielded address and its QR code, every time you open it (blurred in this picture)." />
 
@@ -81,9 +81,10 @@ What happens next depends on where the ZEC came from:
 | Your deposit came from | It can fund a wallet |
 | --- | --- |
 | A shielded address (Zodl's default) | After 10 confirmations, about 12–13 minutes |
-| A public (transparent) address, such as an exchange | After resting 2–6 hours, picked per note ("From a public address: resting 2–6 h") |
+| An exchange (Deposit → **Exchange**: a fresh `t1…` address Mitoshi shields for you) | After resting 2–6 hours, picked per note |
 
-The rest keeps an arrival from a public address from being matched to your next trade.
+Exchanges refuse the shielded address, which is why the **Exchange** tab exists ([how it works](/docs/guide/wallet#from-an-exchange)).
+The rest keeps an exchange withdrawal from being matched to your next trade.
 
 ## 4. Open a market
 
