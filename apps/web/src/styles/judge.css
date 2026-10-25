@@ -118,6 +118,9 @@ a.jd-pass:focus-visible {
   .jd-desks {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .jd-desk {
+    aspect-ratio: 1.5 / 1;
+  }
 }
 .jd-desk {
   position: relative;

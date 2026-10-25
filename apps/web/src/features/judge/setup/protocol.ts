@@ -30,5 +30,13 @@ export interface DeskSealed {
   hyperliquid: string;
 }
 
-export type ToDesk = { kind: "fund"; n: number } | { kind: "seal"; n: number; key: string } | { kind: "ping" };
-export type FromDesk = DeskStatus | DeskSealed | { kind: "failed"; n: number; error: string };
+export type ToDesk =
+  | { kind: "fund"; n: number }
+  | { kind: "seal"; n: number; key: string }
+  | { kind: "words"; n: number }
+  | { kind: "ping" };
+export type FromDesk =
+  | DeskStatus
+  | DeskSealed
+  | { kind: "words"; n: number; mnemonic: string }
+  | { kind: "failed"; n: number; error: string };

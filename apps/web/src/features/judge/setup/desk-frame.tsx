@@ -88,6 +88,11 @@ export function DeskFrame() {
           ch.postMessage({ kind: "failed", n, error: err instanceof Error ? err.message : String(err) }),
         );
       }
+      if (m.kind === "words" && m.n === n) {
+        void vaultRecord("mnemonic").then((bytes) => {
+          if (bytes) ch.postMessage({ kind: "words", n, mnemonic: new TextDecoder().decode(bytes) });
+        });
+      }
       if (m.kind === "seal" && m.n === n) {
         seal(n, m.key).then(
           (out) => ch.postMessage(out),

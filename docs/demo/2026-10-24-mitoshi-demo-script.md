@@ -1,6 +1,6 @@
 MITOSHI — DEMO SCRIPT
 One story, in the order a new user meets it. [Brackets] = where you are in the app. Don't read them.
-About 358 spoken words: 1:53–1:56 at your pace. Hackathon rule: two minutes.
+About 369 spoken words: 1:55–1:58 at your pace. Hackathon rule: two minutes.
 
 1 · OPENING · 0:00
    [ZECATHON page → Mitoshi repo → mitoshi.xyz hero]
@@ -44,13 +44,13 @@ wallet funded at a random moment with one standard amount from the shielded pool
 7 · THE PROOF · 1:08
    [Wallets → What the public sees → the explorer]
 
-Let's confirm it. This is all a copy trader finds: a brand-new address, one funding from a NEAR swap, one trade,
+This is all a copy trader finds: a brand-new address, one funding from a NEAR swap, one trade,
 no history. Links to my other wallets: none. On the explorer, the same. It matches. You don't have to trust me.
 
 8 · THE REST · 1:20
    [Predict → an event → Perps → BTC → Tokens → Portfolio → Send home]
 
-And that's just one trade. Any Polymarket event, Yes or No. Crypto perps on Hyperliquid. Solana tokens through
+Any Polymarket event, Yes or No. Crypto perps on Hyperliquid. Solana tokens through
 Jupiter. Portfolio shows it all, privately, and Send home brings the money back to a fresh shielded address.
 No Mitoshi fee.
 
@@ -66,9 +66,10 @@ sees your IP, never what you ask about your wallets.
 Who sees what at every step: it's all in the docs. docs dot mitoshi dot x y z. And follow us on X, at HANDLE.
 
 11 · CLOSE · 1:50
-   [mitoshi.xyz hero]
+   [mitoshi.xyz hero → the judge pass]
 
-It's live right now, on the web and on your phone. Mitoshi — a new wallet for every trade.
+It's live right now, on the web and on your phone. Judges: the link in your submission opens a funded desk, so you can
+trade in thirty seconds. Mitoshi — a new wallet for every trade.
 
 ---
 Have ready

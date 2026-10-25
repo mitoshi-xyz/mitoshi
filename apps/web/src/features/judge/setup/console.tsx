@@ -10,7 +10,15 @@ import { loadRegistry } from "../../private-wallets/registry-store";
 import { STATUS } from "../../private-wallets/venues";
 import { claimTab } from "../../vault/tab-lock";
 import { DepositDrawer } from "../../wallet/deposit-drawer";
-import { bootWallet, createWallet, money, newPhrase, sendMany, useWallet } from "../../wallet/wallet-store";
+import {
+  bootWallet,
+  createWallet,
+  money,
+  newPhrase,
+  sendMany,
+  useWallet,
+  vaultRecord,
+} from "../../wallet/wallet-store";
 import { DESK_VERSION, type DeskIndex, newDeskKey, sealIndex, toBase64 } from "../desk";
 import { setupSlot, slotWindowName } from "../slot";
 import { type DeskStatus, type FromDesk, SETUP_CHANNEL } from "./protocol";
@@ -22,8 +30,13 @@ const PAY_FEE_RESERVE_ZAT = 60_000;
 const NEED_ZAT = DESK_COUNT * DESK_SHARE_ZAT + PAY_FEE_RESERVE_ZAT;
 const ZEC_DIGITS = 4;
 const FUND_SPACING_MS = 60_000;
-/** On the developer machine, scripts/desk-receiver.mjs takes the sealed desks straight into public/desks. */
+/**
+ * On the developer machine, scripts/desk-receiver.mjs takes the sealed desks straight into public/desks, and keeps a
+ * copy of every wallet's words (the money is recoverable even if this browser's storage goes).
+ */
 const DESK_RECEIVER = "http://127.0.0.1:3398/desks";
+const WORDS_RECEIVER = "http://127.0.0.1:3398/words";
+const WORDS_WAIT_MS = 4_000;
 const DESKS = Array.from({ length: DESK_COUNT }, (_, i) => i + 1);
 
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS);
@@ -93,6 +106,8 @@ export function DeskConsole() {
   const [published, setPublished] = useState<string | null>(null);
   const [twice, setTwice] = useState(false);
   const channel = useRef<BroadcastChannel | null>(null);
+  const words = useRef<Record<number, string>>({});
+  const [backedUp, setBackedUp] = useState<string | null>(null);
 
   useEffect(() => {
     if (!dev) return;
@@ -117,6 +132,7 @@ export function DeskConsole() {
     channel.current = ch;
     ch.onmessage = (e: MessageEvent<FromDesk>) => {
       const m = e.data;
+      if (m.kind === "words") words.current[m.n] = m.mnemonic;
       if (m.kind === "status") setDesks((d) => ({ ...d, [m.n]: m }));
       if (m.kind === "sealed") setFiles((f) => ({ ...f, [m.n]: { file: m.file, hyperliquid: m.hyperliquid } }));
       if (m.kind === "failed") setProblems((p) => ({ ...p, [m.n]: m.error }));
@@ -141,6 +157,29 @@ export function DeskConsole() {
   if (twice) {
     return <p className="p-8 text-center text-muted">Desk setup is open in another tab. Use that one.</p>;
   }
+
+  // Every wallet's words to this machine, before any money goes in: the vaults live only in this browser.
+  const backUp = async () => {
+    words.current = {};
+    for (const n of DESKS) channel.current?.postMessage({ kind: "words", n });
+    await new Promise((r) => setTimeout(r, WORDS_WAIT_MS));
+    const treasury = await vaultRecord("mnemonic");
+    const got = Object.keys(words.current).length;
+    if (!treasury || got < DESK_COUNT) {
+      setBackedUp(`Only ${got} of ${DESK_COUNT} desks answered: try again`);
+      return;
+    }
+    const body = JSON.stringify({
+      network: ZEC_NETWORK,
+      treasury: new TextDecoder().decode(treasury),
+      desks: words.current,
+    });
+    const ok = await fetch(WORDS_RECEIVER, { method: "POST", body }).then(
+      (r) => r.ok,
+      () => false,
+    );
+    setBackedUp(ok ? "All seven wallets' words are saved on this machine" : "No receiver running: nothing saved");
+  };
 
   const pay = async () => {
     const payments = addresses.map((to) => ({ to: to as string, zat: DESK_SHARE_ZAT }));
@@ -198,6 +237,16 @@ export function DeskConsole() {
         <h1 className="type-headline-md">Judge desks · setup</h1>
         <span className="type-label text-accent">{ZEC_NETWORK === "main" ? "Mainnet" : "Testnet"}</span>
       </header>
+
+      <Step n={0} title="Back up the words" done={backedUp?.startsWith("All") ?? false}>
+        <p className="text-[13px] text-ink-2">
+          The treasury's and each desk's words, to the receiver on this machine, before any money goes in.
+        </p>
+        <Button onClick={() => void backUp()} disabled={w.phase !== "ready"}>
+          Back up the words
+        </Button>
+        {backedUp ? <p className="text-[12px] text-ink-2">{backedUp}</p> : null}
+      </Step>
 
       <Step n={1} title="Fund the treasury" done={treasury.spendable >= NEED_ZAT || paid}>
         <p className="num text-[13px] text-ink-2">

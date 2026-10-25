@@ -210,7 +210,7 @@ export function JudgeGate() {
                     aria-label="Your judge link"
                     autoComplete="off"
                     spellCheck={false}
-                    className="num h-[52px] min-w-0 flex-1 rounded-full bg-[var(--lp-card-2)] px-5 text-[14px] shadow-[inset_0_0_0_1px_var(--lp-line)] outline-none focus:shadow-[inset_0_0_0_1px_#e04d26]"
+                    className="num h-[52px] w-full min-w-0 shrink-0 rounded-full sm:w-auto sm:flex-1 bg-[var(--lp-card-2)] px-5 text-[14px] shadow-[inset_0_0_0_1px_var(--lp-line)] outline-none focus:shadow-[inset_0_0_0_1px_#e04d26]"
                   />
                   <button type="submit" className="lp-btn lp-btn-accent">
                     Open my desk
