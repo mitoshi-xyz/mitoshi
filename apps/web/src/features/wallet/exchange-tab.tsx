@@ -12,6 +12,14 @@ import { checkSoon, exchangeAddress, freshExchangeAddress } from "./exchange";
 const ZEC_DIGITS = 8;
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
 
+/** A wallet made before exchange deposits existed has no transparent keys; restoring it from its words adds them. */
+function explain(e: unknown): string {
+  const why = e instanceof Error ? e.message : String(e);
+  return /ReceiverTypeNotSupported|P2pkh/.test(why)
+    ? "This wallet was made before exchange deposits. Restore it from your 24 words (Settings, then Forget and restore) to turn them on."
+    : why;
+}
+
 /**
  * Deposit from an exchange: exchanges pay only transparent addresses, so this is a fresh transparent address of the
  * wallet. What lands there is moved into the shielded pool by itself, then rests like any public deposit.
@@ -26,7 +34,7 @@ export function ExchangeDeposit({ open, unit }: { open: boolean; unit: string })
     setError(null);
     make().then(
       (a) => setAddress(a.address),
-      (e: unknown) => setError(e instanceof Error ? e.message : String(e)),
+      (e: unknown) => setError(explain(e)),
     );
   };
 

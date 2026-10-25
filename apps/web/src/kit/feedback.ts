@@ -1,10 +1,20 @@
 "use client";
 
-import { ATTACK_S, BUZZ, CUES, MASTER_GAIN, NOISE_S, PREF_KEY, SILENCE } from "./constants/feedback";
+import {
+  ATTACK_S,
+  BUZZ,
+  CUES,
+  MASTER_GAIN,
+  NOISE_S,
+  PREF_KEY,
+  SILENCE,
+  SILENT_CUES,
+  TAPTIC,
+} from "./constants/feedback";
 /**
- * Sound and touch for the moments that matter: a tap, a drawer, money sent, money arrived, a fill,
- * a win, a loss, an error. The sounds are synthesised (WebAudio, nothing downloaded) and quiet;
- * haptics use the Vibration API where the device has it. Both can be switched off in Settings.
+ * Touch and sound for the moments that matter. Every cue is felt: the Taptic Engine inside the Mitoshi app's web view,
+ * the Vibration API elsewhere. Sound is opt-in (Settings) and only for money events (sent, arrived, a fill, a win or
+ * loss, an error); taps, drawers and sheets never make a sound, because this is a trading app, not a game.
  */
 export type Cue = "tap" | "open" | "close" | "send" | "arrive" | "fill" | "win" | "loss" | "error";
 
@@ -16,11 +26,11 @@ export interface FeedbackPrefs {
 export function feedbackPrefs(): FeedbackPrefs {
   try {
     const raw = localStorage.getItem(PREF_KEY);
-    if (raw) return { sound: true, haptics: true, ...(JSON.parse(raw) as Partial<FeedbackPrefs>) };
+    if (raw) return { sound: false, haptics: true, ...(JSON.parse(raw) as Partial<FeedbackPrefs>) };
   } catch {
     // Storage blocked: fall back to the defaults.
   }
-  return { sound: true, haptics: true };
+  return { sound: false, haptics: true };
 }
 
 export function setFeedbackPrefs(p: FeedbackPrefs) {
@@ -43,8 +53,8 @@ function audio(): AudioContext | null {
 /** Plays a cue (sound and haptic, as the person has them set). Silent until the page has had a gesture. */
 export function cue(name: Cue) {
   const prefs = feedbackPrefs();
-  if (prefs.haptics && typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(BUZZ[name]);
-  if (!prefs.sound) return;
+  if (prefs.haptics) haptic(name);
+  if (!prefs.sound || SILENT_CUES.includes(name)) return;
   const a = audio();
   if (a?.state !== "running") return;
   const t0 = a.currentTime;
@@ -68,6 +78,21 @@ export function cue(name: Cue) {
     osc.start(t0 + n.at);
     osc.stop(t0 + n.at + n.len + ATTACK_S);
   }
+}
+
+interface NativeShell {
+  ReactNativeWebView?: { postMessage(message: string): void };
+}
+
+/** Inside the Mitoshi app the shell plays it on the Taptic Engine; in a browser, the Vibration API (where there is one). */
+function haptic(name: Cue) {
+  if (typeof window === "undefined") return;
+  const shell = (window as NativeShell).ReactNativeWebView;
+  if (shell) {
+    shell.postMessage(JSON.stringify({ type: "haptic", kind: TAPTIC[name] }));
+    return;
+  }
+  if ("vibrate" in navigator) navigator.vibrate(BUZZ[name]);
 }
 
 let noise: AudioBuffer | null = null;

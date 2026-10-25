@@ -17,6 +17,7 @@ import { NoticesDrawer } from "./notices-drawer";
 import { OfflineStrip } from "./offline-strip";
 import { Palette } from "./palette";
 import { PLACES } from "./places";
+import { PullToRefresh } from "./pull-refresh";
 import { Rail } from "./rail";
 import { RouteProgress } from "./route-progress";
 import { TopLine } from "./top-line";
@@ -111,6 +112,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         <More open={more} onClose={() => setMore(false)} />
         <Palette open={palette} onClose={() => setPalette(false)} />
         <NoticesDrawer open={notices} onClose={() => setNotices(false)} />
+        <PullToRefresh />
         <WalletDrawers />
         <Toaster />
         <RouteProgress />

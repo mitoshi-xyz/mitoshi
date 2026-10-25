@@ -1,7 +1,8 @@
 import type { Cue } from "../feedback";
 
 /** Sound and touch cue tables (frequencies, timings, vibration patterns). */
-export const PREF_KEY = "mitoshi:feedback";
+/** v2: sound became opt-in (2026-10-25), so earlier saved choices start again from the new defaults. */
+export const PREF_KEY = "mitoshi:feedback:v2";
 export const MASTER_GAIN = 0.06;
 export const ATTACK_S = 0.006;
 export const SILENCE = 0.0001;
@@ -63,6 +64,22 @@ export const CUES: Record<Cue, Note[]> = {
     { f: 220, at: 0, len: 0.07, type: "square", gain: 0.25 },
     { f: 196, at: 0.1, len: 0.09, type: "square", gain: 0.25 },
   ],
+};
+
+/** Cues a person makes by touching the interface: felt (a haptic), never heard. Sound is for money events. */
+export const SILENT_CUES: readonly Cue[] = ["tap", "open", "close"];
+
+/** The Taptic Engine kinds the Mitoshi app's web view plays (its shell's haptic names). */
+export const TAPTIC: Record<Cue, string> = {
+  tap: "tap",
+  open: "open",
+  close: "close",
+  send: "move",
+  arrive: "surge",
+  fill: "tick",
+  win: "mega",
+  loss: "slump",
+  error: "warn",
 };
 
 export const BUZZ: Record<Cue, number | number[]> = {

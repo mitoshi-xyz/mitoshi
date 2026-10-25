@@ -51,7 +51,7 @@ function Recovery() {
 }
 
 function Feel() {
-  const [prefs, setPrefs] = useState<FeedbackPrefs>({ sound: true, haptics: true });
+  const [prefs, setPrefs] = useState<FeedbackPrefs>({ sound: false, haptics: true });
   const [light, setLight] = useState(false);
   useEffect(() => {
     setPrefs(feedbackPrefs());
@@ -65,7 +65,7 @@ function Feel() {
   const rows = [
     {
       icon: Volume2,
-      label: "Sounds",
+      label: "Sounds for fills and deposits",
       on: prefs.sound,
       set: (v: boolean) => save({ ...prefs, sound: v }),
     },
