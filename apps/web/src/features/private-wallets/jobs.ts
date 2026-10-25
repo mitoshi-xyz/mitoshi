@@ -17,6 +17,7 @@ import {
 import { ASSETS, formatUnits } from "@mitoshi/rails";
 import { toast } from "@/kit";
 import { pmBridge } from "../polymarket/pm";
+import { exchangeTick } from "../wallet/exchange";
 import { deviceSeed, freshAddress, previewSend, refreshWallet, send, walletState } from "../wallet/wallet-store";
 import {
   balances,
@@ -308,6 +309,7 @@ function tick() {
   }
   if (canFund().ok) keepReady();
   migrationTick(now, sessionStart);
+  exchangeTick(now);
 }
 
 let started = false;

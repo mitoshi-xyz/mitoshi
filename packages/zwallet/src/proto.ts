@@ -36,6 +36,10 @@ export const bytesField = (field: number, bytes: ArrayLike<number>) => [
   ...Array.from(bytes),
 ];
 
+/** `GetAddressUtxosArg { addresses, startHeight, maxEntries }` (0 entries = no limit). */
+export const addressUtxosArg = (address: string, startHeight: number) =>
+  new Uint8Array([...bytesField(1, new TextEncoder().encode(address)), ...uintField(2, startHeight)]);
+
 /** `BlockID { height }` */
 export const blockId = (height: number) => uintField(1, height);
 

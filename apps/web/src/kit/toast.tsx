@@ -29,10 +29,19 @@ const emit = () => {
 
 const SOUND: Record<Toast["tone"], Cue> = { up: "arrive", info: "tap", down: "error" };
 
+const sinks = new Set<(t: Toast) => void>();
+
+/** Hears every toast as it is raised (the notification list keeps them after they leave the screen). */
+export function onToast(sink: (t: Toast) => void): () => void {
+  sinks.add(sink);
+  return () => sinks.delete(sink);
+}
+
 export function toast(t: Omit<Toast, "id">) {
   const id = crypto.randomUUID();
   toasts = [{ ...t, id }, ...toasts].slice(0, MAX);
   emit();
+  for (const sink of sinks) sink({ ...t, id });
   cue(SOUND[t.tone]);
   setTimeout(() => dismiss(id), TTL_MS);
 }

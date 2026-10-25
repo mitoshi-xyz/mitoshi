@@ -21,6 +21,13 @@ export const WALLET_SYNC_INTERVAL_MS = 30_000;
  * After a broadcast the wallet does not sync for a random 1–10 min, so a broadcast and a sync never share a window
  * (ZIP 318): the gateway sees no send followed at once by the same wallet's block reads.
  */
+/**
+ * Exchange deposits: one transparent address is checked per round, at a random spacing, so the gateway never sees a
+ * wallet's addresses asked about together; an address is watched for a week after it is handed out.
+ */
+export const EXCHANGE_CHECK_MIN_MS = 45_000;
+export const EXCHANGE_CHECK_MAX_MS = 120_000;
+export const EXCHANGE_WATCH_MS = 7 * 24 * 60 * 60 * 1000;
 export const SEND_QUIET_MIN_MS = 60_000;
 export const SEND_QUIET_MAX_MS = 600_000;
 

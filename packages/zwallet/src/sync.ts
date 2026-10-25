@@ -3,6 +3,7 @@ import { BIRTHDAY_LOOKBACK_BLOCKS, MAX_REORG_REWINDS, SCAN_BATCH_BLOCKS, SUBTREE
 import type { CoreModule } from "./core";
 import { lwdCall } from "./grpc-web";
 import {
+  addressUtxosArg,
   blockId,
   blockIdHeight,
   blockRange,
@@ -92,6 +93,12 @@ export class Lwd {
       if (e instanceof Error && NOT_FOUND.test(e.message)) return null;
       throw e;
     }
+  }
+
+  /** One transparent address's unspent outputs since `startHeight`, as `GetAddressUtxosReplyList` bytes. */
+  async utxos(address: string, startHeight: number): Promise<Uint8Array> {
+    const [msg] = await lwdCall(this.send, this.base, "GetAddressUtxos", addressUtxosArg(address, startHeight));
+    return msg ?? new Uint8Array();
   }
 
   async broadcast(raw: Uint8Array): Promise<void> {

@@ -5,6 +5,8 @@ export const PREF_KEY = "mitoshi:feedback";
 export const MASTER_GAIN = 0.06;
 export const ATTACK_S = 0.006;
 export const SILENCE = 0.0001;
+/** Length of the shared noise buffer clicks are cut from, in seconds. */
+export const NOISE_S = 0.05;
 
 export interface Note {
   /** Hz. */
@@ -17,10 +19,19 @@ export interface Note {
   gain?: number;
   /** Glide to this frequency over the note. */
   to?: number;
+  /**
+   * A burst of band-passed noise instead of a tone, centred on `f` (Q is the band's sharpness): the transient a
+   * physical click makes. It decays from the first sample, so it reads as a tick rather than a beep.
+   */
+  noise?: { q: number };
 }
 
 export const CUES: Record<Cue, Note[]> = {
-  tap: [{ f: 1320, at: 0, len: 0.035, gain: 0.5 }],
+  // A click: a 12 ms noise tick in the upper mids, with a 4 ms low knock under it for body.
+  tap: [
+    { f: 3200, at: 0, len: 0.012, gain: 0.9, noise: { q: 1.2 } },
+    { f: 190, at: 0, len: 0.018, gain: 0.35, to: 120 },
+  ],
   open: [
     { f: 660, at: 0, len: 0.06, type: "triangle" },
     { f: 990, at: 0.05, len: 0.08, type: "triangle" },

@@ -10,5 +10,5 @@ export { Sheet } from "./sheet";
 export { SlideToConfirm } from "./slide";
 export { ChartLoading, EmptyState, LiveDot, Skeleton, Wait } from "./states";
 export { Switch } from "./switch";
-export { type Toast, Toaster, toast } from "./toast";
+export { onToast, type Toast, Toaster, toast } from "./toast";
 export { type StepState, TxCta, type TxPhase, type TxStep, TxSteps } from "./tx";

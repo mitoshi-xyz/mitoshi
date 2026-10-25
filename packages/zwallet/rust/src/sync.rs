@@ -127,7 +127,8 @@ pub fn scan_blocks(state: &mut State, args: &Value, bin: &[u8]) -> Result<Value,
     for message in rest {
         let block = CompactBlock::decode(*message).ctx("decoding a compact block")?;
         end = block.height() + 1;
-        let block = match scan_block::<_, _, _, Infallible>(&network, block, &keys, &spend_ids, prior_meta.as_ref()) {
+        // Compact blocks carry no transparent outputs; exchange deposits are found with GetAddressUtxos (exchange.rs).
+        let block = match scan_block::<_, _, _, Infallible>(&network, block, &keys, &spend_ids, prior_meta.as_ref(), |_| Ok(None)) {
             Ok(block) => block,
             Err(ScanBlockError::Scan(e)) if e.is_continuity_error() => {
                 let rewound = state

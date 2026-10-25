@@ -10,6 +10,7 @@ mod notes;
 mod prover;
 mod send;
 mod sync;
+mod exchange;
 mod wallet;
 
 use std::cell::RefCell;
@@ -107,6 +108,10 @@ pub(crate) fn dispatch(method: &str, args: &Value, bin: &[u8]) -> Result<Value, 
         "lockNotes" => with_state(|s| notes::lock(s, args)),
         "unlockNotes" => with_state(|s| notes::unlock(s, args)),
         "history" => with_state(|s| notes::history(s, args)),
+        "transparentAddress" => with_state(exchange::receive_address),
+        "transparentAddresses" => with_state(exchange::list),
+        "putUtxos" => with_state(|s| exchange::put_utxos(s, bin)),
+        "shield" => with_state(|s| exchange::shield(s, args)),
         other => Err(Error::msg(format!("unknown method {other}"))),
     }
 }

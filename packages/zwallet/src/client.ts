@@ -7,8 +7,10 @@ import type {
   Proposal,
   Request,
   Response,
+  Shielded,
   Summary,
   SyncProgress,
+  UtxoCheck,
 } from "./types";
 
 type DistributiveOmit<T, K extends keyof never> = T extends unknown ? Omit<T, K> : never;
@@ -99,6 +101,25 @@ export class WalletClient {
 
   freshAddress(): Promise<{ address: string }> {
     return this.request({ kind: "freshAddress" });
+  }
+
+  /** A never-used transparent address, for a deposit from an exchange (exchanges pay only these). */
+  transparentAddress(): Promise<{ address: string }> {
+    return this.request({ kind: "transparentAddress" });
+  }
+
+  transparentAddresses(): Promise<{ addresses: string[] }> {
+    return this.request({ kind: "transparentAddresses" });
+  }
+
+  /** Asks the light server (over OHTTP) what one transparent address holds, and records it. */
+  checkUtxos(address: string): Promise<UtxoCheck> {
+    return this.request({ kind: "checkUtxos", address });
+  }
+
+  /** Moves what transparent addresses hold into Ironwood, and broadcasts it (or `txid: null` if too little). */
+  shield(seedHex: string): Promise<Shielded> {
+    return this.request({ kind: "shield", seedHex });
   }
 
   /** Every unspent note with its origin. */

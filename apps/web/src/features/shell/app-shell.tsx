@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
-import { primeFeedback, Toaster } from "@/kit";
+import { onToast, primeFeedback, Toaster } from "@/kit";
 import { WalletDrawers } from "../private-wallets/drawers";
 import { startJobs } from "../private-wallets/jobs";
 import { loadRegistry } from "../private-wallets/registry-store";
@@ -12,6 +12,8 @@ import { LockScreen } from "../vault/lock-screen";
 import { bootWallet, useWallet } from "../wallet/wallet-store";
 import { Dock } from "./dock";
 import { More } from "./more";
+import { recordNotice } from "./notices";
+import { NoticesDrawer } from "./notices-drawer";
 import { OfflineStrip } from "./offline-strip";
 import { Palette } from "./palette";
 import { PLACES } from "./places";
@@ -38,6 +40,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
   const router = useRouter();
   const [palette, setPalette] = useState(false);
   const [more, setMore] = useState(false);
+  const [notices, setNotices] = useState(false);
   const wallet = useWallet();
 
   useEffect(() => {
@@ -55,7 +58,12 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
     }, CHUNK_GUARD_MS);
     // A locked vault refuses the read; the lock screen loads the registry once it opens.
     loadRegistry().then(startJobs, () => undefined);
-    return () => clearTimeout(guard);
+    // Every toast also goes to the notification list, so nothing is lost when it leaves the screen.
+    const stopNotices = onToast(recordNotice);
+    return () => {
+      clearTimeout(guard);
+      stopNotices();
+    };
   }, []);
 
   useEffect(() => {
@@ -89,7 +97,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         </a>
         <Rail onMore={() => setMore(true)} />
         <div className="mt-column">
-          <TopLine onSearch={() => setPalette(true)} />
+          <TopLine onSearch={() => setPalette(true)} onNotices={() => setNotices(true)} />
           <main
             id="main"
             tabIndex={-1}
@@ -102,6 +110,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         <Dock onMore={() => setMore(true)} />
         <More open={more} onClose={() => setMore(false)} />
         <Palette open={palette} onClose={() => setPalette(false)} />
+        <NoticesDrawer open={notices} onClose={() => setNotices(false)} />
         <WalletDrawers />
         <Toaster />
         <RouteProgress />

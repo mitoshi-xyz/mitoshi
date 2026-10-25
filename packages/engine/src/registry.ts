@@ -122,6 +122,39 @@ export interface Registry {
   keepReady: Record<Venue, number | null>;
   /** A ZIP 318 move of Orchard value into Ironwood the user agreed to, one part at a time. */
   migration?: MigrationPart[];
+  /** Transparent receive addresses handed out for exchange deposits, newest first. */
+  exchange?: ExchangeAddress[];
+  /** Every notification raised on this device, newest first, and when the list was last opened. */
+  notices?: Notice[];
+  noticesSeenAt?: number;
+}
+
+/** A notification kept after its toast left the screen: what happened, when, and where to look. */
+export interface Notice {
+  id: string;
+  tone: "up" | "info" | "down";
+  title: string;
+  body?: string;
+  href?: string;
+  at: number;
+}
+
+/**
+ * One exchange deposit. Exchanges pay only transparent addresses, so each deposit gets a fresh transparent address
+ * of this wallet; what arrives there is then shielded into Ironwood.
+ */
+export interface ExchangeAddress {
+  address: string;
+  createdAt: number;
+  /** What the light server reported at this address, and when it was first seen. */
+  arrivedZat?: number;
+  arrivedAt?: number;
+  /** The shielding transaction that moved it into the shielded pool. */
+  shieldTx?: string;
+  shieldedAt?: number;
+  /** Why the last check or shielding failed, cleared by the next success. */
+  error?: string;
+  checkedAt?: number;
 }
 
 /** One crossing of a migration: a standard amount, sent alone at its own random time. */

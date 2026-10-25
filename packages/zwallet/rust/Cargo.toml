@@ -14,11 +14,13 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # The NU7-ready librustzcash cohort released 2026-10-21 (mainnet NU7 at 3,543,405).
-zcash_client_sqlite = { version = "0.23.0", default-features = false, features = ["orchard"] }
-zcash_client_backend = { version = "0.25.0", default-features = false, features = ["orchard"] }
+zcash_client_sqlite = { version = "0.23.0", default-features = false, features = ["orchard", "transparent-inputs"] }
+zcash_client_backend = { version = "0.25.0", default-features = false, features = ["orchard", "transparent-inputs"] }
 zcash_primitives = { version = "0.31.0", default-features = false, features = ["std", "circuits"] }
 zcash_protocol = "0.11.0"
-zcash_keys = { version = "0.17.0", features = ["orchard"] }
+zcash_keys = { version = "0.17.0", features = ["orchard", "transparent-inputs"] }
+# Exchanges pay only transparent addresses: receiving from one, then shielding it (src/exchange.rs).
+transparent = { package = "zcash_transparent", version = "0.11.0", features = ["transparent-inputs"] }
 zcash_address = "0.14.0"
 zip321 = "0.10.0"
 zip32 = "0.3.0"

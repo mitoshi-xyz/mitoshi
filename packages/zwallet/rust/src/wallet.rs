@@ -90,6 +90,8 @@ fn account_json(b: &AccountBalance) -> Value {
         "ironwood": balance_json(b.ironwood_balance()),
         "orchard": balance_json(b.orchard_balance()),
         "sapling": balance_json(b.sapling_balance()),
+        // Arrived at a transparent address (from an exchange) and not shielded yet.
+        "transparent": balance_json(&b.unshielded_balance()),
         "total": b.total().into_u64(),
     })
 }

@@ -7,6 +7,7 @@ import {
   type HistoryEntry,
   MNEMONIC_STRENGTH_BITS,
   type Note,
+  type Shielded,
   type Summary,
   type SyncProgress,
   WalletClient,
@@ -166,14 +167,16 @@ function announce(before: HistoryEntry[], after: HistoryEntry[]) {
       toast({
         tone: "up",
         title: `Deposit arrived: +${fmt(h.delta)} ${UNIT}`,
-        body: h.fromPublic ? "From a public address: it rests 2–6 h first." : "Shielded. It confirms in a block.",
-        action: { label: "Balance", href: "/wallet" },
+        body: h.fromPublic
+          ? "From a public address: spendable after 10 blocks, then it rests 2–6 h."
+          : "Shielded: spendable after 10 blocks, about 13 min.",
+        action: { label: "Balance", href: "/portfolio" },
       });
     } else if (old && old.minedHeight === null && h.minedHeight !== null && h.delta < 0) {
       toast({
         tone: "up",
         title: `Withdrawal confirmed: ${fmt(-h.delta)} ${UNIT}`,
-        action: { label: "Receipt", href: "/wallet" },
+        action: { label: "Receipt", href: "/portfolio" },
       });
     }
   }
@@ -364,6 +367,17 @@ export async function migrate(zat: number): Promise<{ txid: string; fee: number 
   if (!client) throw new Error("wallet is not open");
   const result = await client.migrate(zat, await seedHex());
   quietUntil = Date.now() + between(SEND_QUIET_MIN_MS, SEND_QUIET_MAX_MS);
+  return result;
+}
+
+/**
+ * Moves what the wallet's transparent addresses hold (exchange deposits) into the shielded pool. Like any broadcast,
+ * the next sync waits a random 1–10 min.
+ */
+export async function shieldTransparent(): Promise<Shielded> {
+  if (!client) throw new Error("wallet is not open");
+  const result = await client.shield(await seedHex());
+  if (result.txid) quietUntil = Date.now() + between(SEND_QUIET_MIN_MS, SEND_QUIET_MAX_MS);
   return result;
 }
 

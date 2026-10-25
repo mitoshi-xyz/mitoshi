@@ -2,37 +2,52 @@
 
 import { BLOCK_SECONDS as SPACING } from "@mitoshi/engine";
 import { type HistoryEntry, RECEIVED_CONFIRMATIONS, ZAT_PER_ZEC } from "@mitoshi/zwallet";
-import { Check, Copy, ExternalLink, RefreshCw, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ZEC_NETWORK } from "@/constants";
-import { Button, DottedQr, Drawer, Skeleton, TxSteps, Wait } from "@/kit";
+import { Drawer, Segmented, TxSteps, Wait } from "@/kit";
+import { AddressCard } from "./address-card";
+import { ExchangeDeposit } from "./exchange-tab";
 import { freshAddress, useWallet } from "./wallet-store";
 
 const UNIT = ZEC_NETWORK === "main" ? "ZEC" : "TAZ";
-const GROUP = 6;
 const ZEC_DIGITS = 8;
 const SECONDS_PER_MINUTE = 60;
 const BLOCK_SECONDS = SPACING[ZEC_NETWORK];
 /** Ten blocks at the network's spacing, rounded: what the copy promises before a deposit is spendable. */
 const SPENDABLE_MINUTES = Math.round((RECEIVED_CONFIRMATIONS * BLOCK_SECONDS) / SECONDS_PER_MINUTE);
 
-const grouped = (a: string) => a.match(new RegExp(`.{1,${GROUP}}`, "g"))?.join(" ") ?? a;
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
 
-/**
- * Deposit: a never-used shielded address as a dotted QR, and the deposit followed live: waiting, seen in a block,
- * counted to the 10 confirmations the wallet needs, then where it came from (a public address rests 2–6 h more).
- */
+type From = "wallet" | "exchange";
+const FROM = [
+  { value: "wallet", label: "Shielded wallet" },
+  { value: "exchange", label: "Exchange" },
+] as const;
+
+/** Deposit, from a shielded wallet (a shielded address) or from an exchange (a transparent one Mitoshi shields). */
 export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [from, setFrom] = useState<From>("wallet");
+  return (
+    <Drawer open={open} onClose={onClose} title={`Deposit ${UNIT}`}>
+      <Segmented options={FROM} value={from} onChange={setFrom} className="self-center" />
+      {from === "wallet" ? <ShieldedDeposit open={open} /> : <ExchangeDeposit open={open} unit={UNIT} />}
+    </Drawer>
+  );
+}
+
+/**
+ * From a shielded wallet: a never-used shielded address as a dotted QR, and the deposit followed live: seen in a
+ * block, counted to the 10 confirmations the wallet needs, then where it came from.
+ */
+function ShieldedDeposit({ open }: { open: boolean }) {
   const w = useWallet();
   const [address, setAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const seenAtOpen = useRef<Set<string>>(new Set());
 
   const next = () => {
     setAddress(null);
-    setCopied(false);
     freshAddress().then(setAddress, (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
   };
 
@@ -56,43 +71,15 @@ export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () =>
   );
 
   return (
-    <Drawer open={open} onClose={onClose} title={`Deposit ${UNIT}`}>
-      {error ? (
-        <p className="text-[13px] text-down">{error}</p>
-      ) : !address ? (
-        <Skeleton className="mx-auto h-[264px] w-[264px] rounded-xl" label="Making a fresh address" />
-      ) : (
-        <div className="flex flex-col items-center gap-4">
-          <DottedQr value={address} mark="/marks/venue-zcash.svg" />
-          <p className="num break-all text-center text-[12px] text-ink-2 leading-relaxed">{grouped(address)}</p>
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button
-              tone="primary"
-              size="lg"
-              icon={copied ? <Check size={16} /> : <Copy size={16} />}
-              onClick={() => {
-                void navigator.clipboard.writeText(address);
-                setCopied(true);
-              }}
-            >
-              {copied ? "Copied" : "Copy address"}
-            </Button>
-            <a
-              href={`zcash:${address}`}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-strong font-semibold text-[15px] hover:bg-surface-2"
-            >
-              <ExternalLink size={16} /> Open in wallet
-            </a>
-          </div>
-          <button
-            type="button"
-            onClick={next}
-            className="inline-flex items-center gap-1.5 text-[12px] text-muted hover:text-ink"
-          >
-            <RefreshCw size={12} /> Another fresh address
-          </button>
-        </div>
-      )}
+    <>
+      <AddressCard
+        address={address}
+        error={error}
+        onFresh={next}
+        freshLabel="Another fresh address"
+        openInWallet
+        loading="Making a fresh address"
+      />
 
       <div className="flex flex-col gap-3 rounded-lg bg-surface-2/60 p-4">
         {arrived ? (
@@ -127,11 +114,10 @@ export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () =>
       <div className="flex gap-3 text-[13px] text-ink-2">
         <ShieldCheck size={18} className="mt-0.5 shrink-0 text-up" />
         <p>
-          From a shielded wallet (Zodl, Zashi, Ywallet) it is spendable after {RECEIVED_CONFIRMATIONS} blocks, about{" "}
-          {SPENDABLE_MINUTES} minutes. From an exchange or a transparent address it rests 2–6 hours more, so its arrival
-          can't be matched to your next trade.
+          From Zodl, Zashi or Ywallet it is spendable after {RECEIVED_CONFIRMATIONS} blocks, about {SPENDABLE_MINUTES}{" "}
+          minutes. Sending from an exchange? Use Exchange.
         </p>
       </div>
-    </Drawer>
+    </>
   );
 }

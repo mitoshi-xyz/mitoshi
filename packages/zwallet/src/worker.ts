@@ -7,7 +7,7 @@ import { createPrivateFetch } from "@mitoshi/net";
 import { LOAD_REPORT_BYTES, LWD_UPSTREAM } from "./constants";
 import { CoreModule } from "./core";
 import { createAccount, enhance, Lwd, syncToTip } from "./sync";
-import type { Built, HistoryEntry, Note, Proposal, Request, Response, Summary } from "./types";
+import type { Built, HistoryEntry, Note, Proposal, Request, Response, Shielded, Summary, UtxoCheck } from "./types";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -92,6 +92,29 @@ async function handle(req: Request): Promise<unknown> {
       const reply = ready().core.call<{ address: string }>("freshAddress");
       persist();
       return reply;
+    }
+    case "transparentAddress": {
+      const reply = ready().core.call<{ address: string }>("transparentAddress");
+      persist();
+      return reply;
+    }
+    case "transparentAddresses":
+      return ready().core.call<{ addresses: string[] }>("transparentAddresses");
+    case "checkUtxos": {
+      const w = ready();
+      const { birthday } = w.core.call<Summary>("summary");
+      const reply = await w.lwd.utxos(req.address, birthday ?? 0);
+      const found = w.core.call<UtxoCheck>("putUtxos", {}, reply);
+      if (found.stored > 0) persist();
+      return found;
+    }
+    case "shield": {
+      const w = ready();
+      const built = w.core.call<Shielded & { raw?: string }>("shield", { seed: req.seedHex });
+      if (!built.txid || !built.raw) return { txid: null };
+      persist();
+      await w.lwd.broadcast(hexToBytes(built.raw));
+      return { txid: built.txid, fee: built.fee, zat: built.zat };
     }
     case "notes":
       return ready().core.call<Note[]>("notes");

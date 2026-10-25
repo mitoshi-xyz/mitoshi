@@ -9,6 +9,8 @@ export type {
   NoteRef,
   PoolBalance,
   Proposal,
+  Shielded,
   Summary,
   SyncProgress,
+  UtxoCheck,
 } from "./types";

@@ -12,7 +12,21 @@ export interface Balance {
   ironwood: PoolBalance;
   orchard: PoolBalance;
   sapling: PoolBalance;
+  /** At a transparent receive address (an exchange deposit), not shielded yet. */
+  transparent: PoolBalance;
   total: number;
+}
+
+/** What one check of a transparent address found, and what a shielding did. */
+export interface UtxoCheck {
+  stored: number;
+  zat: number;
+}
+export interface Shielded {
+  /** Null when there was too little at transparent addresses to be worth the fee. */
+  txid: string | null;
+  fee?: number;
+  zat?: number;
 }
 
 export interface Summary {
@@ -100,7 +114,11 @@ export type Request =
   | { id: number; kind: "unlockNotes"; notes: NoteRef[] }
   | { id: number; kind: "history"; limit: number }
   | { id: number; kind: "send"; send: SendKind; to: string; zat: number; seedHex: string }
-  | { id: number; kind: "propose"; send: SendKind; to: string; zat: number };
+  | { id: number; kind: "propose"; send: SendKind; to: string; zat: number }
+  | { id: number; kind: "transparentAddress" }
+  | { id: number; kind: "transparentAddresses" }
+  | { id: number; kind: "checkUtxos"; address: string }
+  | { id: number; kind: "shield"; seedHex: string };
 
 /**
  * A payment spends Ironwood only. A migration moves one standard amount of Orchard value into Ironwood as a ZIP 318

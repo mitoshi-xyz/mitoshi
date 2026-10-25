@@ -23,6 +23,8 @@ export const LWD_METHODS = [
   "GetBlockRange",
   "GetTransaction",
   "SendTransaction",
+  // One transparent receive address at a time: what an exchange deposit has paid it.
+  "GetAddressUtxos",
 ];
 
 export interface Upstream {

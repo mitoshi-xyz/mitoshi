@@ -1,6 +1,6 @@
 "use client";
 
-import { ATTACK_S, BUZZ, CUES, MASTER_GAIN, PREF_KEY, SILENCE } from "./constants/feedback";
+import { ATTACK_S, BUZZ, CUES, MASTER_GAIN, NOISE_S, PREF_KEY, SILENCE } from "./constants/feedback";
 /**
  * Sound and touch for the moments that matter: a tap, a drawer, money sent, money arrived, a fill,
  * a win, a loss, an error. The sounds are synthesised (WebAudio, nothing downloaded) and quiet;
@@ -52,6 +52,10 @@ export function cue(name: Cue) {
   master.gain.value = MASTER_GAIN;
   master.connect(a.destination);
   for (const n of CUES[name]) {
+    if (n.noise) {
+      tick(a, master, t0, n.f, n.noise.q, n.at, n.len, n.gain ?? 1);
+      continue;
+    }
     const osc = a.createOscillator();
     const g = a.createGain();
     osc.type = n.type ?? "sine";
@@ -64,6 +68,38 @@ export function cue(name: Cue) {
     osc.start(t0 + n.at);
     osc.stop(t0 + n.at + n.len + ATTACK_S);
   }
+}
+
+let noise: AudioBuffer | null = null;
+
+/** A noise transient through a band-pass filter: full level at once, gone within `len`. */
+function tick(
+  a: AudioContext,
+  out: AudioNode,
+  t0: number,
+  f: number,
+  q: number,
+  at: number,
+  len: number,
+  gain: number,
+) {
+  if (!noise || noise.sampleRate !== a.sampleRate) {
+    noise = a.createBuffer(1, Math.ceil(a.sampleRate * NOISE_S), a.sampleRate);
+    const data = noise.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  }
+  const src = a.createBufferSource();
+  src.buffer = noise;
+  const band = a.createBiquadFilter();
+  band.type = "bandpass";
+  band.frequency.value = f;
+  band.Q.value = q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(gain, t0 + at);
+  g.gain.exponentialRampToValueAtTime(SILENCE, t0 + at + len);
+  src.connect(band).connect(g).connect(out);
+  src.start(t0 + at);
+  src.stop(t0 + at + len + ATTACK_S);
 }
 
 /** Wakes the audio on the first gesture, so later cues (a wallet getting ready) can play. */
