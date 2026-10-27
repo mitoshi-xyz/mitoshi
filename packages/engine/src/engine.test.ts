@@ -21,13 +21,15 @@ const ZEC = 100_000_000;
 
 describe("standard amounts", () => {
   it("knows the ladder", () => {
-    assert.equal(LADDER_ZAT.length, 7);
+    assert.equal(LADDER_ZAT.length, 8);
+    assert.ok(isCanonical(0.005 * ZEC));
     assert.ok(isCanonical(0.05 * ZEC));
     assert.ok(!isCanonical(0.03 * ZEC));
   });
   it("offers only sizes the balance covers with the fee", () => {
-    assert.deepEqual(fundableSizes(0.06 * ZEC, 10_000), [0.01 * ZEC, 0.02 * ZEC, 0.05 * ZEC]);
-    assert.deepEqual(fundableSizes(0.05 * ZEC, 10_000), [0.01 * ZEC, 0.02 * ZEC]);
+    assert.deepEqual(fundableSizes(0.06 * ZEC, 10_000), [0.005 * ZEC, 0.01 * ZEC, 0.02 * ZEC, 0.05 * ZEC]);
+    assert.deepEqual(fundableSizes(0.05 * ZEC, 10_000), [0.005 * ZEC, 0.01 * ZEC, 0.02 * ZEC]);
+    assert.deepEqual(fundableSizes(0.0052 * ZEC, 15_000), [0.005 * ZEC]);
   });
   it("splits odd amounts into standard pieces", () => {
     assert.deepEqual(decompose(0.35 * ZEC), { pieces: [0.2 * ZEC, 0.1 * ZEC, 0.05 * ZEC], leftover: 0 });

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { cx, EmptyState, RollingNumber, Skeleton, Wait } from "@/kit";
 import { price, upDown } from "../format";
+import { useJudgeDesk } from "../judge/judge";
 import { Mark } from "../marks/mark";
 import { DRIVERS, usePerpAccount } from "../perps/hooks";
 import { type PerpMarket, type PerpVenue, terminalHref } from "../perps/model";
@@ -29,6 +30,8 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
   const [hidden] = useHideAmounts();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The judges' wallet is shared: it stays on its venue for the next judge.
+  const shared = useJudgeDesk() !== null;
   const marketOf = (id: string) => markets.find((m) => m.id === id);
 
   async function run(verb: string, job: () => Promise<unknown>) {
@@ -130,7 +133,7 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
           </div>
         );
       })}
-      {closed && wallet.status !== "returning" ? (
+      {closed && wallet.status !== "returning" && !shared ? (
         <button
           type="button"
           disabled={busy !== null}

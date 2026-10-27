@@ -1,6 +1,6 @@
 "use client";
 
-import { LADDER_ZAT, liveWallets, type Venue, ZAT_PER_ZEC } from "@mitoshi/engine";
+import { DEFAULT_SIZE_ZAT, LADDER_ZAT, liveWallets, type Venue, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { cx, Sheet, Switch } from "@/kit";
@@ -13,8 +13,6 @@ import { inMinutes } from "./wallet-steps";
 
 const ZEC_DIGITS = 8;
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
-/** The size a venue starts at when its switch goes on. */
-const DEFAULT_SIZE = LADDER_ZAT[2];
 
 /** What "keep one ready" holds for a venue right now, in a few words: a waiting wallet says when it starts. */
 function warmWord(venue: Venue, r: ReturnType<typeof useRegistry>, now: number): { text: string; ok: boolean } {
@@ -65,7 +63,7 @@ export function KeepReady() {
                 on={Boolean(size)}
                 disabled={!v.live}
                 label={`Keep a ${v.name} wallet ready`}
-                onChange={(on) => setKeepReady(id, on ? (size ?? DEFAULT_SIZE) : null)}
+                onChange={(on) => setKeepReady(id, on ? (size ?? DEFAULT_SIZE_ZAT) : null)}
               />
             </li>
           );

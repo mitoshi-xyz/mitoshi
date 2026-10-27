@@ -29,8 +29,8 @@ const KEY_STORE = "mitoshi:desk-setup:key";
 const SEALED_STORE = "mitoshi:desk-setup:sealed";
 const AUTO_STORE = "mitoshi:desk-setup:auto";
 const ADDRESS_STORE = "mitoshi:desk-setup:treasury-address";
-/** What the one payment to the six desks may cost on top of their shares (ZIP 317: seven actions). */
-const PAY_FEE_RESERVE_ZAT = 60_000;
+/** What the payment to the judges' wallet may cost on top of its share (ZIP 317: two actions, with room to spare). */
+const PAY_FEE_RESERVE_ZAT = 20_000;
 const NEED_ZAT = DESK_COUNT * DESK_SHARE_ZAT + PAY_FEE_RESERVE_ZAT;
 const ZEC_DIGITS = 4;
 const FUND_SPACING_MS = 60_000;
@@ -75,11 +75,11 @@ function DeskCard({ n, s, sealed }: { n: number; s: DeskStatus | undefined; seal
 }
 
 /**
- * Setting up the judges' wallets, on a developer machine (the mainnet dev server). The page's own wallet is the
- * treasury; six frames hold the six judge wallets, each in its own vault. The owner does two things: sends ZEC to the
+ * Setting up the judges' wallet, on a developer machine (the mainnet dev server). The page's own wallet is the
+ * treasury; a frame holds the judges' wallet in a vault of its own. The owner does two things: sends ZEC to the
  * treasury and presses Start. From there the page runs the rest as each step's money arrives: one shielded payment
- * fills the six wallets, each one funds a Hyperliquid wallet the ordinary way (a minute apart), and each locks itself
- * under the judges' link and is saved for the site.
+ * fills the judges' wallet, it funds a Hyperliquid wallet the ordinary way, and it locks itself under the judges' link
+ * and is saved for the site.
  */
 export function DeskConsole() {
   const dev = process.env.NODE_ENV === "development";
@@ -159,7 +159,7 @@ export function DeskConsole() {
   const handedOver = published?.startsWith("Saved") ?? false;
   const link = useMemo(() => (slotSet ? `${JUDGE_ORIGIN}/#k=${deskKey()}` : ""), [slotSet]);
 
-  // Saved once all six have locked themselves; a wallet that couldn't stops the hand-over (its reason shows).
+  // Saved once every judge wallet has locked itself; one that couldn't stops the hand-over (its reason shows).
   const save = useRef<(() => Promise<void>) | null>(null);
   useEffect(() => {
     if (!publishing) return;
@@ -216,7 +216,7 @@ export function DeskConsole() {
       (r) => r.ok,
       () => false,
     );
-    setBackedUp(ok ? "All seven wallets' words are saved on this machine" : "No receiver running: nothing saved");
+    setBackedUp(ok ? "Every wallet's words are saved on this machine" : "No receiver running: nothing saved");
   };
 
   const pay = async () => {
@@ -230,14 +230,14 @@ export function DeskConsole() {
     }
   };
 
-  // A minute apart, so six desks never prove at once on one machine (a starved proof can outlive NEAR's quote).
+  // A minute apart, so wallets never prove at once on one machine (a starved proof can outlive NEAR's quote).
   const fundAll = () => {
     for (const n of DESKS) {
       setTimeout(() => channel.current?.postMessage({ kind: "fund", n }), (n - 1) * FUND_SPACING_MS);
     }
   };
 
-  // Each wallet locks itself under the link's key; once all six answer, the files are saved for the site.
+  // Each wallet locks itself under the link's key; once all answer, the files are saved for the site.
   const publish = () => {
     setProblems({});
     setFiles({});
@@ -268,7 +268,7 @@ export function DeskConsole() {
       a.click();
     }
     localStorage.setItem(SEALED_STORE, new Date().toISOString());
-    // The wallets are the judges' now: this page stops running them.
+    // The wallet is the judges' now: this page stops running it.
     setFrames(false);
   };
   save.current = download;
@@ -290,7 +290,7 @@ export function DeskConsole() {
   const progress: TxStep[] = [
     { label: "Your ZEC arrives", state: paid || enough ? "done" : "active", detail: paid ? "Arrived" : moneyLine },
     {
-      label: "Filling the six wallets",
+      label: "Filling the judge wallet",
       state: paid
         ? "done"
         : paying && !paying.startsWith("Sent") && !paying.startsWith("Proving")
@@ -301,12 +301,12 @@ export function DeskConsole() {
       detail: paid ? "One shielded payment, 10 blocks" : (paying ?? undefined),
     },
     {
-      label: "Getting them ready to trade",
+      label: "Getting it ready to trade",
       state: funded === DESK_COUNT ? "done" : started > 0 || allHaveShare ? "active" : "pending",
-      detail: `${funded} of ${DESK_COUNT} ready · about 20 min in all`,
+      detail: funded === DESK_COUNT ? "Ready on Hyperliquid" : "About 8 min",
     },
     {
-      label: "Handing them to the judges",
+      label: "Handing it to the judges",
       state: handedOver ? "done" : Object.keys(problems).length ? "failed" : publishing ? "active" : "pending",
       detail: published ?? (Object.keys(problems).length ? "A wallet couldn't lock itself: see its card" : undefined),
     },
@@ -315,7 +315,7 @@ export function DeskConsole() {
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
       <header className="flex items-baseline justify-between">
-        <h1 className="type-headline-md">Judge wallets · setup</h1>
+        <h1 className="type-headline-md">Judge wallet · setup</h1>
         <span className="type-label text-accent">{ZEC_NETWORK === "main" ? "Mainnet" : "Testnet"}</span>
       </header>
 
@@ -382,17 +382,17 @@ export function DeskConsole() {
             onClick={() => void pay()}
             disabled={paid || paying !== null || !enough || addresses.some((a) => a === null)}
           >
-            Fill the six wallets
+            Fill the judge wallet
           </Button>
           <Button size="sm" onClick={fundAll} disabled={!allHaveShare}>
-            Get them ready to trade
+            Get it ready to trade
           </Button>
           <Button size="sm" onClick={publish} disabled={publishing || (funded < DESK_COUNT && ZEC_NETWORK === "main")}>
-            <Download size={14} /> Hand them over
+            <Download size={14} /> Hand it over
           </Button>
           {frames ? null : (
             <Button size="sm" onClick={() => setFrames(true)}>
-              Run the judge wallets again
+              Run the judge wallet again
             </Button>
           )}
         </div>

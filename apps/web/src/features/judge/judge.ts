@@ -2,15 +2,15 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { JUDGE_HOST, ZEC_NETWORK } from "@/constants";
-import { hlMarket } from "../hyperliquid/hl";
 import { forgetVault, vaultGet, vaultPut } from "../vault/vault";
-import { type DeskBundle, type DeskIndex, fromBase64 } from "./desk";
+import { type DeskBundle, fromBase64 } from "./desk";
 import { setupSlot } from "./slot";
 
 /**
- * Judge mode: the app on judge.mitoshi.xyz, holding one of the six desks. Everything works as on mitoshi.xyz, with
- * three differences: no deposits into a desk, no "keep one ready" (a desk never funds anything by itself), and a path
- * that shows a judge the product in four steps.
+ * Judge mode: the app on judge.mitoshi.xyz, holding the judges' wallet. Every judge shares it, so everything works as
+ * on mitoshi.xyz with four differences: no deposits, no "keep one ready" (it never funds anything by itself), no
+ * sending its Hyperliquid wallet home (it stays there for the next judge), and a path through the product in three
+ * steps.
  */
 
 const DESK_STORE = "mitoshi:desk";
@@ -53,14 +53,14 @@ function subscribe(l: () => void) {
   };
 }
 
-/** The desk this browser holds, or null (not on the judge host, or no desk opened yet). */
+/** The judges' wallet this browser holds, or null (not on the judge host, or not opened yet). */
 export function useJudgeDesk(): number | null {
   return useSyncExternalStore(subscribe, readDesk, () => null);
 }
 
 export const judgeDesk = readDesk;
 
-export type PathStep = "trade" | "public" | "fund" | "home";
+export type PathStep = "trade" | "public" | "receipt";
 
 function readPath(): string {
   try {
@@ -97,44 +97,15 @@ export function useSeenSteps(): PathStep[] {
   return useMemo(() => parsePath(raw), [raw]);
 }
 
-/** Whether this origin's vault already holds a wallet (a desk opened before, in this browser). */
+/** Whether this origin's vault already holds a wallet (the judges' wallet, opened before in this browser). */
 export async function holdsWallet(): Promise<boolean> {
   return (await vaultGet(ZEC_NETWORK, "mnemonic").catch(() => null)) !== null;
 }
 
-export type DeskCheck = "checking" | "free" | "used";
-
-/**
- * Finds a desk nobody has traded from yet, by its Hyperliquid wallet's public footprint (no desk is opened to look),
- * in a random order so two judges arriving together rarely pick the same one. With all six used, the least used.
- */
-export async function pickDesk(
-  index: DeskIndex,
-  onCheck: (n: number, state: DeskCheck) => void,
-): Promise<{ n: number; shared: boolean }> {
-  // A Fisher–Yates shuffle: every order equally likely.
-  const order = [...index.desks];
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [order[i], order[j]] = [order[j] as (typeof order)[number], order[i] as (typeof order)[number]];
-  }
-  let least: { n: number; activity: number } | null = null;
-  for (const d of order) {
-    onCheck(d.n, "checking");
-    const f = await hlMarket.footprint(d.hyperliquid as `0x${string}`);
-    const used = f.activity > 0 || (f.openPositions ?? 0) > 0;
-    onCheck(d.n, used ? "used" : "free");
-    if (!used) return { n: d.n, shared: false };
-    if (!least || f.activity < least.activity) least = { n: d.n, activity: f.activity };
-  }
-  if (!least) throw new Error("There are no judge wallets");
-  return { n: least.n, shared: true };
-}
-
-/** Writes a desk's records into this origin's vault. The next page load opens it like any wallet. */
+/** Writes the wallet's records into this origin's vault. The next page load opens it like any wallet. */
 export async function importDesk(bundle: DeskBundle) {
   const encode = (t: string) => new TextEncoder().encode(t);
-  // A desk never funds anything on its own, and its setup notices count as new for the judge.
+  // It never funds anything on its own, and its setup notices count as new for the judge.
   const registry = { ...bundle.registry, keepReady: {}, noticesSeenAt: 0 };
   await vaultPut(ZEC_NETWORK, "walletdb", fromBase64(bundle.walletdb));
   await vaultPut(ZEC_NETWORK, "registry", encode(JSON.stringify(registry)));
@@ -145,7 +116,7 @@ export async function importDesk(bundle: DeskBundle) {
   emit();
 }
 
-/** Gives the desk back: this browser forgets it (the desk itself stays as it is, for whoever opens it next). */
+/** Gives the wallet back: this browser forgets it (the wallet itself stays as it is, for the other judges). */
 export async function leaveDesk() {
   await forgetVault();
   try {

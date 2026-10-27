@@ -5,6 +5,7 @@ import { ArrowRight, Check, ChevronDown, Copy, Eye, Home, RotateCw } from "lucid
 import Link from "next/link";
 import { useState } from "react";
 import { Button, cx, LiveDot, TxSteps, Wait } from "@/kit";
+import { useJudgeDesk } from "../judge/judge";
 import { VenueMark } from "../marks/mark";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { sendHome } from "./home";
@@ -68,6 +69,8 @@ export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number
   const venue = VENUES[w.venue];
   const fund = latestSwap(w, "fund");
   const which = flow(w);
+  // The judges' wallet is shared: it stays on its venue for the next judge.
+  const shared = useJudgeDesk() !== null;
 
   const goHome = () => {
     setBusy(true);
@@ -151,7 +154,7 @@ export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number
             >
               {venue.trade.label} <ArrowRight size={14} />
             </Link>
-            {!confirmHome && venue.live ? (
+            {!confirmHome && venue.live && !shared ? (
               <button
                 type="button"
                 onClick={() => setConfirmHome(true)}

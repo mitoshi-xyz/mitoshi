@@ -5,6 +5,7 @@ import { Check, Copy, ExternalLink, ReceiptText } from "lucide-react";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { ZEC_NETWORK } from "@/constants";
 import { cx, DottedQr, Drawer, EmptyState } from "@/kit";
+import { markStep } from "../judge/judge";
 import { Mark, VenueMark } from "../marks/mark";
 import { useRegistry } from "../private-wallets/registry-store";
 import { Seal } from "../shell/seal";
@@ -28,6 +29,7 @@ const listeners = new Set<() => void>();
 
 export function openReceipt(txid: string) {
   openTxid = txid;
+  markStep("receipt");
   for (const l of listeners) l();
 }
 

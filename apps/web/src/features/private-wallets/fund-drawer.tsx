@@ -1,6 +1,6 @@
 "use client";
 
-import { fundableSizes, LADDER_ZAT, type Venue, ZAT_PER_ZEC } from "@mitoshi/engine";
+import { DEFAULT_SIZE_ZAT, fundableSizes, LADDER_ZAT, type Venue, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { swapTerms } from "@mitoshi/rails";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, ChevronDown, Clock, Eye } from "lucide-react";
@@ -98,7 +98,7 @@ export function FundDrawer({
   const w = useWallet();
   const [hidden] = useHideAmounts();
   const [venue, setVenue] = useState<Venue>(initialVenue);
-  const [size, setSize] = useState<number>(LADDER_ZAT[2]);
+  const [size, setSize] = useState<number>(DEFAULT_SIZE_ZAT);
   const [made, setMade] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

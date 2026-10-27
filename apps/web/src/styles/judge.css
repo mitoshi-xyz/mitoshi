@@ -1,6 +1,6 @@
-/* The judges' pieces (features/judge, and the pass on the landing): the 審 hanko, the desk pass (a ticket stub in the
-   receipt's language: cream paper, a perforation with notches, the seal pressed beside it) and the six desk tiles.
-   They live in the landing's dark world, so they use its tokens. */
+/* The judges' pieces (features/judge, and the pass on the landing): the 審 hanko and the judge pass (a ticket stub in
+   the receipt's language: cream paper, a perforation with notches, the seal pressed beside it). They live in the
+   landing's dark world, so they use its tokens. */
 
 /* The hanko: 審 ("judge") cut in vermilion, a double rim like a real seal, pressed a little crooked. */
 .jd-hanko {
@@ -37,7 +37,7 @@
   }
 }
 
-/* The desk pass: a cream stub with a perforation between the body and the seal. */
+/* The judge pass: a cream stub with a perforation between the body and the seal. */
 .jd-pass {
   position: relative;
   display: grid;
@@ -108,68 +108,8 @@ a.jd-pass:focus-visible {
   color: color-mix(in srgb, #141210 68%, transparent);
 }
 
-/* Six desk tiles: waiting, being checked, taken, and the one that is yours. */
-.jd-desks {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
-}
-@media (max-width: 479px) {
-  .jd-desks {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .jd-desk {
-    aspect-ratio: 1.5 / 1;
-  }
-}
-.jd-desk {
-  position: relative;
-  display: flex;
-  aspect-ratio: 1 / 1.1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  overflow: hidden;
-  border-radius: 14px;
-  background: var(--lp-card-2, #171717);
-  box-shadow: inset 0 0 0 1px var(--lp-line, rgb(255 255 255 / 0.1));
-  font: 600 18px / 1 var(--font-mono);
-  color: var(--lp-ink-2, #a3a3a3);
-  transition:
-    opacity 300ms,
-    background 300ms;
-}
-.jd-desk small {
-  font: 500 10px / 1 var(--font-sans);
-  letter-spacing: 0.04em;
-  color: var(--lp-ink-3, #737373);
-}
-.jd-desk[data-state="checking"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 20%,
-    color-mix(in srgb, #f4eee3 10%, transparent) 50%,
-    transparent 80%
-  );
-  background-size: 200% 100%;
-  animation: mt-shimmer 1200ms linear infinite;
-}
-.jd-desk[data-state="used"] {
-  opacity: 0.45;
-}
-.jd-desk[data-state="yours"] {
-  background: color-mix(in srgb, #e04d26 16%, #050505);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #e04d26 70%, transparent);
-  color: #f4eee3;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .jd-press,
-  .jd-desk[data-state="checking"]::after {
+  .jd-press {
     animation: none;
   }
   a.jd-pass:hover {

@@ -76,8 +76,8 @@ sees one funding, one trade and no history.
    Mitoshi shields for you. No account, no sign-up.
 2. **Pick a market.** Say NVIDIA on Polymarket Perps. The ticket starts with the amount: **$25 at 5×** is a **$125.00**
    position, **0.58164 NVDA**, fee **$0.05**.
-3. **A wallet nobody has seen.** Mitoshi derives a new key for this position and pays one standard amount (0.01, 0.02,
-   0.05 … ZEC) from the shielded pool into NEAR Intents at a random moment. A confidential quote on 2026-10-23 turned
+3. **A wallet nobody has seen.** Mitoshi derives a new key for this position and pays one standard amount (0.005, 0.01,
+   0.02 … ZEC) from the shielded pool into NEAR Intents at a random moment. A confidential quote on 2026-10-23 turned
    **0.01 ZEC into 11.86 USDC in about 465 s**.
 4. **Trade.** The order goes to the venue's real book, signed by that wallet's own key (on Polymarket Perps, by a
    7-day proxy that key authorises).

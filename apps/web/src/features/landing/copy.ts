@@ -25,7 +25,7 @@ export const LANDING = {
     stripCta: "How",
     kicker: "ZECATHON · Judge pass",
     title: "Your wallet is funded.",
-    line: "Real money on Zcash mainnet, one wallet per judge, ready to trade. No setup, no sign-up.",
+    line: "Real money on Zcash mainnet, ready to trade. No setup, no sign-up.",
     cta: "Open it from the Working demo link in our submission",
     ctaShort: "Working demo link in our submission",
   },

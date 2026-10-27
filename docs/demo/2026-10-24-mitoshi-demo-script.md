@@ -68,8 +68,8 @@ Who sees what at every step: it's all in the docs. docs dot mitoshi dot x y z. A
 11 · CLOSE · 1:50
    [mitoshi.xyz hero → the judge pass]
 
-It's live right now, on the web and on your phone. Judges: the link in your submission opens a funded desk, so you can
-trade in thirty seconds. Mitoshi — a new wallet for every trade.
+It's live right now, on the web and on your phone. Judges: the link in your submission opens a funded wallet, so you
+can trade in thirty seconds. Mitoshi — a new wallet for every trade.
 
 ---
 Have ready

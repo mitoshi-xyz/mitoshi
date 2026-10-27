@@ -40,15 +40,13 @@ interface Step {
   go: { href: string } | { onClick: () => void };
 }
 
-/** The path through a desk, ticked from what the desk has actually done (and what the judge has looked at). */
+/** The path through the judges' wallet, ticked from what it has actually done (and what the judge has looked at). */
 function usePath(onGo: () => void): Step[] {
   const registry = useRegistry();
   const seen = useSeenSteps();
-  // The desk's first wallet is the one funded before judging; anything after it was made here.
+  // The first wallet is the one funded before judging.
   const first = [...registry.wallets].sort((a, b) => a.createdAt - b.createdAt)[0];
   const traded = registry.wallets.some((w) => (w.trades?.length ?? 0) > 0);
-  const made = registry.wallets.length > 1;
-  const home = registry.wallets.some((w) => w.status === "returning" || w.status === "retired");
   return [
     {
       id: "trade",
@@ -60,7 +58,7 @@ function usePath(onGo: () => void): Step[] {
     {
       id: "public",
       title: "See what the public sees",
-      detail: "One wallet, one trade, no history",
+      detail: "One wallet, its trades, no history",
       done: seen.includes("public"),
       go: {
         onClick: () => {
@@ -70,34 +68,27 @@ function usePath(onGo: () => void): Step[] {
       },
     },
     {
-      id: "fund",
-      title: "Trade ETH from a brand-new wallet",
-      detail: "Funded from shielded ZEC through NEAR · about 8 min",
-      done: made,
-      go: { href: "/trade#ETH" },
-    },
-    {
-      id: "home",
-      title: "Send a wallet home",
-      detail: "Back to a fresh shielded address · about 3 min",
-      done: home,
-      go: { href: "/wallets" },
+      id: "receipt",
+      title: "Check the funding on chain",
+      detail: "Its receipt in History, with the explorer",
+      done: seen.includes("receipt"),
+      go: { href: "/portfolio" },
     },
   ];
 }
 
-function JudgeSheet({ open, onClose, n }: { open: boolean; onClose: () => void; n: number }) {
+function JudgeSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const steps = usePath(onClose);
   const done = steps.filter((s) => s.done).length;
   const [leaving, setLeaving] = useState(false);
   return (
-    <Drawer open={open} onClose={onClose} title={`Judge wallet ${n}`}>
+    <Drawer open={open} onClose={onClose} title="Judge wallet">
       <div className="flex items-center gap-3 rounded-xl bg-cream p-4 text-cream-ink">
         <Hanko size={44} />
         <div className="flex min-w-0 flex-col">
           <span className="font-semibold text-[15px]">Real money on Zcash mainnet</span>
           <span className="text-[13px] text-cream-ink/65">
-            {done} of {steps.length} done
+            Shared by every judge · {done} of {steps.length} done
           </span>
         </div>
       </div>
@@ -161,7 +152,7 @@ function JudgeSheet({ open, onClose, n }: { open: boolean; onClose: () => void; 
   );
 }
 
-/** The top line's desk chip, on judge.mitoshi.xyz only: which desk this is, and the path through it. */
+/** The top line's judge chip, on judge.mitoshi.xyz only: the path through the judges' wallet. */
 export function DeskChip() {
   const n = useJudgeDesk();
   const open = usePathOpen();
@@ -173,16 +164,16 @@ export function DeskChip() {
       <button
         type="button"
         onClick={openJudgePath}
-        aria-label={`Judge wallet ${n}: ${done} of ${steps.length} steps done`}
+        aria-label={`Judge wallet: ${done} of ${steps.length} steps done`}
         className="inline-flex h-11 items-center gap-2 rounded-full border border-accent/50 bg-accent-wash pr-3 pl-1.5 font-semibold text-[13px] text-ink hover:border-accent md:h-10"
       >
         <Hanko size={28} />
-        <span>Judge {n}</span>
+        <span>Judge</span>
         <span className="num text-[12px] text-ink-2">
           {done}/{steps.length}
         </span>
       </button>
-      <JudgeSheet open={open} onClose={() => setPathOpen(false)} n={n} />
+      <JudgeSheet open={open} onClose={() => setPathOpen(false)} />
     </>
   );
 }

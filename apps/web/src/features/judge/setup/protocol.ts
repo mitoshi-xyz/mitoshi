@@ -2,7 +2,7 @@ import type { WalletStatus } from "@mitoshi/engine";
 import type { WalletPhase } from "../../wallet/wallet-store";
 
 /**
- * How the desk-setup console talks to its six desk frames (same origin, one BroadcastChannel). The console only
+ * How the desk-setup console talks to its desk frames (same origin, one BroadcastChannel). The console only
  * asks; each desk does its own work with its own wallet, the way the app does for anyone.
  */
 export const SETUP_CHANNEL = "mitoshi-desk-setup";

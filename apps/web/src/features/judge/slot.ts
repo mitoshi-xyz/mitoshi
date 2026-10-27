@@ -1,6 +1,6 @@
 /**
- * Desk setup runs a treasury and six desks side by side on a developer machine, each in its own frame. A frame's
- * window name says which one it is, and its vault lives in a database of its own, so the seven wallets never touch.
+ * Desk setup runs a treasury and the judges' wallet side by side on a developer machine, each in its own frame. A
+ * frame's window name says which one it is, and its vault lives in a database of its own, so the wallets never touch.
  * Production builds have no slots: there the vault is always the one database.
  */
 const SLOT_NAME = /^mitoshi-slot:([a-z0-9-]+)$/;

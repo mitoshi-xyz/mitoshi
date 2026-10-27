@@ -4,6 +4,7 @@ import { advance, type PrivateWallet, type SwapRecord, type TradeRecord } from "
 import { ASSETS } from "@mitoshi/rails";
 import { PUSD_DECIMALS } from "@mitoshi/venues/polymarket";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
+import { judgeDesk } from "../judge/judge";
 import { bringPerpsHome } from "../pmperps/perps-home";
 import { pmBridge, pmMarket } from "../polymarket/pm";
 import { type PmAccount, pmAccount } from "../polymarket/pm-account";
@@ -170,6 +171,7 @@ export function recordTrade(id: string, trade: TradeRecord) {
 export async function sendHyperliquidHome(id: string): Promise<{ sent: number }> {
   let w = walletById(id);
   if (w?.venue !== "hyperliquid") throw new Error("not a Hyperliquid wallet");
+  if (judgeDesk() !== null) throw new Error("The judges' wallet stays on Hyperliquid for the next judge");
   if (w.status !== "ready" && w.status !== "trading" && w.status !== "failed") {
     throw new Error(`a ${w.status} wallet cannot be sent home`);
   }

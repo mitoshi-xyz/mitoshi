@@ -3,82 +3,55 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { DESK_COUNT, JUDGE_ORIGIN } from "@/constants";
+import { JUDGE_ORIGIN } from "@/constants";
 import { type StepState, TxSteps } from "@/kit";
 import { Seal } from "../shell/seal";
 import { openDesk, openIndex, parseDeskKey } from "./desk";
 import { Hanko } from "./hanko";
-import { type DeskCheck, holdsWallet, importDesk, judgeDesk, leaveDesk, onJudgeHost, pickDesk } from "./judge";
+import { holdsWallet, importDesk, leaveDesk, onJudgeHost } from "./judge";
 import "@/styles/landing.css";
 import "@/styles/judge.css";
 
-const DESKS = Array.from({ length: DESK_COUNT }, (_, i) => i + 1);
-const STEP_LABELS = ["Unlocking the judge wallets", "Finding a free one", "Opening your wallet", "Ready"] as const;
+const STEP_LABELS = ["Unlocking the judge wallet", "Opening it in this browser", "Ready"] as const;
 const TRADE_HREF = "/trade#BTC";
-const pad = (n: number) => String(n).padStart(2, "0");
 
 type Phase =
   | { kind: "boot" }
   | { kind: "ask"; error?: string }
   | { kind: "elsewhere" }
-  | { kind: "returning"; n: number | null }
-  | { kind: "opening"; step: number; n?: number; error?: string }
-  | { kind: "ready"; n: number; shared: boolean };
-
-function Desks({ checks, mine }: { checks: Record<number, DeskCheck>; mine?: number | undefined }) {
-  return (
-    <ol className="jd-desks" aria-label="The six judge wallets">
-      {DESKS.map((n) => {
-        const state = mine === n ? "yours" : checks[n];
-        return (
-          <li key={n} className="jd-desk" data-state={state ?? "idle"}>
-            {state === "yours" ? <Hanko size={30} press /> : pad(n)}
-            <small>
-              {state === "yours" ? "Yours" : state === "used" ? "Taken" : state === "free" ? "Free" : "Wallet"}
-            </small>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
+  | { kind: "returning" }
+  | { kind: "opening"; step: number; error?: string }
+  | { kind: "ready" };
 
 function stepStates(step: number, failed: boolean): StepState[] {
   return STEP_LABELS.map((_, i) => (i < step ? "done" : i === step ? (failed ? "failed" : "active") : "pending"));
 }
 
 /**
- * judge.mitoshi.xyz: opens one of the six desks with the key from the judges' link. The key stays in this browser (it
- * sits after the #, which is never sent); the desk list is opened with it, a free desk is found from public data, and
- * its records are written into this origin's vault. Then the app opens on that desk, synced, with a Hyperliquid
- * wallet ready to trade.
+ * judge.mitoshi.xyz: opens the judges' wallet with the key from the judges' link. The key stays in this browser (it
+ * sits after the #, which is never sent); the wallet list is opened with it and the wallet's records are written into
+ * this origin's vault. Then the app opens on it, synced, with a Hyperliquid wallet ready to trade. Every judge shares
+ * the one wallet.
  */
 export function JudgeGate() {
   const [phase, setPhase] = useState<Phase>({ kind: "boot" });
-  const [checks, setChecks] = useState<Record<number, DeskCheck>>({});
   const [typed, setTyped] = useState("");
   // The gate starts once: the key leaves the address bar on the first pass, so a second pass would find none.
   const started = useRef(false);
 
   const run = async (key: string) => {
-    setChecks({});
     let step = 0;
-    let picked: number | undefined;
     try {
       setPhase({ kind: "opening", step });
-      const index = await openIndex(key);
+      const desk = (await openIndex(key)).desks[0];
+      if (!desk) throw new Error("The judge wallet is being funded: try again soon");
       step = 1;
       setPhase({ kind: "opening", step });
-      const pick = await pickDesk(index, (n, s) => setChecks((c) => ({ ...c, [n]: s })));
-      picked = pick.n;
-      step = 2;
-      setPhase({ kind: "opening", step, n: pick.n });
-      await importDesk(await openDesk(key, pick.n));
-      setPhase({ kind: "ready", n: pick.n, shared: pick.shared });
+      await importDesk(await openDesk(key, desk.n));
+      setPhase({ kind: "ready" });
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
-      if (step === 0) setPhase({ kind: "ask", error });
-      else setPhase({ kind: "opening", step, ...(picked ? { n: picked } : {}), error });
+      setPhase(step === 0 ? { kind: "ask", error } : { kind: "opening", step, error });
     }
   };
 
@@ -87,7 +60,7 @@ export function JudgeGate() {
     started.current = true;
     const key = parseDeskKey(window.location.hash);
     if (!onJudgeHost()) {
-      // On mitoshi.xyz: the desks open on their own origin, key and all.
+      // On mitoshi.xyz: the judge wallet opens on its own origin, key and all.
       if (key) window.location.replace(`${JUDGE_ORIGIN}/#k=${key}`);
       else setPhase({ kind: "elsewhere" });
       return;
@@ -95,21 +68,15 @@ export function JudgeGate() {
     // The key leaves the address bar at once: nothing to copy by accident, nothing in a screenshot.
     if (key) history.replaceState(null, "", window.location.pathname);
     void holdsWallet().then((held) => {
-      if (held) setPhase({ kind: "returning", n: judgeDesk() });
+      if (held) setPhase({ kind: "returning" });
       else if (key) void run(key);
       else setPhase({ kind: "ask" });
     });
   }, []);
 
   const opening = phase.kind === "opening";
-  const title =
-    phase.kind === "ready"
-      ? `Wallet ${phase.n} is yours.`
-      : phase.kind === "returning"
-        ? `Wallet ${phase.n ?? ""} is yours.`
-        : opening
-          ? "Opening your wallet"
-          : "Judge wallets";
+  const open = phase.kind === "ready" || phase.kind === "returning";
+  const title = open ? "Ready to trade." : opening ? "Opening the judge wallet" : "Judge wallet";
 
   return (
     <main className="lp relative flex min-h-dvh flex-col">
@@ -125,28 +92,24 @@ export function JudgeGate() {
 
       <section className="lp-wrap relative flex flex-1 flex-col justify-center gap-7 py-10">
         <div className="flex max-w-[40rem] flex-col gap-4">
+          {open ? <Hanko size={64} press /> : null}
           <span className="lp-kicker">Zcash mainnet · real money</span>
           <h1 className="lp-h1 text-[clamp(34px,6vw,60px)]">{title}</h1>
           <p className="lp-line max-w-[34rem]">
-            {phase.kind === "ready" || phase.kind === "returning"
-              ? "A Hyperliquid wallet funded from shielded ZEC is ready to trade, and there is ZEC to fund a brand-new one."
-              : "Judging Mitoshi? Click the Working demo link in our ZECATHON submission: it opens your wallet, with real money in it. Nothing to set up."}
+            {open
+              ? "A Hyperliquid wallet funded from shielded ZEC. Every judge shares it, so you may see their trades."
+              : "Judging Mitoshi? Click the Working demo link in our ZECATHON submission: it opens a wallet with real money in it. Nothing to set up."}
           </p>
         </div>
 
         <div className="flex max-w-[40rem] flex-col gap-6">
-          <Desks
-            checks={checks}
-            mine={phase.kind === "ready" ? phase.n : phase.kind === "returning" ? (phase.n ?? undefined) : undefined}
-          />
-
           {opening ? (
             <div className="lp-card p-5">
               <TxSteps
                 steps={STEP_LABELS.map((label, i) => {
                   const states = stepStates(phase.step, phase.error !== undefined);
                   return {
-                    label: i === 2 && phase.n ? `Opening wallet ${phase.n}` : label,
+                    label,
                     state: states[i] ?? "pending",
                     ...(i === phase.step && phase.error ? { detail: phase.error } : {}),
                   };
@@ -164,13 +127,8 @@ export function JudgeGate() {
             </div>
           ) : null}
 
-          {phase.kind === "ready" || phase.kind === "returning" ? (
+          {open ? (
             <div className="flex flex-col gap-3">
-              {phase.kind === "ready" && phase.shared ? (
-                <p className="text-[13px] text-[var(--lp-ink-3)]">
-                  Every judge wallet has trades on it already; this one has the fewest.
-                </p>
-              ) : null}
               <div className="flex flex-wrap gap-3">
                 <a href={TRADE_HREF} className="lp-btn lp-btn-accent">
                   Trade BTC now <ArrowRight size={18} />
@@ -218,7 +176,7 @@ export function JudgeGate() {
                 </form>
               ) : (
                 <a href={JUDGE_ORIGIN} className="lp-btn lp-btn-accent self-start">
-                  Open the judge wallets <ArrowRight size={18} />
+                  Open the judge wallet <ArrowRight size={18} />
                 </a>
               )}
               {phase.kind === "ask" && phase.error ? (

@@ -3,10 +3,15 @@ export const ZAT_PER_ZEC = 100_000_000;
 
 /**
  * The standard amounts a private wallet is funded with (ZIP 318 style, n × 10^k with n in
- * {1, 2, 5}): 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 and 1 ZEC. A funding is always exactly one of these,
- * so the one public hop (ZEC into NEAR's deposit address) looks like thousands of others.
+ * {1, 2, 5}): 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 and 1 ZEC. A funding is always exactly one of
+ * these, so the one public hop (ZEC into NEAR's deposit address) looks like thousands of others.
+ * 0.005 ZEC sits one step below ZIP 318's smallest denomination: a first trade for a few dollars.
  */
-export const LADDER_ZAT = [1_000_000, 2_000_000, 5_000_000, 10_000_000, 20_000_000, 50_000_000, 100_000_000] as const;
+export const LADDER_ZAT = [
+  500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000, 20_000_000, 50_000_000, 100_000_000,
+] as const;
+/** The size offered first: 0.05 ZEC. */
+export const DEFAULT_SIZE_ZAT = 5_000_000;
 
 const MS_PER_MINUTE = 60_000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
