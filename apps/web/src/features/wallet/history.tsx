@@ -11,7 +11,7 @@ import { useRegistry } from "../private-wallets/registry-store";
 import { shortAddress, VENUES } from "../private-wallets/venues";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { openReceipt } from "./receipt";
-import { progress, signed, statusLine, story } from "./tx";
+import { progress, signed, statusLine, story, UNIT } from "./tx";
 
 const MS = 1000;
 const DAY_MS = 86_400_000;
@@ -96,6 +96,7 @@ function TxRow({ e, tip, hidden }: { e: HistoryEntry; tip: number | null; hidden
       </span>
       <span className={cx("num shrink-0 text-[14px]", s.tone === "in" && !s.moved ? "text-up" : "text-ink")}>
         {hidden ? MASK : signed(s)}
+        <span className="ml-1 text-[11px] text-muted">{UNIT}</span>
       </span>
     </button>
   );

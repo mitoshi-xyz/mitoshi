@@ -14,7 +14,7 @@ import { solAccount, solMarket } from "../solana/sol";
 
 /**
  * Wallets read from their venue: the ones that have traded. A ready wallet has done nothing since its funding, so its
- * money is what the funding delivered (arrivedUsd); reading it beside the others on every visit would show the venue
+ * money is what the funding delivered ({@link arrived}); reading it beside the others on every visit would show the venue
  * that it belongs with them before it has made a single trade.
  */
 const READ = new Set<PrivateWallet["status"]>(["trading", "returning", "failed"]);
@@ -64,6 +64,8 @@ export interface WalletBook {
   valueUsd: number;
   /** Cash not in a position: USDC on Hyperliquid, SOL on Solana. */
   cashUsd: number;
+  /** The same cash in its own unit: USDC, pUSD or SOL. */
+  cashAmount: number;
   /** What arrived when it was funded, in USD (NEAR's own figure). */
   fundedUsd: number | null;
   /** What came home, in USD. */
@@ -78,13 +80,15 @@ const quoteOf = (s: SwapRecord) => (s.signedQuote as QuoteResponse | undefined)?
 const settled = (s: SwapRecord) => s.status === "SUCCESS";
 
 /** What a ready wallet holds: exactly what its funding delivered (on Solana, that SOL at today's price). */
-function arrivedUsd(w: PrivateWallet, mids: Record<string, number>): number {
+function arrived(w: PrivateWallet, mids: Record<string, number>): { usd: number; amount: number } {
   const fund = latestSwap(w, "fund");
   const q = fund && settled(fund) ? quoteOf(fund) : undefined;
-  if (!q) return 0;
-  const sol = mids.SOL;
-  if (w.venue === "solana" && sol) return (Number(q.amountOut) / LAMPORTS_PER_SOL) * sol;
-  return Number(q.amountOutUsd);
+  if (!q) return { usd: 0, amount: 0 };
+  if (w.venue === "solana") {
+    const sol = Number(q.amountOut) / LAMPORTS_PER_SOL;
+    return { usd: mids.SOL ? sol * mids.SOL : 0, amount: sol };
+  }
+  return { usd: Number(q.amountOutUsd), amount: Number(q.amountOutUsd) };
 }
 
 function swapsBook(w: PrivateWallet) {
@@ -169,19 +173,23 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
       error: r?.error ? r.error.message : null,
       valueUsd: 0,
       cashUsd: 0,
+      cashAmount: 0,
       dayPnlUsd: null,
       positions: [],
       ...base,
     };
     if (w.status === "ready") {
-      book.cashUsd = arrivedUsd(w, mids);
-      book.valueUsd = book.cashUsd;
+      const a = arrived(w, mids);
+      book.cashUsd = a.usd;
+      book.cashAmount = a.amount;
+      book.valueUsd = a.usd;
       return book;
     }
     const d = r?.data;
     if (!d) return book;
     if (d.venue === "polymarket") {
       book.cashUsd = d.cash;
+      book.cashAmount = d.cash;
       book.positions = d.positions
         .filter((p) => p.size > 0)
         .map((p) => ({
@@ -251,12 +259,14 @@ export function useBooks(wallets: PrivateWallet[]): WalletBook[] {
       const open = book.positions.reduce((n, p) => n + (p.pnlUsd ?? 0), 0);
       const venuePnl = s.positions.reduce((n, p) => n + p.unrealizedPnl, 0);
       book.cashUsd = s.spotUsdc + s.withdrawable;
+      book.cashAmount = book.cashUsd;
       book.valueUsd = s.spotUsdc + s.perpValue + (open - venuePnl);
       book.dayPnlUsd = d.day;
       return book;
     }
     const solUsd = d.prices[SOL_MINT] ?? 0;
-    book.cashUsd = (Number(d.lamports) / LAMPORTS_PER_SOL) * solUsd;
+    book.cashAmount = Number(d.lamports) / LAMPORTS_PER_SOL;
+    book.cashUsd = book.cashAmount * solUsd;
     book.positions = d.tokens.map((t) => {
       const px = d.prices[t.mint] ?? null;
       const value = px ? t.uiAmount * px : 0;

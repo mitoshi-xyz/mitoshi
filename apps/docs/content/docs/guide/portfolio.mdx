@@ -4,19 +4,22 @@ description: Your shielded balance and every position on every venue in one priv
 icon: ChartPie
 ---
 
-{/* Sources: apps/web/src/features/portfolio (portfolio.tsx:113-215, money-card.tsx:63-131, positions.tsx:28-210);
-   apps/web/src/features/wallet (sync-strip.tsx:23-72, history.tsx:57-150). */}
+{/* Sources: apps/web/src/features/portfolio (totals.ts, money-card.tsx, assets.tsx, portfolio.tsx, positions.tsx);
+   apps/web/src/features/wallet (sync-strip.tsx, history.tsx). */}
 
 <Screen name="portfolio" alt="The Portfolio screen on mitoshi.xyz for a new wallet: Shielded ZEC 0.00 with Deposit, Withdraw and Wallet, synced, and the venues card at $0.00." caption="Portfolio for a brand-new wallet: nothing on any venue yet." eager />
 
 | Part | What it shows |
 | --- | --- |
-| **Shielded ZEC** | The balance, its dollar value, and three pockets: **Resting**, **Confirming**, **In wallets**; **Deposit**, **Withdraw** and **Wallet** (a new private wallet) |
+| **Total balance** | One figure for everything you own, in dollars and live: your shielded ZEC at the live ZEC price plus every private wallet's cash, tokens and positions at their live prices, with today's change under it. Tap it for the breakdown: **Shielded ZEC**, **Cash on venues**, **Tokens**, **In positions**, each with its share, then **Today**, **All-time** and **Swap costs**. **Deposit**, **Withdraw** and **Wallet** (a new private wallet) sit under it |
 | Sync | "Scanning privately · N blocks left", then "Synced · block N" |
-| **On venues** | How many wallets and their value; **Today**, **Open P&L**, **All-time** and **Swap costs** |
-| **Positions** | Every open position in every wallet: market, size, entry, mark, P&L, with **What the public sees**, **Close** for perps and **Sell** or **Redeem** for the rest |
-| **Wallets** | Each private wallet's value, P&L and story |
+| **Your assets** | Token by token, largest first: **ZEC** (shielded, with how much is spendable, resting or confirming), each venue's cash (**USDC** on Hyperliquid, **pUSD** on Polymarket, **SOL** on Solana) and each Solana token, with its amount in its own unit and its dollar value |
+| **Positions** | Shown once you hold one: every open position in every wallet, moving with the market: market, size, entry, mark, P&L, with **What the public sees**, **Close** for perps and **Sell** or **Redeem** for the rest |
 | **History** | Your Zcash transactions (tap one for its **Receipt**: status, time, block, network fee, where it came from, and the transaction id), and each wallet's fundings, trades and trips home |
+| **Wallets** | Each private wallet's value, P&L and story |
+
+Everything counts once: a wallet's cash is in **Your assets**, its positions are in **Positions**, and both are in the
+total.
 
 <Shot src="/shots/wide/portfolio-history.webp" alt="The History tab of Portfolio on mitoshi.xyz with No transactions yet." caption="History, before the first deposit." />
 

@@ -12,14 +12,17 @@ import { MASK, useHideAmounts } from "./prefs";
 const ZEC_DIGITS = 4;
 const USD_DIGITS = 2;
 
-/** The rail's money plate: your shielded ZEC, what is resting, and the network, on a cream card. */
+/**
+ * The rail's money plate: all your shielded ZEC (the same figure as Portfolio's ZEC line, spendable or not), what of it
+ * is resting, and the network, on a cream card.
+ */
 export function MoneyPlate() {
   const w = useWallet();
   const mids = useLiveMids();
   const [hidden, setHidden] = useHideAmounts();
   const b = w.summary?.balance;
   const m = money(b);
-  const spendable = m.spendable / ZAT_PER_ZEC;
+  const shielded = (m.spendable + m.resting + m.confirming + m.orchard) / ZAT_PER_ZEC;
   const resting = m.resting / ZAT_PER_ZEC;
   const zecUsd = mids.ZEC;
   const syncing = w.progress;
@@ -63,7 +66,7 @@ export function MoneyPlate() {
               <span className="num font-semibold text-[22px]">{MASK}</span>
             ) : (
               <RollingNumber
-                value={spendable}
+                value={shielded}
                 format={{ maximumFractionDigits: ZEC_DIGITS, minimumFractionDigits: 2 }}
                 className="font-semibold text-[22px] leading-tight"
               />
@@ -73,7 +76,7 @@ export function MoneyPlate() {
           <span className="num text-[12px] text-cream-ink/60">
             {hidden || !zecUsd || test
               ? "shielded · private"
-              : `≈ $${(spendable * zecUsd).toFixed(USD_DIGITS)} · shielded`}
+              : `≈ $${(shielded * zecUsd).toFixed(USD_DIGITS)} · shielded`}
           </span>
         </Link>
       )}
