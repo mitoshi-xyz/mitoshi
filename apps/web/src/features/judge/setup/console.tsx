@@ -286,7 +286,9 @@ export function DeskConsole() {
       ? "Arrived"
       : treasury.confirming + treasury.resting > 0
         ? `${zec(treasury.confirming + treasury.resting)} ZEC on its way${treasury.resting > 0 ? ", resting 2–6 h" : ", 10 blocks"}`
-        : `Waiting for ${zec(NEED_ZAT)} ZEC`;
+        : treasury.spendable > 0
+          ? `${zec(treasury.spendable)} of ${zec(NEED_ZAT)} ZEC here: send ${zec(NEED_ZAT - treasury.spendable)} more`
+          : `Waiting for ${zec(NEED_ZAT)} ZEC`;
   const progress: TxStep[] = [
     { label: "Your ZEC arrives", state: paid || enough ? "done" : "active", detail: paid ? "Arrived" : moneyLine },
     {
