@@ -31,6 +31,8 @@ random moment, every call about your wallets travels over Oblivious HTTP, and Se
 shielded address. The market sees the trade, not who made it.
 
 Built for **[ZECATHON](https://thezecathon.com) · Private Markets** ([how Mitoshi meets the hackathon](#how-mitoshi-meets-the-hackathon)).
+**Judges:** the Working demo link in our submission opens a shared wallet with real money on Hyperliquid, at
+judge.mitoshi.xyz. Trade in 30 seconds.
 *Mitoshi* (見通し) means **outlook**: the view ahead.
 
 ## The problem
@@ -167,7 +169,7 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 | --- | --- | --- |
 | **Privacy:** "Does it actually preserve privacy, or does it only look like it does? Leaks are disqualifying, not deductions." | Shielded balance in the browser, one fresh wallet per position, standard amounts at random times, confidential NEAR swaps, every call over Oblivious HTTP, no server-side state. Residuals are written down, not hidden | [Who sees what](#who-sees-what) · [threat model](https://docs.mitoshi.xyz/docs/privacy) · [gateway allowlist](services/gateway/src/constants.ts) |
 | **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet, in their own words; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [The problem](#the-problem) · [mitoshi.xyz](https://mitoshi.xyz) |
-| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; the browser wallet's proofs and sends confirmed on testnet; 40 unit tests | [Proof and evidence](#proof-and-evidence) |
+| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; a mainnet funding from the browser wallet to Hyperliquid; 40 unit tests | [Proof and evidence](#proof-and-evidence) |
 | **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
 | **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
 | "All code written during the build window. Libraries are fine; existing products are not." | The repository's history starts on 2026-10-22; libraries are listed above and in the lockfile | [Prior work](#prior-work) |
@@ -179,6 +181,7 @@ Dated; re-checked on 2026-10-23.
 
 | What | Evidence |
 | --- | --- |
+| A mainnet funding, end to end (2026-10-27) | The browser wallet proved an Ironwood spend of 0.005 ZEC (fee 0.00015) into NEAR Intents 1Click: `fd46b7ee43b4c5ce10844f0dff51902d7945c6ce66327b8752504b3e26ecfdf5`, block 3,532,740. The fresh wallet held 6.13 USDC on Hyperliquid, ready to trade, 14 min later; NEAR's swap cost $0.35 |
 | The browser wallet builds, proves and broadcasts an Ironwood spend | NU7 testnet `ceb45a85df00f55d8a7b6c4318c65aa22c33c702a4bff476c2feef0dee7d4e5d`, height 4,529,708, 9,166 bytes; proving-key warm-up 11.8 s, proof about 17.5 s single-threaded |
 | Sends from the app, direct and over OHTTP | `c1569f9f34a75c6896b272f7804ed501285acbfb472ce1dcf53fc869fa6938e2` (height 4,529,789) and `8a14a08bc1af88c6b8f644fdc22d11731e431a8b2257fccac4a3768430981b86` (height 4,529,846) |
 | No third-party request from a page | On mitoshi.xyz the resource list holds one host, mitoshi.xyz |
@@ -253,8 +256,8 @@ with an earlier, unrelated project, and uses none of its code.
 
 ## Honest limits
 
-- **The full mainnet round trip has not run yet** (fund a fresh wallet, trade, close, come home). The parts are live and
-  verified one by one above; the end-to-end run waits for test funds.
+- **A full mainnet round trip has not run yet.** Funding a fresh wallet has (see [Proof](#proof-and-evidence)); a
+  mainnet trade, close and trip home have not.
 - **The venue sees the trade.** Each wallet's orders are public on its venue; Mitoshi hides who placed them, not what was
   traded.
 - **Polymarket's trip home is not a confidential swap.** Its bridge pays out an inexact amount, which NEAR's
