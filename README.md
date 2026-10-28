@@ -1,16 +1,17 @@
 <p align="center">
   <a href="https://mitoshi.xyz">
-    <picture><img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. A new wallet for every trade. Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC. Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR Intents, with no history to follow. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." /></picture>
+    <img src=".github/assets/brand-banner.png" width="960" alt="Mitoshi 見通し. Trade privately from anywhere. Polymarket, Hyperliquid and Solana, from shielded ZEC." />
   </a>
 </p>
 
-<h1 align="center">Mitoshi · 見通し</h1>
 <p align="center"><b>A new wallet for every trade.</b><br/>Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC.</p>
 
 <p align="center">
   <a href="https://mitoshi.xyz"><b>Open Mitoshi</b></a>
   &nbsp;·&nbsp;
   <a href="https://mitoshi.xyz/demo"><b>Demo</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://youtu.be/Ll-X6zQsO6Q"><b>YouTube</b></a>
   &nbsp;·&nbsp;
   <a href="https://mitoshi.xyz/pitch"><b>Pitch</b></a>
   &nbsp;·&nbsp;
@@ -21,6 +22,12 @@
   <a href="#proof-and-evidence"><b>Proof</b></a>
   &nbsp;·&nbsp;
   <a href="https://mitoshi.xyz/status"><b>Status</b></a>
+</p>
+
+<p align="center">
+  <a href="https://mitoshi.xyz">
+    <picture><img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. A new wallet for every trade. Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC. Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR Intents, with no history to follow. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." /></picture>
+  </a>
 </p>
 
 Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR
@@ -112,6 +119,12 @@ builder attribution on gasless wallet calls) is in the [threat model](https://do
   <a href="https://mitoshi.xyz/demo">
     <img src=".github/assets/demo-cover.png" width="960" alt="Play the Mitoshi demo: A new wallet for every trade, over three phone screens from the app." />
   </a>
+</p>
+
+<p align="center">
+  <a href="https://mitoshi.xyz/demo"><b>Play it on mitoshi.xyz/demo</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://youtu.be/Ll-X6zQsO6Q"><b>Watch on YouTube</b></a>
 </p>
 
 Follow the proof on the live app:
@@ -250,9 +263,9 @@ Checks: `pnpm lint && pnpm typecheck && pnpm test`. Rebuild the wallet WASM with
   its owner and is used only to name the venue.
 - **Fonts.** Sora, Inter and JetBrains Mono (SIL OFL), self-hosted; a Noto Serif JP subset for 見通し (SIL OFL 1.1,
   [licence](apps/web/src/fonts/noto-serif-jp/OFL.txt)).
-- **Images.** The banner and demo cover are composed in HTML ([.github/assets/source](.github/assets/source)) from
-  unchanged captures of the live app, and the cover is artwork with a play button, not a recording; see
-  [provenance.json](.github/assets/provenance.json).
+- **Images.** The brand banner, the banner and the demo cover are composed in HTML
+  ([.github/assets/source](.github/assets/source)); the banner and cover from unchanged captures of the live app, and
+  the cover is artwork with a play button, not a recording; see [provenance.json](.github/assets/provenance.json).
 
 ## Prior work
 

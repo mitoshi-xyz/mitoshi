@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Mitoshi brand banner</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Sora:wght@700;800&display=block" rel="stylesheet">
+<!-- The README's first image: the seal, the wordmark and the motto. Rendered at 2x: see provenance.json. -->
+<style>
+@font-face { font-family: "Mitoshi Serif"; src: url("../../../apps/web/src/fonts/noto-serif-jp/700.woff2") format("woff2"); font-weight: 700; }
+* { box-sizing: border-box; margin: 0; }
+html, body { background: transparent; }
+body { width: 1600px; height: 480px; -webkit-font-smoothing: antialiased; }
+.b { position: relative; width: 1600px; height: 480px; border-radius: 32px; overflow: hidden; color: #fff;
+  background:
+    radial-gradient(620px 300px at 560px 210px, rgb(224 77 38 / .42), transparent 72%),
+    radial-gradient(900px 400px at 1400px 520px, rgb(224 77 38 / .16), transparent 70%),
+    linear-gradient(rgb(244 238 227 / .05) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, rgb(244 238 227 / .05) 1px, transparent 1px) 0 0 / 56px 56px,
+    #050505;
+  box-shadow: inset 0 0 0 1.5px rgb(244 238 227 / .1); }
+.kanji { position: absolute; right: -40px; top: -60px; font: 700 400px/1 "Mitoshi Serif", "Hiragino Mincho ProN", serif; color: rgb(244 238 227 / .05); }
+.row { position: absolute; left: 0; right: 0; top: 104px; display: flex; align-items: center; justify-content: center; gap: 40px; }
+.seal { width: 176px; height: 176px; border-radius: 50%; background: #e04d26; display: grid; place-items: center;
+  box-shadow: 0 0 60px -6px rgb(224 77 38 / .6); }
+.seal svg { width: 58%; }
+.w { font: 800 168px/1 Sora; letter-spacing: -.045em; }
+.w span { font: 700 88px/1 "Mitoshi Serif", "Hiragino Mincho ProN", serif; color: #a3a3a3; margin-left: 28px; letter-spacing: 0; }
+.motto { position: absolute; left: 0; right: 0; top: 318px; text-align: center; font: 700 46px/1 Sora; letter-spacing: -.025em; color: #f4eee3; }
+.motto em { font-style: normal; color: #e04d26; }
+.venues { position: absolute; left: 0; right: 0; bottom: 44px; text-align: center; font: 500 20px/1 "JetBrains Mono"; letter-spacing: .22em; text-transform: uppercase; color: #737373; }
+</style>
+<body><div class="b">
+  <div class="kanji">見通し</div>
+  <div class="row">
+    <span class="seal"><svg viewBox="0 0 248 248" fill="none"><path d="M36 200 H212" stroke="#f4eee3" stroke-width="28" stroke-linecap="round"/><path d="M52 156 C 104 156, 132 92, 182 62" stroke="#f4eee3" stroke-width="28" stroke-linecap="round"/><circle cx="200" cy="44" r="27" fill="#f4eee3"/></svg></span>
+    <span class="w">Mitoshi<span>見通し</span></span>
+  </div>
+  <div class="motto">Trade <em>privately</em> from anywhere.</div>
+  <div class="venues">Polymarket · Hyperliquid · Solana · from shielded ZEC</div>
+</div></body>
