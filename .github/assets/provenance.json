@@ -1,6 +1,6 @@
 {
   "banner.png": {
-    "made": "2026-10-23",
+    "made": "2026-10-28",
     "how": "Composed in HTML (source/banner.html) and rendered with headless Chrome at a 1920x900 viewport.",
     "screens": [
       "apps/web/public/captures/event.jpg",
@@ -9,7 +9,7 @@
     ],
     "screensAre": "Unchanged captures of the production app at 375x812 (2x), 2026-10-23: event.jpg and terminal.jpg from mitoshi.xyz and its workers.dev address, order.jpg earlier the same day. Prices and odds are live public market data; no wallet was funded and no order was sent.",
     "marks": "apps/web/public/marks/venue-*.svg (see apps/web/scripts/venues/SOURCES.md).",
-    "words": "The landing hero (apps/web/src/features/landing/copy.ts)."
+    "words": "The landing hero (apps/web/src/features/landing/copy.ts), re-rendered on 2026-10-28 for the new subline; the phone screens are the 2026-10-23 captures."
   },
   "demo-cover.png": {
     "made": "2026-10-23",
@@ -30,5 +30,10 @@
     "made": "2026-10-23",
     "how": "demo-cover.png resized to 1280x720.",
     "note": "The cover /demo links out from once DEMO_VIDEO_URL is set."
+  },
+  "apps/web/public/og.png": {
+    "made": "2026-10-28",
+    "how": "source/banner.html#og rendered with headless Chrome at 1920x1008, then scaled to 1200x630.",
+    "note": "The link preview; the same words and screens as banner.png."
   }
 }

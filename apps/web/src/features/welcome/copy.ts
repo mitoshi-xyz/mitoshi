@@ -12,7 +12,7 @@ export const WELCOME = {
     {
       key: "fresh",
       title: "A new wallet for every trade.",
-      body: "Each position opens from a wallet that has never existed before.",
+      body: "Every trade gets a wallet that has never existed before.",
     },
     {
       key: "venues",

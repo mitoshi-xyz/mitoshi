@@ -6,7 +6,7 @@ import "./globals.css";
 
 const TITLE = "Mitoshi 見通し · Trade predictions, stocks and crypto from shielded ZEC";
 const DESCRIPTION =
-  "On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history.";
+  "Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't.";
 /** The link preview (public/og.png), made from the README banner: .github/assets/source/banner.html#og. */
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;

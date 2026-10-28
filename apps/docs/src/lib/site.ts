@@ -10,10 +10,10 @@ export const SITE = {
   repo: "https://github.com/mitoshi-xyz/mitoshi",
   headline: "Trade predictions, stocks and crypto from shielded ZEC.",
   subline:
-    "On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history.",
+    "Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't.",
   motto: "A new wallet for every trade.",
   description:
-    "Trade predictions, stocks and crypto from shielded ZEC: on Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents.",
+    "Trade predictions, stocks and crypto from shielded ZEC: every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents.",
 } as const;
 
 /** The docs' sections (the top tabs) and where each starts. */

@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://mitoshi.xyz">
-    <picture><img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade predictions, stocks and crypto from shielded ZEC. On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." /></picture>
+    <picture><img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade predictions, stocks and crypto from shielded ZEC. Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." /></picture>
   </a>
 </p>
 
@@ -23,8 +23,8 @@
   <a href="https://mitoshi.xyz/status"><b>Status</b></a>
 </p>
 
-On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy
-traders find one trade and no history. From one shielded ZEC balance you bet on prediction markets, trade US stocks,
+Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The
+trade is public; who made it isn't. From one shielded ZEC balance you bet on prediction markets, trade US stocks,
 indices, gold and oil, go long or short on crypto perps, and buy Solana tokens, with one portfolio across all of them.
 The privacy is the engine: a real Zcash wallet runs in your browser, every funding is one standard amount sent at a
 random moment, every call about your wallets travels over Oblivious HTTP, and Send home swaps the money back to a fresh

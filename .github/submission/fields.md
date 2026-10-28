@@ -16,7 +16,7 @@ separate problem field, so the problem opens the Description in the README's wor
 ## Description
 
 ```text
-Trade predictions, stocks and crypto from shielded ZEC. On Polymarket, Hyperliquid and Solana, each position opens from a brand-new wallet funded through NEAR Intents: copy traders find one trade and no history.
+Trade predictions, stocks and crypto from shielded ZEC. Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't.
 
 The problem: on these markets every trade is public, and tools rank wallets so others can copy them. Traders use a new wallet for every trade, but the money that funds it gives it away: a transfer from the main wallet is public, and an exchange records every withdrawal under your name. "I created another wallet to trade in peace and people found it."
 
