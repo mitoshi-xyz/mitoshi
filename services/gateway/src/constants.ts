@@ -219,6 +219,7 @@ export const UPSTREAMS: Record<string, Upstream> = {
       "/v1/info/tickers",
       "/v1/info/statistics",
       "/v1/info/klines",
+      "/v1/info/mark-history",
       "/v1/info/book",
       "/v1/info/trades",
       "/v1/info/fees",

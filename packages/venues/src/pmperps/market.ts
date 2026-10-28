@@ -84,6 +84,37 @@ export function candleOf(k: RawKline): PerpsCandle {
   return { t: k[0], o: Number(k[1]), h: Number(k[2]), l: Number(k[3]), c: Number(k[4]), v: Number(k[5]) };
 }
 
+/** A mark-history row: [bucket open time ms, the last mark price in that bucket]. */
+export type RawMark = [number, string];
+
+/**
+ * Candles drawn from the mark price, one for every interval from the first mark on, each opening where the last one
+ * closed. The API's trade candles skip every interval without a trade, so a quiet market drew scattered stubs; the mark
+ * moves with the index whether or not anyone trades, and it is the price positions are valued at. Volume still comes
+ * from the trades. With no mark history at all, the trade candles are returned as they are.
+ */
+export function markCandles(
+  marks: readonly [number, number][],
+  trades: readonly PerpsCandle[],
+  step: number,
+  end: number,
+): PerpsCandle[] {
+  if (marks.length === 0) return [...trades];
+  const bucket = (t: number) => Math.floor(t / step) * step;
+  const markAt = new Map(marks.map(([t, px]) => [bucket(t), px]));
+  const volumeAt = new Map(trades.map((c) => [bucket(c.t), c.v]));
+  const sorted = [...marks].sort((a, b) => a[0] - b[0]);
+  const first = sorted[0] as [number, number];
+  const out: PerpsCandle[] = [];
+  let prev = first[1];
+  for (let t = bucket(first[0]); t <= end; t += step) {
+    const c = markAt.get(t) ?? prev;
+    out.push({ t, o: prev, h: Math.max(prev, c), l: Math.min(prev, c), c, v: volumeAt.get(t) ?? 0 });
+    prev = c;
+  }
+  return out;
+}
+
 const baseOf = (symbol: string) => (symbol.endsWith(SYMBOL_SUFFIX) ? symbol.slice(0, -SYMBOL_SUFFIX.length) : symbol);
 
 /** Public Polymarket Perps data. Reads go over OHTTP too, so browsing never reaches Polymarket directly. */
@@ -152,21 +183,22 @@ export class PolymarketPerpsMarket {
     });
   }
 
-  /** The last `count` candles of one interval, oldest first. */
+  /** The last `count` candles of one interval, oldest first, drawn from the mark price ({@link markCandles}). */
   async candles(
     id: number,
     interval: PerpsInterval,
     endTime = Date.now(),
     count = PERPS_CANDLES_PER_VIEW,
   ): Promise<PerpsCandle[]> {
-    const rows = await this.get<RawKline[] | { data: RawKline[] }>("/v1/info/klines", {
-      instrument_id: id,
-      interval,
-      start_timestamp: endTime - PERPS_INTERVALS[interval] * count,
-      end_timestamp: endTime,
-    });
-    const list = Array.isArray(rows) ? rows : rows.data;
-    return list.map(candleOf).sort((a, b) => a.t - b.t);
+    const step = PERPS_INTERVALS[interval];
+    const window = { instrument_id: id, interval, start_timestamp: endTime - step * count, end_timestamp: endTime };
+    const [rows, marks] = await Promise.all([
+      this.get<RawKline[] | { data: RawKline[] }>("/v1/info/klines", window),
+      this.get<RawMark[] | { data: RawMark[] }>("/v1/info/mark-history", window),
+    ]);
+    const trades = (Array.isArray(rows) ? rows : rows.data).map(candleOf).sort((a, b) => a.t - b.t);
+    const points = (Array.isArray(marks) ? marks : marks.data).map(([t, px]): [number, number] => [t, Number(px)]);
+    return markCandles(points, trades, step, endTime);
   }
 
   /** Whether an address has ever opened a Perps account (public; registration is permanent). */
