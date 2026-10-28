@@ -1,6 +1,6 @@
 MITOSHI — DEMO SCRIPT
-One story, in the order a new user meets it. [Brackets] = where you are in the app. Don't read them.
-About 369 spoken words: 1:55–1:58 at your pace. Hackathon rule: two minutes.
+One story, in the order a new user meets it. [Brackets] = where you are in the app and what to type. Don't read them.
+About 298 spoken words: 1:36 at your pace, 1:59 if slow. Hackathon rule: two minutes.
 
 1 · OPENING · 0:00
    [ZECATHON page → Mitoshi repo → mitoshi.xyz hero]
@@ -8,71 +8,81 @@ About 369 spoken words: 1:55–1:58 at your pace. Hackathon rule: two minutes.
 Howdy to the ZECATHON team and the zkSNARKs crew. It's Blockchain Oracle, and I bring to you Mitoshi — a new wallet
 for every trade.
 
-2 · THE PROBLEM · 0:07
-   [The traders' posts from the README → the three steps, one by one]
-
-Just a quick question. Have you ever been copied? On Polymarket and Hyperliquid, every trade is public, and tools rank
-wallets so others can copy them. The advice: a new wallet for every trade. But you fund it from your main wallet or an
-exchange, and that trail leads straight back. People find it anyway.
-
-3 · THE SOLUTION · 0:25
+2 · WHAT IT IS · 0:08
    [mitoshi.xyz hero]
 
-So I built Mitoshi. Trade predictions, stocks and crypto from shielded ZEC. Polymarket, Hyperliquid and Solana, from
-one private balance, and every position gets a wallet nobody has ever seen.
+Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC, with NEAR Intents moving the money.
 
-Let me show you, from the start.
+3 · JUDGES · 0:13
+   [the judge pass on the landing → judge.mitoshi.xyz: "Ready to trade."]
 
-4 · YOUR WALLET · 0:36
-   [Open Mitoshi → Create → the 24 words → Portfolio]
+Judges: the Working demo link in our submission opens a wallet with real money. I'm using it now.
 
-No account, no sign-up. A real Zcash wallet, right here in the browser. The twenty-four words never leave this
-device.
+4 · THE PROBLEM · 0:19
+   [the trader's post on X, 1 October 2026: "I created another wallet to trade in peace and people found it"]
 
-5 · MONEY IN · 0:43
-   [Portfolio → Deposit → the QR]
+Just a quick question. Have you ever been copied? Every trade here is public. Traders make a new wallet, but the
+money that funds it leads back. One trader posted: I created another wallet to trade in peace, and people found it.
 
-First, money in, to a fresh shielded address. From Zodl, it's ready in about thirteen minutes. From an exchange, it
-rests a few hours, so it can't be matched to my next trade.
+5 · THE SOLUTION · 0:32
+   [mitoshi.xyz hero]
 
-6 · THE FIRST TRADE · 0:54
-   [Perps → NVIDIA → Long → $25 → 5× → filled]
+So I built Mitoshi. Every trade gets a brand-new wallet, funded from shielded ZEC. Let me show you.
 
-Now the fun part. NVIDIA, on Polymarket Perps. Long, twenty-five dollars, five times. Watch this. Filled, by a
-wallet funded at a random moment with one standard amount from the shielded pool, through NEAR Intents.
+6 · GETTING IN · 0:38
+   [Open Mitoshi → Create → the 24 words (cut) → Portfolio → Deposit: Shielded wallet / Exchange]
 
-7 · THE PROOF · 1:08
-   [Wallets → What the public sees → the explorer]
+No account, no sign-up: a real Zcash wallet in your browser. Deposit from Zodl or an exchange.
 
-This is all a copy trader finds: a brand-new address, one funding from a NEAR swap, one trade,
-no history. Links to my other wallets: none. On the explorer, the same. It matches. You don't have to trust me.
+7 · THE FEATURES · 0:44
+   [judge.mitoshi.xyz → Ready to trade]
 
-8 · THE REST · 1:20
-   [Predict → an event → Perps → BTC → Tokens → Portfolio → Send home]
+The features, in order: trade, what the public sees, the proof, and your portfolio.
 
-Any Polymarket event, Yes or No. Crypto perps on Hyperliquid. Solana tokens through
-Jupiter. Portfolio shows it all, privately, and Send home brings the money back to a fresh shielded address.
-No Mitoshi fee.
+8 · TRADE · 0:48
+   [Trade BTC now → Long → $2.50 → 5× → filled]
 
-9 · UNDER THE HOOD · 1:35
-   [Status → DevTools: every wallet call is POST /relay/ohttp]
+Trade. Bitcoin on Hyperliquid. Long, two dollars fifty, five times. Watch this. Filled.
 
-Under the hood: librustzcash in the browser, NEAR Intents for every swap, and every call over Oblivious HTTP. Our relay
-sees your IP, never what you ask about your wallets.
+9 · WHAT THE PUBLIC SEES · 0:53
+   [Judge → See what the public sees]
 
-10 · DOCS AND X · 1:43
+What the public sees: a fresh address, its own trades, no history, and no links to my other wallets.
+
+10 · THE PROOF · 0:59
+   [Judge → Check the funding on chain → Funded a Hyperliquid wallet → Verify it on chain → the explorer]
+
+Let's confirm it. The funding, on the Zcash explorer: in, shielded. Out, point zero zero five ZEC to NEAR. It
+matches. You don't have to trust me.
+
+11 · PORTFOLIO · 1:07
+   [Portfolio → Total balance → Your assets → Positions → Close]
+
+Portfolio: one live total, token by token, my trade moving with the price. I close it here.
+
+12 · THE REST · 1:13
+   [Predict → Perps: NVIDIA, Gold → Tokens → Wallets: Keep one ready, Send home]
+
+And the rest: Polymarket bets, stocks and gold, Solana tokens, a wallet kept ready, and Send home.
+
+13 · UNDER THE HOOD · 1:18
+   [DevTools → Network: every wallet call is POST /relay/ohttp]
+
+Under the hood, every wallet call goes over Oblivious HTTP. Our relay sees your IP, never what you ask.
+
+14 · DOCS AND X · 1:25
    [docs.mitoshi.xyz → Who sees what → X]
 
-Who sees what at every step: it's all in the docs. docs dot mitoshi dot x y z. And follow us on X, at HANDLE.
+It's all in the docs, docs dot mitoshi dot x y z. And follow us on X, at HANDLE.
 
-11 · CLOSE · 1:50
-   [mitoshi.xyz hero → the judge pass]
+15 · CLOSE · 1:31
+   [mitoshi.xyz hero]
 
-It's live right now, on the web and on your phone. Judges: the link in your submission opens a funded wallet, so you
-can trade in thirty seconds. Mitoshi — a new wallet for every trade.
+It's live right now, on the web and your phone. Mitoshi — a new wallet for every trade.
 
 ---
 Have ready
-- Mainnet ZEC in the browser wallet, and Keep one ready on for Polymarket Perps, so part 6 needs no wait.
-- A second browser on Tor or a VPN for the explorer in part 7 (an explorer sees your IP).
-- Cut the 24 words in part 4 before upload. Replace HANDLE with the X handle.
+- The judges' link open in a second tab; close the BTC trade in part 11, so the money stays for the judges.
+- The X post from part 4 open: x.com/DegenCapitalLLC/status/2105567151352689047.
+- Cut the 24 words in part 6 and the fill and explorer waits. Show Send home in part 12, don't press it.
+- Replace HANDLE with the X handle.
