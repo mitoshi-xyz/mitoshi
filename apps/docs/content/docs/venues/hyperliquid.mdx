@@ -37,7 +37,9 @@ perps when the account keeps them apart.
 
 Two steps: **Close** each position, then **Send home**: orders are cancelled, perp USDC goes back to spot and is sent
 to a NEAR deposit address, and NEAR swaps it to ZEC at a fresh shielded address. Send home refuses while a position is
-open. Under 1 USDC stays behind as dust; if NEAR refunds the trip home, the USDC returns to the wallet.
+open. Hyperliquid charges the send 1 USDC to open NEAR's new deposit address, so 1 USDC less goes. Under 2 USDC stays as
+dust; if NEAR refunds the trip home, the USDC returns to the wallet. The sheet shows what arrives, and every cost on the
+way, before you send ([fees](/docs/guide/fees-and-timing#the-trip-home)).
 
 ## Live data
 

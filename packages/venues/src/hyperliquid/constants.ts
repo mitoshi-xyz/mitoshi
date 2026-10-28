@@ -7,6 +7,12 @@ export const HL_USDC_TOKEN = "USDC:0x6d1e7cde53ba9467b783cb7c530ce054";
 /** A new HyperCore account's first inbound transfer costs this much USDC (activation fee). */
 export const HL_ACTIVATION_FEE_USDC = 1;
 
+/**
+ * Hyperliquid's base-tier taker fee, 0.045% of notional (hyperliquid.gitbook.io/hyperliquid-docs/trading/fees); a
+ * close at market pays it.
+ */
+export const HL_TAKER_FEE = 0.00045;
+
 /** Market orders are IOC limits this far through the mid, so they fill without a runaway price. */
 export const MARKET_SLIPPAGE = 0.01;
 

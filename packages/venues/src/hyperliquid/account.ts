@@ -3,7 +3,7 @@ import { ExchangeClient, InfoClient } from "@nktkas/hyperliquid";
 import { formatPrice, formatSize } from "@nktkas/hyperliquid/utils";
 import { type Hex, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { DUST_USDC, HL_USDC_TOKEN, MARKET_SLIPPAGE } from "./constants.ts";
+import { DUST_USDC, HL_TAKER_FEE, HL_USDC_TOKEN, MARKET_SLIPPAGE } from "./constants.ts";
 import type { Perp } from "./market.ts";
 import { OhttpTransport } from "./transport.ts";
 
@@ -206,6 +206,19 @@ export class HyperliquidAccount {
       s = await this.state();
     }
     return s.spotUsdc < DUST_USDC ? 0 : Number(usd(s.spotUsdc));
+  }
+
+  /**
+   * What sending home would gather now, read only: the USDC in spot and perps, with open positions counted as closed
+   * at the mark less the taker fee to close them (`closeFee`).
+   */
+  async homeValue(): Promise<{ usdc: number; closeFee: number; open: number }> {
+    const s = await this.state();
+    const closeFee = s.positions.reduce((n, p) => n + Math.abs(p.valueUsd) * HL_TAKER_FEE, 0);
+    const held = separateBalances(s.mode)
+      ? s.spotUsdc + s.perpValue
+      : s.spotUsdc + s.positions.reduce((n, p) => n + p.marginUsed + p.unrealizedPnl, 0);
+    return { usdc: held - closeFee, closeFee, open: s.positions.length };
   }
 
   /** Sends spot USDC to an address on HyperCore (1Click's deposit address for the trip home). */

@@ -4,11 +4,11 @@ import { latestSwap, type PrivateWallet, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { ArrowRight, Check, ChevronDown, Copy, Eye, Home, RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Button, cx, LiveDot, TxSteps, Wait } from "@/kit";
+import { cx, LiveDot, TxSteps } from "@/kit";
 import { useJudgeDesk } from "../judge/judge";
 import { VenueMark } from "../marks/mark";
 import { MASK, useHideAmounts } from "../shell/prefs";
-import { sendHome } from "./home";
+import { openSendHome } from "./drawers";
 import { retryWallet } from "./jobs";
 import { STATUS, shortAddress, type Tone, VENUES } from "./venues";
 import { fundingSteps, homeSteps, venueAmount } from "./wallet-steps";
@@ -62,26 +62,12 @@ function flow(w: PrivateWallet): "fund" | "home" | "live" {
 export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number; onPublic: (id: string) => void }) {
   const [hidden] = useHideAmounts();
   const [copied, setCopied] = useState(false);
-  const [confirmHome, setConfirmHome] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [timeline, setTimeline] = useState(false);
   const venue = VENUES[w.venue];
   const fund = latestSwap(w, "fund");
   const which = flow(w);
   // The judges' wallet is shared: it stays on its venue for the next judge.
   const shared = useJudgeDesk() !== null;
-
-  const goHome = () => {
-    setBusy(true);
-    setError(null);
-    sendHome(w)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => {
-        setBusy(false);
-        setConfirmHome(false);
-      });
-  };
 
   return (
     <li className="flex flex-col gap-4 rounded-xl border border-hairline bg-surface-1 p-4">
@@ -117,34 +103,6 @@ export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number
       {which === "fund" ? <TxSteps steps={fundingSteps(w, now)} /> : null}
       {which === "home" ? <TxSteps steps={homeSteps(w, now)} /> : null}
 
-      {confirmHome ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-hairline bg-bg p-3 text-[13px]">
-          <p>
-            Close everything on {venue.name} at market and send the money home to a fresh shielded address? It arrives
-            in a few minutes and rests 2–6 h.
-          </p>
-          {busy ? (
-            <Wait
-              verb={
-                w.venue === "hyperliquid"
-                  ? "Closing positions and gathering USDC"
-                  : w.venue === "polymarket"
-                    ? "Selling shares and sending pUSD home"
-                    : "Selling tokens back to SOL"
-              }
-            />
-          ) : (
-            <div className="flex gap-2">
-              <Button tone="primary" icon={<Home size={15} />} onClick={goHome}>
-                Send home
-              </Button>
-              <Button onClick={() => setConfirmHome(false)}>Not now</Button>
-            </div>
-          )}
-        </div>
-      ) : null}
-      {error ? <p className="text-[12px] text-down">{error}</p> : null}
-
       <div className="flex flex-wrap items-center gap-2">
         {which === "live" ? (
           <>
@@ -154,10 +112,10 @@ export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number
             >
               {venue.trade.label} <ArrowRight size={14} />
             </Link>
-            {!confirmHome && venue.live && !shared ? (
+            {venue.live && !shared ? (
               <button
                 type="button"
-                onClick={() => setConfirmHome(true)}
+                onClick={() => openSendHome(w.id)}
                 className="inline-flex h-9 items-center gap-1.5 rounded-full border border-strong px-4 font-medium text-[13px] hover:bg-surface-2"
               >
                 <Home size={14} /> Send home
@@ -168,11 +126,10 @@ export function WalletCard({ w, now, onPublic }: { w: PrivateWallet; now: number
         {w.status === "failed" ? (
           <button
             type="button"
-            disabled={busy}
-            onClick={() => (latestSwap(w, "return") ? goHome() : retryWallet(w.id))}
+            onClick={() => (latestSwap(w, "return") ? openSendHome(w.id) : retryWallet(w.id))}
             className="inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-[13px] text-bg hover:brightness-110 disabled:opacity-50"
           >
-            <RotateCw size={14} className={busy ? "animate-spin" : ""} /> Try again
+            <RotateCw size={14} /> Try again
           </button>
         ) : null}
         <button

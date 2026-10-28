@@ -6,7 +6,9 @@ icon: Timer
 
 {/* Sources: packages/rails/src/oneclick.ts (quoteRequest, swapTerms); docs.near-intents.org/resources/fees; packages/engine/src/constants.ts:9-48; apps/web/src/constants.ts:17-25;
    apps/web/src/features/private-wallets (funding.ts:57-58, fund-drawer.tsx:208-252); apps/web/src/features/perps/hl-driver.ts:9-10;
-   packages/rails/src/fixtures/dry-quote.json; the funding-sheet capture of 2026-10-23. */}
+   packages/rails/src/fixtures/dry-quote.json; the funding-sheet capture of 2026-10-23;
+   the trip home: apps/web/src/features/private-wallets/home.ts, home-preview.ts; hyperliquid.gitbook.io (activation fee);
+   a live Hyperliquid trip home on 2026-10-28 read back from Hyperliquid's ledger and 1Click's status. */}
 
 ## Fees
 
@@ -18,6 +20,31 @@ icon: Timer
 | Zcash network fee | Zcash miners | The ZIP 317 fee; the funding sheet reserves 0.00015 ZEC for it |
 | Polymarket bridge | Polymarket's bridge | Shown in the funding sheet for Polymarket |
 
+## The trip home
+
+**Send home** opens a sheet with what reaches your shielded balance and where every other dollar goes, read from
+NEAR's own quote before anything moves. Part of it is fixed, the same on any amount:
+
+| What | Charged by | How much |
+| --- | --- | --- |
+| Opening NEAR's deposit address | Hyperliquid | **1 USDC** on every trip home from Hyperliquid: each quote's deposit address is new to Hyperliquid, which charges the sender 1 USDC to activate it, on top of what is sent |
+| The route out of Hyperliquid | NEAR Intents | About 0.20 USDC: NEAR counted 5.00 of the 5.20 USDC in the trip below. Its quote already prices it in |
+| The ZEC payout | NEAR Intents | **0.00032 ZEC** (the quote's payout fee), about $0.41 at $1,271 a ZEC |
+| The swap | NEAR Intents | 0.2% plus the spread, as for fundings |
+
+A real trip home from Hyperliquid, on 2026-10-28:
+
+| Step | Amount |
+| --- | --- |
+| In the wallet, after closing a BTC trade | 6.21 USDC |
+| Hyperliquid's new-address fee | −1.00 USDC |
+| Sent to NEAR | 5.20 USDC, counted as 5.00 |
+| ZEC payout fee | −0.00032 ZEC ($0.41) |
+| NEAR's 0.2% and the spread | about $0.03 |
+| **Home, shielded** | **0.00359141 ZEC ($4.56)**, 3 min 12 s after the send |
+
+On 6.21 USDC the fixed part is about a quarter; on 100 USDC it would be under 2%.
+
 ## Timing
 
 | Step | Typical time | From |
@@ -25,6 +52,7 @@ icon: Timer
 | A new wallet starts funding | 20 s to 3 min after you ask, at random | Mitoshi's scheduler |
 | A keep-ready wallet starts funding | The first, when you turn the switch on with ZEC to spend: like one you asked for. Every one after it: a random wait, 90 min on average, at most 12 h | Mitoshi's scheduler |
 | Funding: ZEC in, venue asset out | About 8 minutes | 1Click's estimate (465 s in a quote of 2026-10-22; "about 8 min" in the funding sheet on 2026-10-23) |
+| Trip home: venue asset out, ZEC in | About 3 minutes | 1Click's estimate (152 s in a Hyperliquid quote of 2026-10-28; 3 min 12 s live) |
 | Polymarket credit: USDC to pUSD | Not estimated; the wallet turns Ready when the bridge reports it (its fee is in the sheet) | Polymarket's bridge |
 | A deposit shows up | One block, about 75 s on mainnet | Zcash |
 | A deposit can be spent | 10 confirmations, about 12–13 min (your own change: 3) | librustzcash's default confirmation policy |
@@ -45,5 +73,3 @@ The standard sizes blend in, so the sheet starts on the largest one your balance
   <span className="rounded-full border border-fd-border px-3 py-1">0.5 ZEC</span>
   <span className="rounded-full border border-fd-border px-3 py-1">1 ZEC</span>
 </div>
-
-The leak meter blocks a funding of any other size.

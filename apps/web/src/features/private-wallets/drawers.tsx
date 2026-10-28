@@ -1,6 +1,7 @@
 "use client";
 
 import type { Venue } from "@mitoshi/engine";
+import dynamic from "next/dynamic";
 import { useEffect, useSyncExternalStore } from "react";
 import { markStep } from "../judge/judge";
 import { DepositDrawer } from "../wallet/deposit-drawer";
@@ -9,9 +10,12 @@ import { FundDrawer } from "./fund-drawer";
 import { PublicView } from "./public-view";
 import { useRegistry } from "./registry-store";
 
+// Loaded when first opened: it carries every venue's trip home.
+const SendHomeSheet = dynamic(() => import("./send-home-sheet").then((m) => m.SendHomeSheet), { ssr: false });
+
 /**
  * The money drawers, open from anywhere and rendered once by the shell: Deposit, Withdraw, Fund a private wallet
- * (venue already chosen) and what the public sees of a wallet. A flow never leaves the screen it started on; links can
+ * (venue already chosen), Send a wallet home, and what the public sees of a wallet. A flow never leaves the screen it started on; links can
  * open one with "#deposit" or "#withdraw" on any page.
  */
 interface DrawerState {
@@ -21,9 +25,18 @@ interface DrawerState {
   /** What a deposit should bring in, in zat, when a flow asks for an amount (a funding that needs more). */
   depositZat: number | null;
   withdraw: boolean;
+  /** The wallet being sent home. */
+  homeId: string | null;
 }
 
-const CLOSED: DrawerState = { fund: null, publicId: null, deposit: false, depositZat: null, withdraw: false };
+const CLOSED: DrawerState = {
+  fund: null,
+  publicId: null,
+  deposit: false,
+  depositZat: null,
+  withdraw: false,
+  homeId: null,
+};
 let state: DrawerState = CLOSED;
 const listeners = new Set<() => void>();
 
@@ -46,6 +59,10 @@ export function openDeposit(zat?: unknown) {
   set({ ...CLOSED, deposit: true, depositZat: typeof zat === "number" && zat > 0 ? zat : null });
 }
 
+export function openSendHome(id: string) {
+  set({ ...CLOSED, homeId: id });
+}
+
 export function openWithdraw() {
   set({ ...CLOSED, withdraw: true });
 }
@@ -64,11 +81,13 @@ function useDrawers(): DrawerState {
 const HASH_DRAWERS: Record<string, () => void> = { "#deposit": openDeposit, "#withdraw": openWithdraw };
 
 let lastVenue: Venue = "polymarket";
+let lastHome: string | null = null;
 
 export function WalletDrawers() {
   const s = useDrawers();
   const registry = useRegistry();
   if (s.fund) lastVenue = s.fund;
+  if (s.homeId) lastHome = s.homeId;
 
   useEffect(() => {
     const read = () => {
@@ -100,6 +119,9 @@ export function WalletDrawers() {
         onClose={() => set({ ...state, deposit: false, depositZat: null })}
       />
       <WithdrawDrawer open={s.withdraw} onClose={() => set({ ...state, withdraw: false })} />
+      {lastHome ? (
+        <SendHomeSheet id={lastHome} open={s.homeId !== null} onClose={() => set({ ...state, homeId: null })} />
+      ) : null}
     </>
   );
 }

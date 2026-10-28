@@ -11,6 +11,7 @@ import { useJudgeDesk } from "../judge/judge";
 import { Mark } from "../marks/mark";
 import { DRIVERS, usePerpAccount } from "../perps/hooks";
 import { type PerpMarket, type PerpVenue, terminalHref } from "../perps/model";
+import { openSendHome } from "../private-wallets/drawers";
 import { useNow } from "../private-wallets/use-now";
 import { homeSteps } from "../private-wallets/wallet-steps";
 import { MASK, useHideAmounts } from "../shell/prefs";
@@ -156,7 +157,7 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
         <button
           type="button"
           disabled={busy !== null}
-          onClick={() => void run("Swapping home to shielded ZEC", () => driver.sendHome(wallet))}
+          onClick={() => openSendHome(wallet.id)}
           className="h-10 rounded-full bg-accent font-semibold text-[13px] text-accent-ink hover:brightness-110 disabled:opacity-40"
         >
           {s.orders.length ? "Cancel orders and send home" : "Send home"}
