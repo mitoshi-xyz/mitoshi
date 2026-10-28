@@ -6,6 +6,7 @@ export const LANDING = {
     demo: "Demo",
     privacy: "Privacy",
     docs: "Docs",
+    github: "GitHub",
     open: "Open Mitoshi",
     openShort: "Open app",
   },
@@ -178,7 +179,7 @@ export const LANDING = {
   },
   footer: {
     built: "Built for ZECATHON 2026",
-    repo: "Source",
+    repo: "GitHub",
     demo: "Demo",
     pitch: "Pitch",
     docs: "Docs",

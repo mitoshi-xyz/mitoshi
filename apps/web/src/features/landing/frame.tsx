@@ -9,9 +9,10 @@ const LINKS = [
   ["/demo", L.nav.demo],
   ["/privacy", L.nav.privacy],
   [DOCS_URL, L.nav.docs],
+  [REPO_URL, L.nav.github],
 ] as const;
 
-/** The landing's glass nav, shared by the landing and /demo. Demo stays visible on phones, beside Open. */
+/** The landing's glass nav, shared by the landing and /demo. Below 1024 px, Demo stays visible beside Open. */
 export function LandingNav() {
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -21,12 +22,12 @@ export function LandingNav() {
           <span className="font-extrabold font-heading text-[19px] tracking-[0.02em] max-[359px]:hidden">MITOSHI</span>
           <span className="hidden font-stamp text-[14px] text-[var(--lp-ink-3)] sm:inline">見通し</span>
         </Link>
-        <div className="mx-auto hidden items-center gap-1 md:flex">
+        <div className="mx-auto hidden items-center gap-1 lg:flex">
           {LINKS.map(([href, label]) => (
             <Link
               key={href}
               href={href}
-              className="rounded-full px-3.5 py-2.5 font-semibold text-[14px] text-[var(--lp-ink-2)] hover:bg-[var(--lp-line)] hover:text-[var(--lp-ink)]"
+              className="whitespace-nowrap rounded-full px-3.5 py-2.5 font-semibold text-[14px] text-[var(--lp-ink-2)] hover:bg-[var(--lp-line)] hover:text-[var(--lp-ink)]"
             >
               {label}
             </Link>
@@ -34,13 +35,13 @@ export function LandingNav() {
         </div>
         <Link
           href="/demo"
-          className="ml-auto rounded-full px-2 py-2.5 font-semibold text-[14px] text-[var(--lp-ink-2)] hover:bg-[var(--lp-line)] hover:text-[var(--lp-ink)] md:hidden"
+          className="ml-auto rounded-full px-2 py-2.5 font-semibold text-[14px] text-[var(--lp-ink-2)] hover:bg-[var(--lp-line)] hover:text-[var(--lp-ink)] lg:hidden"
         >
           {L.nav.demo}
         </Link>
-        <Link href="/markets" className="lp-btn lp-btn-accent lp-btn-sm md:ml-0">
-          <span className="md:hidden">{L.nav.openShort}</span>
-          <span className="hidden md:inline">{L.nav.open}</span>
+        <Link href="/markets" className="lp-btn lp-btn-accent lp-btn-sm lg:ml-0">
+          <span className="lg:hidden">{L.nav.openShort}</span>
+          <span className="hidden lg:inline">{L.nav.open}</span>
         </Link>
       </nav>
     </header>
