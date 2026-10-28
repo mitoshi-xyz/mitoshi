@@ -5,7 +5,7 @@ import type { SolToken } from "@mitoshi/venues/solana";
 import { ZAT_PER_ZEC } from "@mitoshi/zwallet";
 import { useQueries } from "@tanstack/react-query";
 import { ZEC_NETWORK } from "@/constants";
-import { useLiveMids } from "../hyperliquid/hooks";
+import { useZecUsd } from "../hyperliquid/hooks";
 import { usePerpMarkets } from "../perps/hooks";
 import { useRegistry } from "../private-wallets/registry-store";
 import { solMarket } from "../solana/sol";
@@ -73,7 +73,7 @@ export const allTime = (b: WalletBook) => (b.fundedUsd === null ? null : b.value
  */
 export function usePortfolio(state: WalletState): PortfolioView {
   const registry = useRegistry();
-  const mids = useLiveMids();
+  const zecLive = useZecUsd();
   const markets = usePerpMarkets("hyperliquid");
   const books = useBooks(registry.wallets);
   const mints = [...new Set(books.flatMap((b) => b.positions.filter((p) => p.kind === "token").map((p) => p.asset)))];
@@ -98,7 +98,7 @@ export function usePortfolio(state: WalletState): PortfolioView {
     confirming: m.confirming / ZAT_PER_ZEC,
     orchard: m.orchard / ZAT_PER_ZEC,
   };
-  const zecUsd = ZEC_NETWORK === "main" ? (mids.ZEC ?? null) : null;
+  const zecUsd = ZEC_NETWORK === "main" ? zecLive : null;
   const zecYesterday = markets.data?.find((x) => x.id === "ZEC")?.prevDayPx ?? null;
   const shieldedUsd = zecUsd === null ? null : zec.total * zecUsd;
   const cashUsd = books.reduce((n, b) => n + b.cashUsd, 0);

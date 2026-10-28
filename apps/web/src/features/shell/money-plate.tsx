@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { ZEC_NETWORK } from "@/constants";
 import { CountdownRing, cx, RollingNumber, Skeleton } from "@/kit";
-import { useLiveMids } from "../hyperliquid/hooks";
+import { useZecUsd } from "../hyperliquid/hooks";
 import { money, useWallet } from "../wallet/wallet-store";
 import { MASK, useHideAmounts } from "./prefs";
 
@@ -18,13 +18,12 @@ const USD_DIGITS = 2;
  */
 export function MoneyPlate() {
   const w = useWallet();
-  const mids = useLiveMids();
   const [hidden, setHidden] = useHideAmounts();
   const b = w.summary?.balance;
   const m = money(b);
   const shielded = (m.spendable + m.resting + m.confirming + m.orchard) / ZAT_PER_ZEC;
   const resting = m.resting / ZAT_PER_ZEC;
-  const zecUsd = mids.ZEC;
+  const zecUsd = useZecUsd();
   const syncing = w.progress;
   const test = ZEC_NETWORK !== "main";
 

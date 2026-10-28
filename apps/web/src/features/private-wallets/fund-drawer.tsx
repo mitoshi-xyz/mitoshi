@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, cx, Sheet, Skeleton, TxSteps } from "@/kit";
 import { usd } from "../format";
-import { useLiveMids } from "../hyperliquid/hooks";
+import { useZecUsd } from "../hyperliquid/hooks";
 import { Mark, VenueMark } from "../marks/mark";
 import { LeakMeter } from "../privacy/leak-meter";
 import { MASK, useHideAmounts } from "../shell/prefs";
@@ -114,7 +114,7 @@ export function FundDrawer({
   // The amount can be typed in ZEC or in dollars; `typed` holds the text while the person types.
   const [unit, setUnit] = useState<"zec" | "usd">("zec");
   const [typed, setTyped] = useState<string | null>(null);
-  const zecUsd = useLiveMids().ZEC ?? null;
+  const zecUsd = useZecUsd();
   const [made, setMade] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -162,12 +162,21 @@ export function FundDrawer({
   const tooSmall = size < MIN_FUNDING_ZAT;
   const ready = !tooSmall && size + FUNDING_FEE_RESERVE_ZAT <= spendable;
   // What is missing, rounded up to 0.0001 ZEC so it is easy to type into a wallet.
-  const need = Math.ceil((size + FUNDING_FEE_RESERVE_ZAT - spendable) / ASK_STEP_ZAT) * ASK_STEP_ZAT;
+  const missing = (zat: number) => Math.ceil((zat + FUNDING_FEE_RESERVE_ZAT - spendable) / ASK_STEP_ZAT) * ASK_STEP_ZAT;
+  const need = missing(size);
+  // Under the smallest funding there is still a next step: use the minimum, or deposit enough for it.
+  const minFits = MIN_FUNDING_ZAT + FUNDING_FEE_RESERVE_ZAT <= spendable;
   const big = "h-[52px] w-full text-[16px]";
   const cta = made ? null : !allowed.ok ? null : tooSmall ? (
-    <Button tone="primary" size="lg" className={big} disabled>
-      At least {zec(MIN_FUNDING_ZAT)} ZEC
-    </Button>
+    minFits ? (
+      <Button tone="primary" size="lg" className={big} onClick={() => pick(MIN_FUNDING_ZAT)}>
+        Use the minimum, {zec(MIN_FUNDING_ZAT)} ZEC
+      </Button>
+    ) : (
+      <Button tone="primary" size="lg" className={big} onClick={() => openDeposit(missing(MIN_FUNDING_ZAT))}>
+        Deposit {zec(missing(MIN_FUNDING_ZAT))} ZEC
+      </Button>
+    )
   ) : !ready ? (
     <Button tone="primary" size="lg" className={big} onClick={() => openDeposit(need)}>
       Deposit {zec(need)} ZEC
@@ -241,33 +250,33 @@ export function FundDrawer({
               />
               <span className="font-semibold text-[18px] text-muted">{unit === "zec" ? "ZEC" : "USD"}</span>
             </label>
-            {zecUsd ? (
-              <div className="flex items-center gap-2">
-                <span className="num text-[13px] text-ink-2">
-                  ≈ {unit === "zec" ? usd((size / ZAT_PER_ZEC) * zecUsd) : `${zec(size)} ZEC`}
-                </span>
-                <fieldset className="flex min-w-0 rounded-full bg-surface-2 p-0.5" aria-label="Amount in">
-                  {(["zec", "usd"] as const).map((u) => (
-                    <button
-                      key={u}
-                      type="button"
-                      aria-pressed={unit === u}
-                      onClick={() => {
-                        setUnit(u);
-                        setTyped(null);
-                      }}
-                      className={cx(
-                        "inline-flex h-7 items-center gap-1 rounded-full px-2.5 font-medium text-[12px]",
-                        unit === u ? "bg-surface-1 text-ink shadow-sm" : "text-ink-2 hover:text-ink",
-                      )}
-                    >
-                      {u === "zec" ? <Mark symbol="ZEC" size={14} /> : null}
-                      {u === "zec" ? "ZEC" : "$ USD"}
-                    </button>
-                  ))}
-                </fieldset>
-              </div>
-            ) : null}
+            <div className="flex items-center gap-2">
+              <span className="num text-[13px] text-ink-2">
+                ≈ {unit === "usd" || !zecUsd ? `${zec(size)} ZEC` : usd((size / ZAT_PER_ZEC) * zecUsd)}
+              </span>
+              <fieldset className="flex min-w-0 rounded-full bg-surface-2 p-0.5" aria-label="Amount in">
+                {(["zec", "usd"] as const).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    // Dollars need ZEC's price; until it answers, the switch stays where it is.
+                    disabled={u === "usd" && !zecUsd}
+                    aria-pressed={unit === u}
+                    onClick={() => {
+                      setUnit(u);
+                      setTyped(null);
+                    }}
+                    className={cx(
+                      "inline-flex h-7 items-center gap-1 rounded-full px-2.5 font-medium text-[12px] disabled:opacity-40",
+                      unit === u ? "bg-surface-1 text-ink shadow-sm" : "text-ink-2 hover:text-ink",
+                    )}
+                  >
+                    {u === "zec" ? <Mark symbol="ZEC" size={14} /> : null}
+                    {u === "zec" ? "ZEC" : "$ USD"}
+                  </button>
+                ))}
+              </fieldset>
+            </div>
             <span className={cx("num text-[13px]", ready ? "text-ink-2" : "text-warning")}>
               {hidden ? MASK : zec(spendable)} ZEC ready
               {resting > 0 ? ` · ${hidden ? MASK : zec(resting)} resting` : ""}
@@ -361,7 +370,8 @@ export function FundDrawer({
                 </dl>
               </details>
             )}
-            {p && !settling ? <LeakMeter report={p.leak} blocks /> : null}
+            {/* Without the ZEC for it, the Deposit button already says what is missing. */}
+            {p && !settling && ready ? <LeakMeter report={p.leak} blocks /> : null}
           </section>
           {error ? <p className="text-[13px] text-down">{error}</p> : null}
         </>

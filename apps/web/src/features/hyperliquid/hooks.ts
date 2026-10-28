@@ -6,6 +6,7 @@ import { hlLive, hlMarket } from "./hl";
 
 const PERPS_STALE_MS = 30_000;
 const MIDS_FLUSH_MS = 1_000;
+const ZEC_PRICE_MS = 30_000;
 
 /** Every perp market (meta and today's numbers), shared by the list and the terminal. */
 export function usePerps() {
@@ -37,4 +38,20 @@ export function useLiveMids(): Record<string, number> {
     };
   }, []);
   return mids;
+}
+
+/**
+ * ZEC in dollars: the live mid once the stream has it, else Hyperliquid's mids asked once (and every 30 s), so dollars
+ * never wait on the socket. Null until either answers.
+ */
+export function useZecUsd(): number | null {
+  const live = useLiveMids().ZEC;
+  const asked = useQuery({
+    queryKey: ["hyperliquid", "mids"],
+    queryFn: () => hlMarket.mids(),
+    staleTime: ZEC_PRICE_MS,
+    refetchInterval: ZEC_PRICE_MS,
+    enabled: live === undefined,
+  });
+  return live ?? asked.data?.ZEC ?? null;
 }
