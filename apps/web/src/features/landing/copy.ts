@@ -166,11 +166,10 @@ export const LANDING = {
   final: { title: "Your next trade, from a wallet nobody has seen.", open: "Open Mitoshi" },
   demo: {
     title: "Demo",
-    pending: "Recording soon",
-    watch: "Watch on YouTube",
-    line: "Until it's up, try it live.",
-    stillAlt: "Mitoshi on a phone: a Polymarket event, the NVIDIA perps terminal and a Long order sheet",
+    watch: "Play the demo",
+    youtube: "Watch on YouTube",
     coverAlt: "Play the Mitoshi demo",
+    playerTitle: "Mitoshi demo",
     tries: [
       { label: "Long a stock", href: "/trade#pm/NVDA-USD" },
       { label: "Back an outcome", href: "/predict" },
@@ -190,5 +189,6 @@ export const LANDING = {
 
 export const REPO_URL = "https://github.com/mitoshi-xyz/mitoshi";
 
-/** The demo recording on YouTube, once it exists. /demo links out to it: nothing from YouTube loads on this site. */
-export const DEMO_VIDEO_URL: string | null = null;
+/** The demo recording on YouTube. /demo plays it in place; nothing from YouTube loads until someone presses play. */
+export const DEMO_VIDEO_ID = "Ll-X6zQsO6Q";
+export const DEMO_VIDEO_URL = `https://youtu.be/${DEMO_VIDEO_ID}`;

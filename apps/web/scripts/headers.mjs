@@ -71,6 +71,13 @@ const lines = ["/*", ...Object.entries(EVERYWHERE).map(([k, v]) => `  ${k}: ${v}
 // /_next/static/* caching is set by the Worker (services/web), which marks only real files immutable: a rule here would
 // also make a missing chunk's 404 immutable, and a browser that loads mid-deploy would keep it for a year.
 
+/**
+ * Pages that play a video from another origin (features/landing/demo-player.tsx): they may frame that origin, and they
+ * drop COEP, which a player that sends no CORP or COEP of its own cannot load under. Nothing on them uses shared memory
+ * (the wallet core refuses to run on it), so only these pages lose cross-origin isolation.
+ */
+const EMBEDS = { "/demo": "https://www.youtube-nocookie.com" };
+
 const policyFor = (html, base) =>
   [...base, `script-src 'self' 'wasm-unsafe-eval' ${scriptHashes(html).join(" ")}`.trim()].join("; ");
 // A <meta> policy cannot carry frame-ancestors (browsers ignore it there); X-Frame-Options covers framing.
@@ -89,10 +96,13 @@ for (const file of htmlFiles(OUT)) {
       writeFileSync(file, html.replace("<head>", `<head>${meta}`));
     continue;
   }
-  const policy = policyFor(html, BASE_POLICY);
-  const line = `  Content-Security-Policy: ${policy}`;
-  if (line.length > MAX_LINE) throw new Error(`${file}: CSP line is ${line.length} characters (limit ${MAX_LINE})`);
-  for (const p of paths) lines.push(p, line, "");
+  for (const p of paths) {
+    const embed = EMBEDS[p];
+    const policy = policyFor(html, embed ? [...BASE_POLICY, `frame-src ${embed}`] : BASE_POLICY);
+    const line = `  Content-Security-Policy: ${policy}`;
+    if (line.length > MAX_LINE) throw new Error(`${file}: CSP line is ${line.length} characters (limit ${MAX_LINE})`);
+    lines.push(p, line, ...(embed ? ["  ! Cross-Origin-Embedder-Policy"] : []), "");
+  }
   pages++;
 }
 
