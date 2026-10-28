@@ -3,13 +3,13 @@
 import { DEFAULT_SIZE_ZAT, fundableSizes, LADDER_ZAT, type Venue, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { swapTerms } from "@mitoshi/rails";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, ArrowUpDown, ChevronDown, Clock, Eye } from "lucide-react";
+import { AlertTriangle, ArrowRight, ChevronDown, Clock, Eye } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, cx, Sheet, Skeleton, TxSteps } from "@/kit";
 import { usd } from "../format";
 import { useLiveMids } from "../hyperliquid/hooks";
-import { VenueMark } from "../marks/mark";
+import { Mark, VenueMark } from "../marks/mark";
 import { LeakMeter } from "../privacy/leak-meter";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { useWallet } from "../wallet/wallet-store";
@@ -224,8 +224,12 @@ export function FundDrawer({
           </div>
 
           <div className="flex flex-col items-center gap-1 pt-2">
-            <label className="flex items-baseline justify-center gap-1.5">
-              {unit === "usd" ? <span className="font-semibold text-[32px] text-muted">$</span> : null}
+            <label className="flex items-center justify-center gap-2">
+              {unit === "usd" ? (
+                <span className="font-semibold text-[32px] text-muted">$</span>
+              ) : (
+                <Mark symbol="ZEC" size={30} />
+              )}
               <input
                 inputMode="decimal"
                 value={typed ?? shown}
@@ -235,20 +239,34 @@ export function FundDrawer({
                 style={{ width: `${Math.max(FIELD_MIN_CH, (typed ?? shown).length) + FIELD_SPARE_CH}ch` }}
                 className="num min-w-0 bg-transparent text-center font-semibold text-[48px] leading-none outline-none focus-visible:outline-none"
               />
-              {unit === "zec" ? <span className="font-semibold text-[18px] text-muted">ZEC</span> : null}
+              <span className="font-semibold text-[18px] text-muted">{unit === "zec" ? "ZEC" : "USD"}</span>
             </label>
             {zecUsd ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setUnit(unit === "zec" ? "usd" : "zec");
-                  setTyped(null);
-                }}
-                className="num inline-flex items-center gap-1 text-[13px] text-ink-2 hover:text-ink"
-              >
-                ≈ {unit === "zec" ? usd((size / ZAT_PER_ZEC) * zecUsd) : `${zec(size)} ZEC`}
-                <ArrowUpDown size={12} />
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="num text-[13px] text-ink-2">
+                  ≈ {unit === "zec" ? usd((size / ZAT_PER_ZEC) * zecUsd) : `${zec(size)} ZEC`}
+                </span>
+                <span className="flex rounded-full bg-surface-2 p-0.5" role="group" aria-label="Amount in">
+                  {(["zec", "usd"] as const).map((u) => (
+                    <button
+                      key={u}
+                      type="button"
+                      aria-pressed={unit === u}
+                      onClick={() => {
+                        setUnit(u);
+                        setTyped(null);
+                      }}
+                      className={cx(
+                        "inline-flex h-7 items-center gap-1 rounded-full px-2.5 font-medium text-[12px]",
+                        unit === u ? "bg-surface-1 text-ink shadow-sm" : "text-ink-2 hover:text-ink",
+                      )}
+                    >
+                      {u === "zec" ? <Mark symbol="ZEC" size={14} /> : null}
+                      {u === "zec" ? "ZEC" : "$ USD"}
+                    </button>
+                  ))}
+                </span>
+              </div>
             ) : null}
             <span className={cx("num text-[13px]", ready ? "text-ink-2" : "text-warning")}>
               {hidden ? MASK : zec(spendable)} ZEC ready
@@ -262,11 +280,10 @@ export function FundDrawer({
                 <button
                   key={share}
                   type="button"
-                  disabled={zat < MIN_FUNDING_ZAT}
                   aria-pressed={size === zat && zat > 0}
                   onClick={() => pick(zat)}
                   className={cx(
-                    "num h-9 rounded-full text-[13px] transition-colors duration-[var(--dur-hover)] disabled:opacity-40",
+                    "num h-9 rounded-full text-[13px] transition-colors duration-[var(--dur-hover)]",
                     size === zat && zat > 0 ? "bg-ink text-bg" : "bg-surface-2 text-ink-2 hover:text-ink",
                   )}
                 >
