@@ -121,6 +121,12 @@ export class HyperliquidMarket {
     };
   }
 
+  /** The transaction that filled one order (for a link to Hyperliquid's explorer), or null while it has not filled. */
+  async fillHash(user: `0x${string}`, oid: number): Promise<string | null> {
+    const fills = await this.info.userFills({ user });
+    return fills.find((f) => f.oid === oid)?.hash ?? null;
+  }
+
   /** An account's profit and loss over the last 24 hours, from Hyperliquid's own portfolio record. */
   async dayPnl(user: `0x${string}`): Promise<number> {
     const periods = await this.info.portfolio({ user });

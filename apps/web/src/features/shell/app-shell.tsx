@@ -11,6 +11,7 @@ import { loadRegistry } from "../private-wallets/registry-store";
 import { LockScreen } from "../vault/lock-screen";
 import { claimTab, onTabLost, useTabOwner } from "../vault/tab-lock";
 import { openReceipt, ReceiptHost } from "../wallet/receipt";
+import { TradeReceiptHost } from "../wallet/trade-receipt";
 import { bootWallet, stopWallet, useWallet } from "../wallet/wallet-store";
 import { Dock } from "./dock";
 import { More } from "./more";
@@ -134,6 +135,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         <PullToRefresh />
         <WalletDrawers />
         <ReceiptHost />
+        <TradeReceiptHost />
         <Toaster />
         <RouteProgress />
         <OfflineStrip />

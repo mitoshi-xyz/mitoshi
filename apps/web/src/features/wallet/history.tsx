@@ -11,6 +11,7 @@ import { useRegistry } from "../private-wallets/registry-store";
 import { shortAddress, VENUES } from "../private-wallets/venues";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { openReceipt } from "./receipt";
+import { openTradeReceipt } from "./trade-receipt";
 import { progress, signed, statusLine, story, UNIT } from "./tx";
 
 const MS = 1000;
@@ -25,7 +26,7 @@ const MOMENTS: Partial<Record<PrivateWallet["status"], (venue: string) => string
 
 type Item =
   | { kind: "tx"; key: string; at: number; e: HistoryEntry }
-  | { kind: "wallet"; key: string; at: number; w: PrivateWallet; title: string };
+  | { kind: "wallet"; key: string; at: number; w: PrivateWallet; title: string; trade?: number };
 
 function items(entries: HistoryEntry[], registry: Registry): Item[] {
   const now = Date.now();
@@ -43,6 +44,7 @@ function items(entries: HistoryEntry[], registry: Registry): Item[] {
         at: t.at,
         w,
         title: t.label,
+        trade: t.at,
       })),
     ];
   });
@@ -102,11 +104,22 @@ function TxRow({ e, tip, hidden }: { e: HistoryEntry; tip: number | null; hidden
   );
 }
 
-function WalletRow({ w, title, at }: { w: PrivateWallet; title: string; at: number }) {
+/** A private wallet's moment; a trade opens its receipt (both sides' proof), anything else what the public sees. */
+function WalletRow({
+  w,
+  title,
+  at,
+  trade,
+}: {
+  w: PrivateWallet;
+  title: string;
+  at: number;
+  trade?: number | undefined;
+}) {
   return (
     <button
       type="button"
-      onClick={() => openPublicView(w.id)}
+      onClick={() => (trade === undefined ? openPublicView(w.id) : openTradeReceipt(w.id, trade))}
       className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left hover:bg-surface-1"
     >
       <VenueMark venue={w.venue} size={40} />
@@ -157,7 +170,7 @@ export function History({ entries, tip }: { entries: HistoryEntry[]; tip: number
                 {it.kind === "tx" ? (
                   <TxRow e={it.e} tip={tip} hidden={hidden} />
                 ) : (
-                  <WalletRow w={it.w} title={it.title} at={it.at} />
+                  <WalletRow w={it.w} title={it.title} at={it.at} trade={it.trade} />
                 )}
               </li>
             ))}
