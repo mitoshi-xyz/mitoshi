@@ -2,7 +2,7 @@
 
 import { isCanonical, type PrivateWallet, type Registry, walletPath, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Copy, ExternalLink, Eye, Minus, X } from "lucide-react";
+import { Check, ChevronDown, Copy, ExternalLink, Eye, Minus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { cx, Drawer, Skeleton } from "@/kit";
 import { hlMarket } from "../hyperliquid/hl";
@@ -111,9 +111,6 @@ function PublicBody({ w }: { w: PrivateWallet }) {
   const f = footprint.data;
   return (
     <>
-      <p className="-mt-2 text-[14px] text-ink-2">
-        This is the wallet as a copy trader finds it on {venue.name}: read live from {venue.name}'s own public data.
-      </p>
       <div className="flex flex-col gap-1 rounded-xl border border-hairline bg-bg p-4">
         <div className="flex items-center gap-3">
           <VenueMark venue={w.venue} size={32} />
@@ -167,9 +164,15 @@ function PublicBody({ w }: { w: PrivateWallet }) {
         )}
       </div>
 
-      <section className="flex flex-col gap-2">
-        <h3 className="type-title">Why it can't be tied to you</h3>
-        <ul className="flex flex-col gap-2 text-[13px]">
+      <details className="group rounded-xl border border-hairline">
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-medium text-[14px]">
+          Why it can't be tied to you
+          <span className={cx("ml-auto num text-[13px]", linked ? "text-down" : "text-up")}>
+            {checks.filter((c) => c.ok).length} of {checks.length}
+          </span>
+          <ChevronDown size={14} className="text-muted transition-transform group-open:rotate-180" />
+        </summary>
+        <ul className="flex flex-col gap-2 border-hairline border-t px-4 py-3 text-[13px]">
           {checks.map((c) => (
             <li key={c.text} className="flex gap-2.5">
               <span
@@ -190,24 +193,9 @@ function PublicBody({ w }: { w: PrivateWallet }) {
             </li>
           ))}
         </ul>
-      </section>
+      </details>
 
-      <section className="flex flex-col gap-2 text-[13px]">
-        <h3 className="type-title">What stays public</h3>
-        <p className="text-ink-2">
-          This wallet's own trades on {venue.name}; its funding, at a standard size, and its trip home, at whatever it
-          held; and NEAR Intents' record of each swap. None of it names you or your other wallets.
-        </p>
-      </section>
-
-      <section className="flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-[13px]">
-        <span className="flex items-center gap-1.5 font-semibold text-warning">
-          <Eye size={14} /> Looking it up yourself
-        </span>
-        <p className="text-ink-2">
-          These pages load straight from your browser, so the site sees your IP address next to this wallet. Open them
-          on Tor or a VPN.
-        </p>
+      <section className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-2">
           {venue.explorers(w.address).map((e) => (
             <a
@@ -216,12 +204,15 @@ function PublicBody({ w }: { w: PrivateWallet }) {
               target="_blank"
               rel="noreferrer noopener"
               referrerPolicy="no-referrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-strong px-3 py-1.5 font-medium hover:bg-surface-1"
+              className="inline-flex items-center gap-1.5 rounded-full border border-strong px-3 py-1.5 font-medium text-[13px] hover:bg-surface-1"
             >
               {e.label} <ExternalLink size={12} />
             </a>
           ))}
         </div>
+        <span className="flex items-center gap-1.5 text-[12px] text-warning">
+          <Eye size={12} /> Opens in your browser: the site sees your IP. Use Tor or a VPN.
+        </span>
       </section>
     </>
   );
