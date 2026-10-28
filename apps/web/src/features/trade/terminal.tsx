@@ -20,14 +20,25 @@ const DEFAULT_COIN = "BTC";
 /** From here the ticket sits beside the chart; below it, trading opens in sheets. */
 const WIDE = "(min-width: 1024px)";
 const LIVE = new Set(["ready", "trading", "returning"]);
+const HASH_POLL_MS = 300;
 
 function useHashMarket(): [{ venue: PerpVenue; id: string }, (m: { venue: PerpVenue; id: string }) => void] {
   const [at, setAt] = useState<{ venue: PerpVenue; id: string }>({ venue: "hyperliquid", id: DEFAULT_COIN });
   useEffect(() => {
-    const read = () => setAt(parseTerminalHash(window.location.hash, DEFAULT_COIN));
+    let last: string | null = null;
+    const read = () => {
+      if (window.location.hash === last) return;
+      last = window.location.hash;
+      setAt(parseTerminalHash(last, DEFAULT_COIN));
+    };
     read();
     window.addEventListener("hashchange", read);
-    return () => window.removeEventListener("hashchange", read);
+    // A link to another market from this same page changes the hash with pushState, which fires no event: watch it.
+    const poll = window.setInterval(read, HASH_POLL_MS);
+    return () => {
+      window.removeEventListener("hashchange", read);
+      window.clearInterval(poll);
+    };
   }, []);
   const go = (m: { venue: PerpVenue; id: string }) => {
     window.history.replaceState(null, "", terminalHref(m));

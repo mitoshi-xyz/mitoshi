@@ -7,7 +7,6 @@ import { AlertTriangle, ArrowRight, ChevronDown, Clock, Eye } from "lucide-react
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, cx, Sheet, Skeleton, TxSteps } from "@/kit";
-import { useJudgeDesk } from "../judge/judge";
 import { VenueMark } from "../marks/mark";
 import { LeakMeter } from "../privacy/leak-meter";
 import { MASK, useHideAmounts } from "../shell/prefs";
@@ -131,20 +130,10 @@ export function FundDrawer({
   const settling = key.venue !== venue || key.size !== size;
 
   const ready = affordable.has(size);
-  // The judges' shared wallet has its money on Hyperliquid and no ZEC to fund another: it points them there instead.
-  const desk = useJudgeDesk() !== null;
   // What is missing, rounded up to 0.0001 ZEC so it is easy to type into a wallet.
   const need = Math.ceil((size + FUNDING_FEE_RESERVE_ZAT - spendable) / ASK_STEP_ZAT) * ASK_STEP_ZAT;
   const big = "h-[52px] w-full text-[16px]";
-  const cta = made ? null : !allowed.ok ? null : !ready && desk ? (
-    <Link
-      href="/trade#BTC"
-      onClick={onClose}
-      className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-md bg-accent font-semibold text-[16px] text-accent-ink hover:brightness-110"
-    >
-      Trade BTC on Hyperliquid <ArrowRight size={18} />
-    </Link>
-  ) : !ready ? (
+  const cta = made ? null : !allowed.ok ? null : !ready ? (
     <Button tone="primary" size="lg" className={big} onClick={() => openDeposit(need)}>
       Deposit {zec(need)} ZEC
     </Button>
@@ -180,11 +169,6 @@ export function FundDrawer({
         </div>
       ) : (
         <>
-          {desk && !ready ? (
-            <p className="rounded-xl bg-accent-wash px-4 py-3 text-[14px]">
-              The judges' wallet is funded on Hyperliquid. A new wallet here needs ZEC of its own.
-            </p>
-          ) : null}
           <div className="grid grid-cols-3 gap-1 rounded-xl bg-surface-2 p-1">
             {VENUE_ORDER.map((id) => (
               <button
