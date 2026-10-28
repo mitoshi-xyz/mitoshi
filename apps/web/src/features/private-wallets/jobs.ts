@@ -32,7 +32,7 @@ import {
 } from "./funding";
 import { migrationTick } from "./migration";
 import { currentRegistry, mutate, putWallet, walletById } from "./registry-store";
-import { oneclick, withSwap } from "./swaps";
+import { oneclick, sending, withSwap } from "./swaps";
 import { VENUES } from "./venues";
 
 export {
@@ -49,6 +49,8 @@ export { type SwapMode, swapMode } from "./swaps";
 
 const TICK_MS = 5_000;
 const POLL_MS = 15_000;
+/** A trip home whose send hasn't gone out after this long (and isn't in flight in this tab) never left. */
+const STUCK_SEND_MS = 300_000;
 const TERMINAL: SwapStatus[] = ["SUCCESS", "REFUNDED", "FAILED"];
 
 /**
@@ -261,6 +263,22 @@ async function poll(id: string) {
     if (st.status === "PENDING_DEPOSIT" && !swap.depositTx && Date.parse(swap.deadline) < now) {
       next = advance(next, "failed", now, "The deposit was never sent");
     }
+  } else if (
+    st.status === "PENDING_DEPOSIT" &&
+    !swap.depositTx &&
+    !sending.has(id) &&
+    now - swap.createdAt > STUCK_SEND_MS
+  ) {
+    // The send never went out (it failed, or the tab closed first): the money is still in the wallet.
+    next = {
+      ...advance(
+        withSwap(next, "return", { status: "FAILED" }),
+        "failed",
+        now,
+        "Not sent: the money is still in this wallet",
+      ),
+      error: "The send never went out",
+    };
   } else if (st.status === "SUCCESS") {
     next = advance(next, "retired", now, "Home: the ZEC is back in your balance (resting)");
     toast({

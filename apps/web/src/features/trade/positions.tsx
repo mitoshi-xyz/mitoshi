@@ -5,12 +5,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Layers } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { cx, EmptyState, RollingNumber, Skeleton, Wait } from "@/kit";
+import { cx, EmptyState, RollingNumber, Skeleton, TxSteps, Wait } from "@/kit";
 import { price, upDown } from "../format";
 import { useJudgeDesk } from "../judge/judge";
 import { Mark } from "../marks/mark";
 import { DRIVERS, usePerpAccount } from "../perps/hooks";
 import { type PerpMarket, type PerpVenue, terminalHref } from "../perps/model";
+import { useNow } from "../private-wallets/use-now";
+import { homeSteps } from "../private-wallets/wallet-steps";
 import { MASK, useHideAmounts } from "../shell/prefs";
 
 const ADDRESS_HEAD = 6;
@@ -21,6 +23,12 @@ interface Props {
   wallet: PrivateWallet;
   markets: PerpMarket[];
   marks: Record<string, number>;
+}
+
+/** A trip home's steps with its countdown; only this ticks every second. */
+function TripHome({ wallet }: { wallet: PrivateWallet }) {
+  const now = useNow();
+  return <TxSteps steps={homeSteps(wallet, now)} />;
 }
 
 function WalletPositions({ venue, wallet, markets, marks }: Props) {
@@ -48,6 +56,8 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
   }
 
   const s = account.data;
+  // On its way home, or a send that never left: the same steps, with the countdown, as on Wallets.
+  const home = wallet.status === "returning" || wallet.status === "failed";
   if (account.isPending) return <Skeleton className="h-20" label="Reading the wallet" />;
   // Sending home cancels open orders itself; only open positions must be closed first.
   const closed = s !== undefined && s.positions.length === 0;
@@ -57,8 +67,17 @@ function WalletPositions({ venue, wallet, markets, marks }: Props) {
         <span className="font-mono">
           {wallet.address.slice(0, ADDRESS_HEAD)}…{wallet.address.slice(-ADDRESS_TAIL)}
         </span>
-        <span>{wallet.status === "returning" ? "Coming home" : wallet.status === "trading" ? "Trading" : "Ready"}</span>
+        <span className={cx(wallet.status === "failed" && "text-down")}>
+          {wallet.status === "returning"
+            ? "Coming home"
+            : wallet.status === "failed"
+              ? "Not sent"
+              : wallet.status === "trading"
+                ? "Trading"
+                : "Ready"}
+        </span>
       </div>
+      {home ? <TripHome wallet={wallet} /> : null}
       {s?.positions.map((p) => {
         const m = marketOf(p.marketId);
         const mark = marks[p.marketId] ?? m?.markPx ?? p.entryPx;

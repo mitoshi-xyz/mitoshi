@@ -190,7 +190,11 @@ export function homeSteps(w: PrivateWallet, now: number): TxStep[] {
     {
       label: "Sent to the swap",
       state: sent ? "done" : failed ? "failed" : "active",
-      ...(failed && !sent ? { detail: `${w.error ?? "Stopped"}. The money is still in this wallet.` } : {}),
+      ...(failed && !sent
+        ? { detail: `Not sent: ${w.error ?? "stopped"}. The money is still in this wallet.` }
+        : !sent
+          ? { detail: <Wait verb="Sending from this wallet" /> }
+          : {}),
     },
     {
       label: "Swapping back to ZEC",

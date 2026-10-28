@@ -78,7 +78,7 @@ export function LeverageSheet({
       }
     >
       <div className="flex flex-col gap-1.5">
-        <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1" role="group" aria-label="Margin">
+        <fieldset className="grid min-w-0 grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1" aria-label="Margin">
           {(["isolated", "cross"] as const).map((m) => (
             <button
               key={m}
@@ -94,7 +94,7 @@ export function LeverageSheet({
               {m === "isolated" ? "Isolated" : "Cross"}
             </button>
           ))}
-        </div>
+        </fieldset>
         <p className="text-center text-[12px] text-muted">
           {mode === "isolated" ? "Only this margin is at risk" : "The whole wallet backs it"}
           {locked ? (market.onlyIsolated ? " · this market is isolated only" : " · set by your open position") : ""}

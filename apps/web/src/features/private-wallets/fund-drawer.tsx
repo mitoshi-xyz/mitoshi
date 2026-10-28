@@ -246,7 +246,7 @@ export function FundDrawer({
                 <span className="num text-[13px] text-ink-2">
                   ≈ {unit === "zec" ? usd((size / ZAT_PER_ZEC) * zecUsd) : `${zec(size)} ZEC`}
                 </span>
-                <span className="flex rounded-full bg-surface-2 p-0.5" role="group" aria-label="Amount in">
+                <fieldset className="flex min-w-0 rounded-full bg-surface-2 p-0.5" aria-label="Amount in">
                   {(["zec", "usd"] as const).map((u) => (
                     <button
                       key={u}
@@ -265,7 +265,7 @@ export function FundDrawer({
                       {u === "zec" ? "ZEC" : "$ USD"}
                     </button>
                   ))}
-                </span>
+                </fieldset>
               </div>
             ) : null}
             <span className={cx("num text-[13px]", ready ? "text-ink-2" : "text-warning")}>

@@ -2,6 +2,7 @@
 
 import { advance, type PrivateWallet, type SwapRecord, type TradeRecord } from "@mitoshi/engine";
 import { ASSETS } from "@mitoshi/rails";
+import { DUST_USDC, HL_ACTIVATION_FEE_USDC } from "@mitoshi/venues/hyperliquid";
 import { PUSD_DECIMALS } from "@mitoshi/venues/polymarket";
 import { hlAccount, hlMarket } from "../hyperliquid/hl";
 import { judgeDesk } from "../judge/judge";
@@ -11,10 +12,33 @@ import { type PmAccount, pmAccount } from "../polymarket/pm-account";
 import { solAccount } from "../solana/sol";
 import { freshAddress } from "../wallet/wallet-store";
 import { putWallet, walletById } from "./registry-store";
-import { oneclick, quote, withSwap } from "./swaps";
+import { oneclick, quote, sending, withSwap } from "./swaps";
 
 const CENTS_TO_BASE = 10 ** (ASSETS.hypercoreUsdc.decimals - 2);
 const CENTS = 100;
+
+/**
+ * Runs a trip home's one send. The wallet already says "coming home" (with the signed quote saved), so if the send
+ * throws, nothing left: the wallet goes back to failed with the reason, and Try again sends home afresh.
+ */
+async function send<T>(id: string, job: () => Promise<T>): Promise<T> {
+  sending.add(id);
+  try {
+    return await job();
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e);
+    const w = walletById(id);
+    if (w?.status === "returning") {
+      putWallet({
+        ...advance(withSwap(w, "return", { status: "FAILED" }), "failed", Date.now(), `Not sent: ${reason}`),
+        error: reason,
+      });
+    }
+    throw e;
+  } finally {
+    sending.delete(id);
+  }
+}
 
 /** Sends a wallet's money home, whichever venue it is on. */
 export function sendHome(w: PrivateWallet): Promise<{ sent: number }> {
@@ -137,7 +161,7 @@ export async function sendPolymarketHome(id: string): Promise<{ sent: number }> 
     `Sending ${cash.toFixed(2)} pUSD home`,
   );
   putWallet(w);
-  await account.transfer("pusd", withdrawal, amount);
+  await send(id, () => account.transfer("pusd", withdrawal, amount));
   const sent: PrivateWallet = walletById(id) ?? w;
   putWallet({
     ...withSwap(sent, "return", { status: "KNOWN_DEPOSIT_TX", depositTx: `bridge:${withdrawal}` }),
@@ -176,11 +200,20 @@ export async function sendHyperliquidHome(id: string): Promise<{ sent: number }>
     throw new Error(`a ${w.status} wallet cannot be sent home`);
   }
   const account = await hlAccount(w);
-  const amount = await account.consolidate(await hlMarket.perps());
+  const held = await account.consolidate(await hlMarket.perps());
+  // Each quote's deposit address is new to Hyperliquid, which charges the sender 1 USDC on top to activate it.
+  const amount = Math.floor((held - HL_ACTIVATION_FEE_USDC) * CENTS) / CENTS;
   const now = Date.now();
-  if (amount === 0) {
+  if (amount < DUST_USDC) {
     w = advance(w, "returning", now, "Only dust is left");
-    putWallet(advance(w, "retired", now, "Under 1 USDC stays: less than the trip home would cost"));
+    putWallet(
+      advance(
+        w,
+        "retired",
+        now,
+        `Under ${DUST_USDC + HL_ACTIVATION_FEE_USDC} USDC stays: less than the trip home would cost`,
+      ),
+    );
     return { sent: 0 };
   }
   const recipient = await freshAddress();
@@ -209,9 +242,15 @@ export async function sendHyperliquidHome(id: string): Promise<{ sent: number }>
     updatedAt: now,
     signedQuote: q,
   };
-  w = advance({ ...w, swaps: [...w.swaps, swap] }, "returning", now, `Sending ${amount.toFixed(2)} USDC home`);
+  const { error: _cleared, ...rest } = w;
+  w = advance(
+    { ...rest, swaps: [...w.swaps, swap] },
+    "returning",
+    now,
+    `Sending ${amount.toFixed(2)} USDC home (Hyperliquid keeps ${HL_ACTIVATION_FEE_USDC} USDC to open the address)`,
+  );
   putWallet(w);
-  await account.sendUsdc(depositAddress, amount);
+  await send(id, () => account.sendUsdc(depositAddress, amount));
   const sent: PrivateWallet = walletById(id) ?? w;
   putWallet({
     ...withSwap(sent, "return", { status: "KNOWN_DEPOSIT_TX", depositTx: "spotSend" }),
@@ -267,7 +306,7 @@ export async function sendSolanaHome(id: string): Promise<{ sent: number }> {
   };
   w = advance({ ...w, swaps: [...w.swaps, swap] }, "returning", now, "Sending SOL home");
   putWallet(w);
-  const signature = await account.sendSol(depositAddress, lamports);
+  const signature = await send(id, () => account.sendSol(depositAddress, lamports));
   const sent: PrivateWallet = walletById(id) ?? w;
   putWallet({
     ...withSwap(sent, "return", { status: "KNOWN_DEPOSIT_TX", depositTx: signature }),

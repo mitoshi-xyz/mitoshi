@@ -51,6 +51,9 @@ export function swapMode(r: Registry): SwapMode {
 }
 
 /** Updates the latest swap of a kind on a wallet. */
+/** Trips home being sent from this tab right now, so the poll doesn't call one stuck while it is in flight. */
+export const sending = new Set<string>();
+
 export function withSwap(w: PrivateWallet, kind: SwapRecord["kind"], patch: Partial<SwapRecord>): PrivateWallet {
   const i = w.swaps.map((s) => s.kind).lastIndexOf(kind);
   if (i < 0) return w;

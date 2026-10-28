@@ -1,7 +1,7 @@
 "use client";
 
 import type { Levels } from "@mitoshi/chart";
-import { type PrivateWallet, positionWallet } from "@mitoshi/engine";
+import { latestSwap, type PrivateWallet, positionWallet } from "@mitoshi/engine";
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Layers } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cue, cx, Segmented, Sheet, Skeleton, useMedia, usePhone } from "@/kit";
@@ -68,7 +68,12 @@ function useTradingWallet(venue: PerpVenue, marketName: string | undefined) {
   const mine = registry.wallets.filter(
     (w) => w.venue === driver.wallet && (venue === "hyperliquid" || w.perps !== undefined || w.status === "ready"),
   );
-  const live = mine.filter((w) => LIVE.has(w.status) && (venue === "hyperliquid" || w.perps !== undefined));
+  // A trip home that never left keeps its money here, with Send home again.
+  const live = mine.filter(
+    (w) =>
+      (LIVE.has(w.status) || (w.status === "failed" && latestSwap(w, "return"))) &&
+      (venue === "hyperliquid" || w.perps !== undefined),
+  );
   const usable = (w: PrivateWallet) => venue === "hyperliquid" || w.perps !== undefined || w.status === "ready";
   const wallet = marketName ? positionWallet(registry, driver.wallet, marketName, usable).wallet : undefined;
   const pending = registry.wallets.find(
