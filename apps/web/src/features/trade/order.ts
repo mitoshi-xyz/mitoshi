@@ -49,14 +49,35 @@ export function useOrder(market: PerpMarket | undefined) {
 
 const num = (s: string) => (s.trim() === "" ? undefined : Number(s));
 
-/** Approximate liquidation for a fresh position (maintenance = half the max-leverage margin). */
-export function liquidationPx(entry: number, leverage: number, maxLeverage: number, isLong: boolean): number {
-  const mm = 1 / (MAINTENANCE_SHARE * maxLeverage);
-  return isLong ? entry * (1 - 1 / leverage + mm) : entry * (1 + 1 / leverage - mm);
+/**
+ * Where a fresh position would be liquidated. Orders go in cross margin (each venue is set that way), so the whole
+ * account backs the position: it is liquidated when the account's equity falls to the maintenance margin, half the
+ * max-leverage margin. That is Hyperliquid's rule; for a live 10× BTC long it gave 48,550 against Hyperliquid's own
+ * 48,519.5. An isolated-only market, or an account with nothing in it yet, backs it with its own margin alone. Null
+ * when the account covers a long all the way down.
+ */
+export function liquidationPx(p: {
+  entry: number;
+  size: number;
+  leverage: number;
+  maxLeverage: number;
+  isLong: boolean;
+  /** The account's equity, the margin of this order included. */
+  equity: number;
+  isolated: boolean;
+}): number | null {
+  const mm = 1 / (MAINTENANCE_SHARE * p.maxLeverage);
+  if (p.isolated || p.equity <= 0 || p.size <= 0) {
+    return p.isLong ? p.entry * (1 - 1 / p.leverage + mm) : p.entry * (1 + 1 / p.leverage - mm);
+  }
+  const px = p.isLong
+    ? (p.size * p.entry - p.equity) / (p.size * (1 - mm))
+    : (p.equity + p.size * p.entry) / (p.size * (1 + mm));
+  return px > 0 ? px : null;
 }
 
-/** What the ticket would place, read from the typed order. */
-export function quoteOrder(o: Order, market: PerpMarket, mark: number) {
+/** What the ticket would place, read from the typed order; `equity` is the wallet's account, for the liquidation. */
+export function quoteOrder(o: Order, market: PerpMarket, mark: number, equity = 0) {
   const isLong = o.side === "long";
   const margin = Number(o.margin) || 0;
   const entry = o.kind === "limit" ? (num(o.limit) ?? mark) : mark;
@@ -70,7 +91,18 @@ export function quoteOrder(o: Order, market: PerpMarket, mark: number) {
     entry,
     notional,
     size,
-    liquidation: notional > 0 ? liquidationPx(entry, o.leverage, market.maxLeverage, isLong) : null,
+    liquidation:
+      notional > 0
+        ? liquidationPx({
+            entry,
+            size,
+            leverage: o.leverage,
+            maxLeverage: market.maxLeverage,
+            isLong,
+            equity,
+            isolated: market.onlyIsolated,
+          })
+        : null,
     fee: notional * market.takerFee,
     tp,
     sl,

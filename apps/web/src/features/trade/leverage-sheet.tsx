@@ -16,6 +16,8 @@ export function LeverageSheet({
   value,
   entry,
   isLong,
+  margin,
+  equity,
   onChange,
 }: {
   open: boolean;
@@ -24,6 +26,9 @@ export function LeverageSheet({
   value: number;
   entry: number;
   isLong: boolean;
+  /** The order's margin and the wallet's account equity, for where this leverage would be liquidated. */
+  margin: number;
+  equity: number;
   onChange: (v: number) => void;
 }) {
   const [lev, setLev] = useState(value);
@@ -33,7 +38,18 @@ export function LeverageSheet({
   const max = market.maxLeverage;
   const presets = LEVERAGE_PRESETS.filter((p) => p < max);
   const clamp = (v: number) => Math.min(max, Math.max(1, Math.round(v)));
-  const liq = entry > 0 ? liquidationPx(entry, lev, max, isLong) : null;
+  const liq =
+    entry > 0
+      ? liquidationPx({
+          entry,
+          size: (margin * lev) / entry,
+          leverage: lev,
+          maxLeverage: max,
+          isLong,
+          equity,
+          isolated: market.onlyIsolated,
+        })
+      : null;
   return (
     <Sheet
       open={open}

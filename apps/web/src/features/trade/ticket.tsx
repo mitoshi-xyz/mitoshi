@@ -80,7 +80,9 @@ export function Ticket({
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [sheet, setSheet] = useState<"leverage" | "exits" | null>(null);
 
-  const q = quoteOrder(order, market, mark);
+  // What backs a cross-margin position: the account's equity, or before the first trade the funding still in spot.
+  const equity = Math.max(account?.equity ?? 0, account?.free ?? 0);
+  const q = quoteOrder(order, market, mark, equity);
   const free = account?.free ?? 0;
   const busy = phase === "signing" || phase === "sent";
   const problem = !wallet
@@ -253,7 +255,7 @@ export function Ticket({
           />
         ) : (
           <span className="num ml-auto text-[12px] text-muted">
-            Liq {q.liquidation ? price(q.liquidation) : "–"} · fee {usd(q.fee)}
+            Liq {q.liquidation ? price(q.liquidation) : q.notional > 0 ? "none" : "–"} · fee {usd(q.fee)}
           </span>
         )}
       </div>
@@ -284,6 +286,8 @@ export function Ticket({
         value={order.leverage}
         entry={q.entry}
         isLong={q.isLong}
+        margin={q.margin}
+        equity={equity}
         onChange={(leverage) => setOrder({ leverage })}
       />
       <ExitsSheet
