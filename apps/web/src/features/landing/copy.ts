@@ -129,7 +129,7 @@ export const LANDING = {
       { who: "The venue", sees: "one fresh wallet's trade" },
     ],
     rules: [
-      "Standard sizes only, so a funding looks like everyone else's",
+      "Standard sizes first, so a funding looks like everyone else's",
       "A random start for every funding, never the moment you tap",
       "Public arrivals rest 2–6 hours before they can fund anything",
       "A fresh shielded refund and payout address for every swap",

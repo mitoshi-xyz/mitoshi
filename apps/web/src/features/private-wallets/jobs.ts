@@ -4,7 +4,6 @@ import {
   advance,
   checkFunding,
   fundingTime,
-  isCanonical,
   latestSwap,
   liveWallets,
   type PrivateWallet,
@@ -13,6 +12,7 @@ import {
   type SwapRecord,
   type SwapStatus,
   type Venue,
+  ZAT_PER_ZEC,
 } from "@mitoshi/engine";
 import { ASSETS, formatUnits } from "@mitoshi/rails";
 import { toast } from "@/kit";
@@ -25,6 +25,7 @@ import {
   canFund,
   FUNDING_FEE_RESERVE_ZAT,
   fundingRecipient,
+  MIN_FUNDING_ZAT,
   routedQuote,
   VENUE_ASSET,
   venueAddress,
@@ -39,6 +40,7 @@ export {
   canFund,
   FUNDING_FEE_RESERVE_ZAT,
   type FundingPreview,
+  MIN_FUNDING_ZAT,
   previewFunding,
   VENUE_ASSET,
   venueAddress,
@@ -56,7 +58,9 @@ const TERMINAL: SwapStatus[] = ["SUCCESS", "REFUNDED", "FAILED"];
 export async function prepareWallet(venue: Venue, sizeZat: number, refill = false): Promise<PrivateWallet> {
   const allowed = canFund();
   if (!allowed.ok) throw new Error(allowed.why);
-  if (!isCanonical(sizeZat)) throw new Error("wallets are funded with standard sizes only");
+  if (!Number.isInteger(sizeZat) || sizeZat < MIN_FUNDING_ZAT) {
+    throw new Error(`fund at least ${MIN_FUNDING_ZAT / ZAT_PER_ZEC} ZEC`);
+  }
   const seed = await deviceSeed();
   const index = currentRegistry().nextIndex[venue];
   const now = Date.now();

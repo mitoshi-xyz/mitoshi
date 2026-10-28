@@ -66,7 +66,9 @@ export function linkChecks(w: PrivateWallet, r: Registry): LinkCheck[] {
       ? { ok: null, text: "Found again from your words, so this device has no record of its funding swap" }
       : {
           ok: isCanonical(w.sizeZat),
-          text: `Funded by one NEAR Intents swap of ${zec(w.sizeZat)} ZEC, a standard size many people use`,
+          text: isCanonical(w.sizeZat)
+            ? `Funded by one NEAR Intents swap of ${zec(w.sizeZat)} ZEC, a standard size many people use`
+            : `Funded by one NEAR Intents swap of ${zec(w.sizeZat)} ZEC, a custom amount: easier to match`,
         },
   ];
 }

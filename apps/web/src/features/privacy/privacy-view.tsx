@@ -72,7 +72,7 @@ const PARTIES: Party[] = [
 
 const RULES = [
   { icon: KeyRound, text: "A new wallet for every trade, on its own key path from your words." },
-  { icon: Ruler, text: "Standard sizes only (0.01 to 1 ZEC), so a funding looks like everyone else's." },
+  { icon: Ruler, text: "Standard sizes first (0.005 to 1 ZEC), so a funding looks like everyone else's." },
   { icon: Timer, text: "Each funding starts at a random moment, never the moment you tap." },
   { icon: Clock, text: "Money that arrives from a public address rests 2–6 hours before it can fund anything." },
   { icon: RefreshCcw, text: "Every funding refunds to a fresh shielded address, and every trip home pays out to one." },

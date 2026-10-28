@@ -30,9 +30,10 @@ export interface FundingCheck {
 export function checkFunding(c: FundingCheck): LeakReport {
   const reasons: LeakReport["reasons"] = [];
   if (!isCanonical(c.amountZat)) {
+    // Allowed (the person's money, the person's choice), but said plainly: a rare amount is easier to match.
     reasons.push({
-      level: "red",
-      text: `${zec(c.amountZat)} is not a standard size, so the public hop would stand out`,
+      level: "amber",
+      text: `${zec(c.amountZat)} is a custom amount: easier to match than a standard size`,
     });
   } else {
     reasons.push({ level: "green", text: `${zec(c.amountZat)} is a standard size, shared by many swaps` });

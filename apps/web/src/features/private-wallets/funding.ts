@@ -56,6 +56,8 @@ export async function routedQuote(
 
 /** A funding's network fee is checked for real before sending; this reserve is for showing sizes. */
 export const FUNDING_FEE_RESERVE_ZAT = 15_000;
+/** The smallest funding: 0.003 ZEC, the smallest amount NEAR Intents quoted to every venue (2026-10-27). */
+export const MIN_FUNDING_ZAT = 300_000;
 
 export function canFund(): { ok: boolean; why?: string } {
   if (ZEC_NETWORK !== "main") {

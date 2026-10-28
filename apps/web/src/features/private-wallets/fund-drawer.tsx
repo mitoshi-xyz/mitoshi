@@ -3,16 +3,19 @@
 import { DEFAULT_SIZE_ZAT, fundableSizes, LADDER_ZAT, type Venue, ZAT_PER_ZEC } from "@mitoshi/engine";
 import { swapTerms } from "@mitoshi/rails";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, ChevronDown, Clock, Eye } from "lucide-react";
+import { AlertTriangle, ArrowRight, ArrowUpDown, ChevronDown, Clock, Eye } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, cx, Sheet, Skeleton, TxSteps } from "@/kit";
+import { usd } from "../format";
+import { useLiveMids } from "../hyperliquid/hooks";
 import { VenueMark } from "../marks/mark";
 import { LeakMeter } from "../privacy/leak-meter";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { useWallet } from "../wallet/wallet-store";
+import { FUND_SHARES } from "./constants";
 import { openDeposit } from "./drawers";
-import { balances, canFund, FUNDING_FEE_RESERVE_ZAT, prepareWallet, previewFunding } from "./jobs";
+import { balances, canFund, FUNDING_FEE_RESERVE_ZAT, MIN_FUNDING_ZAT, prepareWallet, previewFunding } from "./jobs";
 import { useRegistry } from "./registry-store";
 import { useNow } from "./use-now";
 import { shortAddress, VENUE_ORDER, VENUES } from "./venues";
@@ -27,6 +30,12 @@ const USD_DIGITS = 2;
 const OUT_DIGITS = 4;
 /** Deposit asks are rounded up to this (0.0001 ZEC). */
 const ASK_STEP_ZAT = 10_000;
+const PCT = 100;
+/** The amount field is as wide as its text, with half a character to spare and room for two at least. */
+const FIELD_MIN_CH = 2;
+const FIELD_SPARE_CH = 0.5;
+/** A typed amount: digits and at most one point. */
+const DECIMAL = /^\d*\.?\d*$/;
 
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
 
@@ -102,6 +111,10 @@ export function FundDrawer({
   const [hidden] = useHideAmounts();
   const [venue, setVenue] = useState<Venue>(initialVenue);
   const [size, setSize] = useState<number>(DEFAULT_SIZE_ZAT);
+  // The amount can be typed in ZEC or in dollars; `typed` holds the text while the person types.
+  const [unit, setUnit] = useState<"zec" | "usd">("zec");
+  const [typed, setTyped] = useState<string | null>(null);
+  const zecUsd = useLiveMids().ZEC ?? null;
   const [made, setMade] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -115,12 +128,29 @@ export function FundDrawer({
       setMade(null);
       setError(null);
       setVenue(initialVenue);
+      setTyped(null);
+      // Start on the largest standard size the balance covers: the most private choice that fits.
+      setSize(fundableSizes(balances().spendable, FUNDING_FEE_RESERVE_ZAT).at(-1) ?? DEFAULT_SIZE_ZAT);
     }
   }, [open, initialVenue]);
 
+  const usable = Math.max(0, spendable - FUNDING_FEE_RESERVE_ZAT);
+  const shown = unit === "usd" && zecUsd ? ((size / ZAT_PER_ZEC) * zecUsd).toFixed(USD_DIGITS) : zec(size);
+  const onType = (text: string) => {
+    if (!DECIMAL.test(text)) return;
+    setTyped(text);
+    const n = Number(text);
+    if (!Number.isFinite(n)) return;
+    setSize(Math.round(unit === "usd" && zecUsd ? (n / zecUsd) * ZAT_PER_ZEC : n * ZAT_PER_ZEC));
+  };
+  const pick = (zat: number) => {
+    setTyped(null);
+    setSize(zat);
+  };
+
   const preview = useQuery({
     queryKey: ["fund-preview", key.venue, key.size],
-    enabled: open && allowed.ok && VENUES[key.venue].live && w.phase === "ready",
+    enabled: open && allowed.ok && VENUES[key.venue].live && w.phase === "ready" && key.size >= MIN_FUNDING_ZAT,
     staleTime: QUOTE_STALE_MS,
     retry: false,
     queryFn: () => previewFunding(key.venue, key.size),
@@ -129,11 +159,16 @@ export function FundDrawer({
   const terms = p ? swapTerms(p.quote) : null;
   const settling = key.venue !== venue || key.size !== size;
 
-  const ready = affordable.has(size);
+  const tooSmall = size < MIN_FUNDING_ZAT;
+  const ready = !tooSmall && size + FUNDING_FEE_RESERVE_ZAT <= spendable;
   // What is missing, rounded up to 0.0001 ZEC so it is easy to type into a wallet.
   const need = Math.ceil((size + FUNDING_FEE_RESERVE_ZAT - spendable) / ASK_STEP_ZAT) * ASK_STEP_ZAT;
   const big = "h-[52px] w-full text-[16px]";
-  const cta = made ? null : !allowed.ok ? null : !ready ? (
+  const cta = made ? null : !allowed.ok ? null : tooSmall ? (
+    <Button tone="primary" size="lg" className={big} disabled>
+      At least {zec(MIN_FUNDING_ZAT)} ZEC
+    </Button>
+  ) : !ready ? (
     <Button tone="primary" size="lg" className={big} onClick={() => openDeposit(need)}>
       Deposit {zec(need)} ZEC
     </Button>
@@ -189,22 +224,65 @@ export function FundDrawer({
           </div>
 
           <div className="flex flex-col items-center gap-1 pt-2">
-            <span className="flex items-baseline gap-1.5">
-              <span className="num font-semibold text-[48px] leading-none">{zec(size)}</span>
-              <span className="font-semibold text-[18px] text-muted">ZEC</span>
-            </span>
+            <label className="flex items-baseline justify-center gap-1.5">
+              {unit === "usd" ? <span className="font-semibold text-[32px] text-muted">$</span> : null}
+              <input
+                inputMode="decimal"
+                value={typed ?? shown}
+                onChange={(e) => onType(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                aria-label={unit === "usd" ? "Amount in dollars" : "Amount in ZEC"}
+                style={{ width: `${Math.max(FIELD_MIN_CH, (typed ?? shown).length) + FIELD_SPARE_CH}ch` }}
+                className="num min-w-0 bg-transparent text-center font-semibold text-[48px] leading-none outline-none focus-visible:outline-none"
+              />
+              {unit === "zec" ? <span className="font-semibold text-[18px] text-muted">ZEC</span> : null}
+            </label>
+            {zecUsd ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setUnit(unit === "zec" ? "usd" : "zec");
+                  setTyped(null);
+                }}
+                className="num inline-flex items-center gap-1 text-[13px] text-ink-2 hover:text-ink"
+              >
+                ≈ {unit === "zec" ? usd((size / ZAT_PER_ZEC) * zecUsd) : `${zec(size)} ZEC`}
+                <ArrowUpDown size={12} />
+              </button>
+            ) : null}
             <span className={cx("num text-[13px]", ready ? "text-ink-2" : "text-warning")}>
               {hidden ? MASK : zec(spendable)} ZEC ready
               {resting > 0 ? ` · ${hidden ? MASK : zec(resting)} resting` : ""}
             </span>
           </div>
-          <div className="-mx-5 flex gap-1.5 overflow-x-auto px-5 [scrollbar-width:none]">
+          <div className="grid grid-cols-4 gap-1.5">
+            {FUND_SHARES.map((share) => {
+              const zat = Math.floor((usable * share) / PCT);
+              return (
+                <button
+                  key={share}
+                  type="button"
+                  disabled={zat < MIN_FUNDING_ZAT}
+                  aria-pressed={size === zat && zat > 0}
+                  onClick={() => pick(zat)}
+                  className={cx(
+                    "num h-9 rounded-full text-[13px] transition-colors duration-[var(--dur-hover)] disabled:opacity-40",
+                    size === zat && zat > 0 ? "bg-ink text-bg" : "bg-surface-2 text-ink-2 hover:text-ink",
+                  )}
+                >
+                  {share === PCT ? "Max" : `${share}%`}
+                </button>
+              );
+            })}
+          </div>
+          <div className="-mx-5 flex items-center gap-1.5 overflow-x-auto px-5 [scrollbar-width:none]">
+            <span className="shrink-0 pr-1 text-[12px] text-muted">Standard</span>
             {LADDER_ZAT.map((sz) => (
               <button
                 key={sz}
                 type="button"
                 aria-pressed={size === sz}
-                onClick={() => setSize(sz)}
+                onClick={() => pick(sz)}
                 className={cx(
                   "num h-9 shrink-0 rounded-full px-3.5 text-[13px] transition-colors duration-[var(--dur-hover)]",
                   size === sz ? "bg-ink text-bg" : "bg-surface-2 text-ink-2 hover:text-ink",

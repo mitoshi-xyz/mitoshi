@@ -146,8 +146,9 @@ Follow the proof on the live app:
 - **One wallet per position.** An order goes to the wallet that already trades that market, otherwise to a ready wallet
   that has never traded, otherwise a new one is funded; another position's wallet is never used. Keys come from your 24
   words on a hardened path of their own, so no two wallets share a key, a proxy, a refund address or a request.
-- **Standard amounts at random times.** Fundings use the canonical denominations of ZIP 318 (n × 10^k ZEC, n ∈ {1, 2, 5}),
-  start 20 s to 3 min after you ask, and never at a deposit or when the app opens. A keep-ready replacement waits a random
+- **Standard amounts at random times.** Fundings offer the canonical denominations of ZIP 318 (n × 10^k ZEC, n ∈ {1, 2, 5})
+  first; any other amount (typed in ZEC or dollars, or a share of your balance) is allowed, and the leak meter says it is
+  easier to match. Fundings start 20 s to 3 min after you ask, and never at a deposit or when the app opens. A keep-ready replacement waits a random
   delay (90 min on average, at most 12 h), so a new wallet never appears right after your trade. ZEC that arrived from a
   public address rests 2–6 hours first.
 - **Two hops, nothing third-party.** Every page and every worker may reach mitoshi.xyz only (CSP with per-page script

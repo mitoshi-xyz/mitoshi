@@ -223,14 +223,14 @@ describe("keys", () => {
 });
 
 describe("leak meter", () => {
-  it("passes a standard funding and refuses resting value", () => {
+  it("passes a standard funding, warns on a custom amount and refuses resting value", () => {
     assert.equal(
       checkFunding({ amountZat: 0.05 * ZEC, feeZat: 10_000, spendableZat: ZEC, restingZat: 0 }).level,
       "green",
     );
     assert.equal(
       checkFunding({ amountZat: 0.03 * ZEC, feeZat: 10_000, spendableZat: ZEC, restingZat: 0 }).level,
-      "red",
+      "amber",
     );
     const resting = checkFunding({
       amountZat: 0.05 * ZEC,

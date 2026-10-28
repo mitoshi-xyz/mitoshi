@@ -14,7 +14,7 @@ icon: ListChecks
 | --- | --- | --- |
 | A new key per wallet | `m/44'/coin'/6874'/venue'/index'`, every level hardened | No two wallets share an address or a key |
 | One wallet per position | the wallet that holds the market, else a never-used ready one, else a new funding | Positions never share a wallet |
-| Standard sizes only | 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 or 1 ZEC | The funding hop looks like many others |
+| Standard sizes first | 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 or 1 ZEC; any other amount is allowed and flagged amber | The funding hop looks like many others |
 | A random start | 20 s to 3 min after you ask | The hop is not timed to your tap |
 | Keep-ready refills | the first, when you switch it on: like one you asked for; every one after: exponential, 90 min on average, at most 12 h | A new wallet never shows up right after your trade |
 | Due while closed | a new random start when the app opens | The hop is not timed to the app opening |
