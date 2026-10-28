@@ -1,6 +1,6 @@
 MITOSHI — DEMO SCRIPT
 One story, in the order a new user meets it. [Brackets] = where you are in the app and what to type. Don't read them.
-About 317 spoken words: 1:42 at your pace, 2:06 if slow. Hackathon rule: two minutes.
+About 322 spoken words: 1:44 at your pace, 2:08 if slow. Hackathon rule: two minutes.
 
 1 · OPENING · 0:00
    [ZECATHON page → Mitoshi repo → mitoshi.xyz hero]
@@ -50,27 +50,27 @@ and it's private. Watch this. Filled.
 What the public sees: a fresh address and its own trades. Nothing links it to me.
 
 9 · THE PROOF · 1:15
-   [Judge → Check the funding on chain → Verify it on chain → https://mainnet.zcashexplorer.app/transactions/fd46b7ee43b4c5ce10844f0dff51902d7945c6ce66327b8752504b3e26ecfdf5]
+   [Portfolio → History → Long BTC 5× → Trade receipt → On Hyperliquid: the fill → On Zcash: the funding on the explorer]
 
-Let's confirm it. On the explorer: in, shielded. Out, a standard amount to NEAR. It matches. You don't
-have to trust me.
+Let's confirm it, both ways. Hyperliquid's explorer shows my trade. Zcash shows the funding: in, shielded, out to
+NEAR. It matches. You don't have to trust me.
 
-10 · POLYMARKET · 1:22
+10 · POLYMARKET · 1:24
    [Predict → an event → Yes → Fund a private wallet: Polymarket, 0.005 ZEC]
 
 Polymarket works the same way: pick an event, choose Yes or No, and that bet gets its own brand-new wallet.
 
-11 · PORTFOLIO · 1:29
+11 · PORTFOLIO · 1:30
    [Portfolio → Total balance → Your assets → Positions → Close]
 
 Portfolio: one live total, my trade moving with the price, and I close it here.
 
-12 · DOCS AND X · 1:33
+12 · DOCS AND X · 1:35
    [https://docs.mitoshi.xyz → Who sees what → X]
 
 It's all in the docs, docs dot mitoshi dot x y z, and on X, at HANDLE.
 
-13 · CLOSE · 1:39
+13 · CLOSE · 1:41
    [mitoshi.xyz hero]
 
 It's live right now. Mitoshi — a new wallet for every trade.
