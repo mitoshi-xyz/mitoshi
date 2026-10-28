@@ -7,7 +7,7 @@ separate problem field, so the problem opens the Description in the README's wor
 | --- | --- | --- |
 | Project name | 64 | Mitoshi 見通し |
 | Track | one | Private Markets |
-| Description | 2000 | below (1,995 characters) |
+| Description | 2000 | below (1,989 characters) |
 | Code repository | URL | https://github.com/mitoshi-xyz/mitoshi |
 | Working demo | URL | The judges' link (`https://judge.mitoshi.xyz/#k=…`): the owner holds it; the key never goes in this repository |
 | Demo video | URL | (the two-minute recording, once uploaded) |
@@ -16,11 +16,11 @@ separate problem field, so the problem opens the Description in the README's wor
 ## Description
 
 ```text
-Trade predictions, stocks and crypto from shielded ZEC. Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't.
+Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC. Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR Intents, with no history to follow.
 
 The problem: on these markets every trade is public, and tools rank wallets so others can copy them. Traders use a new wallet for every trade, but the money that funds it gives it away: a transfer from the main wallet is public, and an exchange records every withdrawal under your name. "I created another wallet to trade in peace and people found it."
 
-What it does: a real Zcash wallet (librustzcash in WASM, Ironwood-ready) runs in your browser. For each position on Polymarket, Polymarket Perps (US stocks, gold, oil), Hyperliquid or Solana, Mitoshi derives a fresh key and funds it from the shielded pool through NEAR Intents. The order goes to the venue's real book. Send home swaps the money back to a fresh shielded address. No account, no fee.
+What it does: a real Zcash wallet (librustzcash in WASM) runs in your browser. For each position on Polymarket, Polymarket Perps (US stocks, gold, oil), Hyperliquid or Solana, Mitoshi derives a fresh key and funds it from the shielded pool through NEAR Intents. The order goes to the venue's real book. Send home swaps the money back to a fresh shielded address. No account, no fee.
 
 Why it does not leak:
 - One wallet per position: no two share a key, proxy, refund address or request.

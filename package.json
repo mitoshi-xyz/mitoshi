@@ -1,7 +1,7 @@
 {
   "name": "mitoshi",
   "private": true,
-  "description": "Mitoshi 見通し: trade predictions, stocks and crypto from shielded ZEC. Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't.",
+  "description": "Mitoshi 見通し: trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC. Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR Intents, with no history to follow.",
   "license": "MIT",
   "packageManager": "pnpm@12.14.0",
   "engines": {

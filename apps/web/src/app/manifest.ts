@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Mitoshi 見通し",
     short_name: "Mitoshi",
-    description: "Trade predictions, stocks and crypto from shielded ZEC. A new wallet for every trade.",
+    description: "Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC. A new wallet for every trade.",
     start_url: "/markets",
     display: "standalone",
     background_color: "#050505",

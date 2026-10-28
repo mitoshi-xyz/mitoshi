@@ -24,8 +24,8 @@ export function Hero() {
             {SITE.motto}
           </span>
           <h1 className="font-heading font-semibold text-[2.4rem] leading-[1.04] tracking-[-0.03em] sm:text-[3.4rem]">
-            Trade predictions, stocks and crypto{" "}
-            <span className="text-[var(--mt-accent-text)]">from shielded ZEC.</span>
+            Trade Polymarket, Hyperliquid and Solana{" "}
+            <span className="text-[var(--mt-accent-text)]">privately, from shielded ZEC.</span>
           </h1>
           <p className="max-w-[46ch] text-[1.08rem] text-fd-muted-foreground leading-relaxed">{SITE.subline}</p>
           <div className="flex flex-wrap items-center gap-3">

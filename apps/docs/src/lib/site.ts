@@ -8,12 +8,12 @@ export const SITE = {
   url: "https://docs.mitoshi.xyz",
   app: "https://mitoshi.xyz",
   repo: "https://github.com/mitoshi-xyz/mitoshi",
-  headline: "Trade predictions, stocks and crypto from shielded ZEC.",
+  headline: "Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC.",
   subline:
-    "Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't.",
+    "Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR Intents, with no history to follow.",
   motto: "A new wallet for every trade.",
   description:
-    "Trade predictions, stocks and crypto from shielded ZEC: every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents.",
+    "Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC: every trade gets a brand-new wallet, funded through NEAR Intents, with no history to follow.",
 } as const;
 
 /** The docs' sections (the top tabs) and where each starts. */

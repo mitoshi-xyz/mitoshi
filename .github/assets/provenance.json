@@ -9,7 +9,7 @@
     ],
     "screensAre": "Unchanged captures of the production app at 375x812 (2x), 2026-10-23: event.jpg and terminal.jpg from mitoshi.xyz and its workers.dev address, order.jpg earlier the same day. Prices and odds are live public market data; no wallet was funded and no order was sent.",
     "marks": "apps/web/public/marks/venue-*.svg (see apps/web/scripts/venues/SOURCES.md).",
-    "words": "The landing hero (apps/web/src/features/landing/copy.ts), re-rendered on 2026-10-28 for the new subline; the phone screens are the 2026-10-23 captures."
+    "words": "The landing hero (apps/web/src/features/landing/copy.ts), re-rendered on 2026-10-28 for the new hero line; the phone screens are the 2026-10-23 captures."
   },
   "demo-cover.png": {
     "made": "2026-10-23",

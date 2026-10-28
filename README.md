@@ -1,11 +1,11 @@
 <p align="center">
   <a href="https://mitoshi.xyz">
-    <picture><img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. Trade predictions, stocks and crypto from shielded ZEC. Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The trade is public; who made it isn't. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." /></picture>
+    <picture><img src=".github/assets/banner.png" width="960" alt="Mitoshi 見通し. A new wallet for every trade. Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC. Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR Intents, with no history to follow. Three phone screens from the app: a Polymarket event, the NVIDIA perps terminal and a Long order sheet." /></picture>
   </a>
 </p>
 
 <h1 align="center">Mitoshi · 見通し</h1>
-<p align="center"><b>A new wallet for every trade.</b><br/>Trade predictions, stocks and crypto from shielded ZEC.</p>
+<p align="center"><b>A new wallet for every trade.</b><br/>Trade Polymarket, Hyperliquid and Solana privately, from shielded ZEC.</p>
 
 <p align="center">
   <a href="https://mitoshi.xyz"><b>Open Mitoshi</b></a>
@@ -23,17 +23,20 @@
   <a href="https://mitoshi.xyz/status"><b>Status</b></a>
 </p>
 
-Every trade on Polymarket, Hyperliquid or Solana gets a brand-new wallet, funded privately through NEAR Intents. The
-trade is public; who made it isn't. From one shielded ZEC balance you bet on prediction markets, trade US stocks,
+Predictions, stocks and crypto from one shielded balance: every trade gets a brand-new wallet, funded through NEAR
+Intents, with no history to follow. From one shielded ZEC balance you bet on prediction markets, trade US stocks,
 indices, gold and oil, go long or short on crypto perps, and buy Solana tokens, with one portfolio across all of them.
 The privacy is the engine: a real Zcash wallet runs in your browser, every funding is one standard amount sent at a
 random moment, every call about your wallets travels over Oblivious HTTP, and Send home swaps the money back to a fresh
-shielded address. The market sees the trade, not who made it.
+shielded address.
 
 Built for **[ZECATHON](https://thezecathon.com) · Private Markets** ([how Mitoshi meets the hackathon](#how-mitoshi-meets-the-hackathon)).
-**Judges:** the Working demo link in our submission opens a shared wallet with real money on Hyperliquid, at
-judge.mitoshi.xyz. Trade in 30 seconds.
 *Mitoshi* (見通し) means **outlook**: the view ahead.
+
+> **Judges: try it in 30 seconds.** The **Working demo** link in our submission opens judge.mitoshi.xyz with a shared
+> wallet that already holds real money on Hyperliquid, funded from shielded ZEC. Press **Trade BTC now** and go long or
+> short ($2.50 at 5× clears Hyperliquid's $10 minimum). Then the **Judge** button at the top walks you through what the
+> public sees and the funding on the Zcash explorer. No link to hand? [Look around](https://mitoshi.xyz/markets).
 
 ## The problem
 
@@ -79,8 +82,8 @@ sees one funding, one trade and no history.
 2. **Pick a market.** Say NVIDIA on Polymarket Perps. The ticket starts with the amount: **$25 at 5×** is a **$125.00**
    position, **0.58164 NVDA**, fee **$0.05**.
 3. **A wallet nobody has seen.** Mitoshi derives a new key for this position and pays one standard amount (0.005, 0.01,
-   0.02 … ZEC) from the shielded pool into NEAR Intents at a random moment. A confidential quote on 2026-10-23 turned
-   **0.01 ZEC into 11.86 USDC in about 465 s**.
+   0.02 … ZEC) from the shielded pool into NEAR Intents at a random moment. On 2026-10-27 a real **0.005 ZEC funding
+   arrived as 6.13 USDC on Hyperliquid, ready to trade 14 minutes later**.
 4. **Trade.** The order goes to the venue's real book, signed by that wallet's own key (on Polymarket Perps, by a
    7-day proxy that key authorises).
 5. **See what a copy trader sees.** "What the public sees" opens the wallet's public record: one funding from a NEAR
@@ -172,12 +175,13 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 | **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; a mainnet funding from the browser wallet to Hyperliquid; 40 unit tests | [Proof and evidence](#proof-and-evidence) |
 | **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
 | **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
+| **Working demo:** "Something the judges can open and use." | A shared wallet with real money on Hyperliquid, opened by the link in the submission at judge.mitoshi.xyz; or mitoshi.xyz with your own wallet | [judge.mitoshi.xyz](https://judge.mitoshi.xyz) |
 | "All code written during the build window. Libraries are fine; existing products are not." | The repository's history starts on 2026-10-22; libraries are listed above and in the lockfile | [Prior work](#prior-work) |
 | "Open source at submission." | MIT, public | [LICENSE](LICENSE) |
 
 ## Proof and evidence
 
-Dated; re-checked on 2026-10-23.
+Dated: the mainnet funding on 2026-10-27, the rest checked on 2026-10-23.
 
 | What | Evidence |
 | --- | --- |
@@ -201,7 +205,7 @@ testnet explorers follow an older testnet chain and do not show them.
 | **Predict** · Polymarket | Events with their odds history, every outcome, Yes or No at market or limit, the order book, redeem after resolution | [/predict](https://mitoshi.xyz/predict) | [Polymarket](https://docs.mitoshi.xyz/docs/venues/polymarket) |
 | **Perps** · Polymarket Perps and Hyperliquid | US stocks, indices, gold and oil, and crypto: live candles, long or short, leverage and TP/SL in their own sheets, close | [/trade](https://mitoshi.xyz/trade#pm/NVDA-USD) | [Perps](https://docs.mitoshi.xyz/docs/venues/polymarket-perps) · [Hyperliquid](https://docs.mitoshi.xyz/docs/venues/hyperliquid) |
 | **Tokens** · Solana through Jupiter | Trending tokens, a live chart, buy and sell | [/tokens](https://mitoshi.xyz/tokens) | [Solana](https://docs.mitoshi.xyz/docs/venues/solana) |
-| **Portfolio** | Every position across every wallet and venue, P&L, history, deposit and withdraw | [/portfolio](https://mitoshi.xyz/portfolio) | [Portfolio](https://docs.mitoshi.xyz/docs/guide/portfolio) |
+| **Portfolio** | One live total for everything you own, your assets token by token, open positions with live P&L, history, deposit and withdraw | [/portfolio](https://mitoshi.xyz/portfolio) | [Portfolio](https://docs.mitoshi.xyz/docs/guide/portfolio) |
 | **Wallets** | Each private wallet's timeline, "keep one ready", what the public sees, send home | [/wallets](https://mitoshi.xyz/wallets) | [Private wallets](https://docs.mitoshi.xyz/docs/guide/private-wallets) |
 | **Privacy and status** | Who sees what and the leak meter; the live state of every hop | [/privacy](https://mitoshi.xyz/privacy) · [/status](https://mitoshi.xyz/status) | [Privacy](https://docs.mitoshi.xyz/docs/privacy) · [Verify](https://docs.mitoshi.xyz/docs/privacy/verify) |
 | **Settings** | Recovery words and an encrypted backup file, a passphrase lock, Forget | [/settings](https://mitoshi.xyz/settings) | [Backup and recovery](https://docs.mitoshi.xyz/docs/guide/backup-and-recovery) |
