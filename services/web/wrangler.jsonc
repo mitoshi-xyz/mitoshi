@@ -23,8 +23,9 @@
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page",
-    // "/" so the judges' origin can answer its front page with the desk gate (every other host gets index.html).
-    "run_worker_first": ["/", "/relay/*", "/_next/static/*", "/docs", "/docs/*"]
+    // "/" so the judges' origin can answer its front page with the desk gate (every other host gets index.html), and
+    // "/j/*" for the judges' short link.
+    "run_worker_first": ["/", "/j/*", "/relay/*", "/_next/static/*", "/docs", "/docs/*"]
   },
   // The relay runs in Europe, so the address the gateway sees says nothing about where a user is.
   "placement": { "mode": "targeted", "region": "aws:eu-west-1" },

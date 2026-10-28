@@ -16,6 +16,8 @@ export const WWW_HOST = "www.mitoshi.xyz";
 /** The judges' desks: the same app on an origin of its own, whose front page is the desk gate. */
 export const JUDGE_HOST = "judge.mitoshi.xyz";
 export const JUDGE_HOME = "/judge";
+/** The judges' short link, for a QR code: /j/<code> forwards to their full link. Both are secrets on the host. */
+export const JUDGE_SHORT_PREFIX = "/j/";
 
 /** Build files are named by their content, so a found one never changes. */
 export const STATIC_PREFIX = "/_next/static/";

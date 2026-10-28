@@ -7,6 +7,7 @@ import {
   IMAGE_CACHE_SECONDS,
   JUDGE_HOME,
   JUDGE_HOST,
+  JUDGE_SHORT_PREFIX,
   MAX_RELAY_BODY_BYTES,
   PASS_BACK,
   RELAY_PREFIX,
@@ -25,10 +26,14 @@ interface Env {
   LIVE: DurableObjectNamespace;
   GATEWAY_URL: string;
   RELAY_TOKEN?: string;
+  /** The judges' short-link code and the full link it forwards to (with its key): set on the host, never in the repo. */
+  JUDGE_CODE?: string;
+  JUDGE_LINK?: string;
 }
 
 const HTTP_OK = 200;
 const HTTP_MOVED = 301;
+const HTTP_FOUND = 302;
 const HTTP_NO_CONTENT = 204;
 const HTTP_FORBIDDEN = 403;
 const HTTP_NOT_FOUND = 404;
@@ -124,6 +129,18 @@ export default {
         return new Response(null, { status: HTTP_NO_CONTENT, headers: h });
       }
       return relay(request, env, url.pathname.slice(RELAY_PREFIX.length), url.search);
+    }
+    // The judges' short link: only the right code forwards; any other is an ordinary missing page.
+    if (
+      url.pathname.startsWith(JUDGE_SHORT_PREFIX) &&
+      env.JUDGE_CODE &&
+      env.JUDGE_LINK &&
+      url.pathname.slice(JUDGE_SHORT_PREFIX.length) === env.JUDGE_CODE
+    ) {
+      return new Response(null, {
+        status: HTTP_FOUND,
+        headers: { location: env.JUDGE_LINK, "cache-control": "no-store", "referrer-policy": "no-referrer" },
+      });
     }
     if (url.pathname === DOCS_PREFIX || url.pathname.startsWith(`${DOCS_PREFIX}/`)) {
       const page = url.pathname.slice(DOCS_PREFIX.length).replace(/\/$/, "");
