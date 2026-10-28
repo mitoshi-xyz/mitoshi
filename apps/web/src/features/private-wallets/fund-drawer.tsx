@@ -7,10 +7,12 @@ import { AlertTriangle, ArrowRight, ChevronDown, Clock, Eye } from "lucide-react
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, cx, Sheet, Skeleton, TxSteps } from "@/kit";
+import { useJudgeDesk } from "../judge/judge";
 import { VenueMark } from "../marks/mark";
 import { LeakMeter } from "../privacy/leak-meter";
 import { MASK, useHideAmounts } from "../shell/prefs";
 import { useWallet } from "../wallet/wallet-store";
+import { openDeposit } from "./drawers";
 import { balances, canFund, FUNDING_FEE_RESERVE_ZAT, prepareWallet, previewFunding } from "./jobs";
 import { useRegistry } from "./registry-store";
 import { useNow } from "./use-now";
@@ -24,6 +26,8 @@ const MS_PER_SECOND = 1000;
 const BPS_PER_PERCENT = 100;
 const USD_DIGITS = 2;
 const OUT_DIGITS = 4;
+/** Deposit asks are rounded up to this (0.0001 ZEC). */
+const ASK_STEP_ZAT = 10_000;
 
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
 
@@ -127,12 +131,29 @@ export function FundDrawer({
   const settling = key.venue !== venue || key.size !== size;
 
   const ready = affordable.has(size);
-  const cta = made ? null : !allowed.ok ? null : (
+  // The judges' shared wallet has its money on Hyperliquid and no ZEC to fund another: it points them there instead.
+  const desk = useJudgeDesk() !== null;
+  // What is missing, rounded up to 0.0001 ZEC so it is easy to type into a wallet.
+  const need = Math.ceil((size + FUNDING_FEE_RESERVE_ZAT - spendable) / ASK_STEP_ZAT) * ASK_STEP_ZAT;
+  const big = "h-[52px] w-full text-[16px]";
+  const cta = made ? null : !allowed.ok ? null : !ready && desk ? (
+    <Link
+      href="/trade#BTC"
+      onClick={onClose}
+      className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-md bg-accent font-semibold text-[16px] text-accent-ink hover:brightness-110"
+    >
+      Trade BTC on Hyperliquid <ArrowRight size={18} />
+    </Link>
+  ) : !ready ? (
+    <Button tone="primary" size="lg" className={big} onClick={() => openDeposit(need)}>
+      Deposit {zec(need)} ZEC
+    </Button>
+  ) : (
     <Button
       tone="primary"
       size="lg"
-      className="h-[52px] w-full text-[16px]"
-      disabled={!p || settling || busy || p.leak.level === "red" || !ready}
+      className={big}
+      disabled={!p || settling || busy || p.leak.level === "red"}
       onClick={() => {
         setBusy(true);
         setError(null);
@@ -144,7 +165,7 @@ export function FundDrawer({
           .finally(() => setBusy(false));
       }}
     >
-      {ready ? "Fund privately" : `Deposit ${zec(size + FUNDING_FEE_RESERVE_ZAT)} ZEC first`}
+      Fund privately
     </Button>
   );
 
@@ -159,6 +180,11 @@ export function FundDrawer({
         </div>
       ) : (
         <>
+          {desk && !ready ? (
+            <p className="rounded-xl bg-accent-wash px-4 py-3 text-[14px]">
+              The judges' wallet is funded on Hyperliquid. A new wallet here needs ZEC of its own.
+            </p>
+          ) : null}
           <div className="grid grid-cols-3 gap-1 rounded-xl bg-surface-2 p-1">
             {VENUE_ORDER.map((id) => (
               <button

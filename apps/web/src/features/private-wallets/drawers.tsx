@@ -18,10 +18,12 @@ interface DrawerState {
   fund: Venue | null;
   publicId: string | null;
   deposit: boolean;
+  /** What a deposit should bring in, in zat, when a flow asks for an amount (a funding that needs more). */
+  depositZat: number | null;
   withdraw: boolean;
 }
 
-const CLOSED: DrawerState = { fund: null, publicId: null, deposit: false, withdraw: false };
+const CLOSED: DrawerState = { fund: null, publicId: null, deposit: false, depositZat: null, withdraw: false };
 let state: DrawerState = CLOSED;
 const listeners = new Set<() => void>();
 
@@ -39,8 +41,9 @@ export function openPublicView(id: string) {
   markStep("public");
 }
 
-export function openDeposit() {
-  set({ ...CLOSED, deposit: true });
+/** Opens Deposit; with an amount, it asks for exactly that. (Used as a click handler too, so only a number counts.) */
+export function openDeposit(zat?: unknown) {
+  set({ ...CLOSED, deposit: true, depositZat: typeof zat === "number" && zat > 0 ? zat : null });
 }
 
 export function openWithdraw() {
@@ -91,7 +94,11 @@ export function WalletDrawers() {
         wallet={registry.wallets.find((w) => w.id === s.publicId) ?? null}
         onClose={() => set({ ...state, publicId: null })}
       />
-      <DepositDrawer open={s.deposit} onClose={() => set({ ...state, deposit: false })} />
+      <DepositDrawer
+        open={s.deposit}
+        amountZat={s.depositZat}
+        onClose={() => set({ ...state, deposit: false, depositZat: null })}
+      />
       <WithdrawDrawer open={s.withdraw} onClose={() => set({ ...state, withdraw: false })} />
     </>
   );

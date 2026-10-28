@@ -18,6 +18,8 @@ const BLOCK_SECONDS = SPACING[ZEC_NETWORK];
 const SPENDABLE_MINUTES = Math.round((RECEIVED_CONFIRMATIONS * BLOCK_SECONDS) / SECONDS_PER_MINUTE);
 
 const zec = (zat: number) => (zat / ZAT_PER_ZEC).toFixed(ZEC_DIGITS).replace(/\.?0+$/, "");
+/** What moving an exchange deposit into the shielded pool costs (ZIP 317: one transparent input, two actions). */
+const SHIELD_FEE_ZAT = 15_000;
 
 type From = "wallet" | "exchange";
 const FROM = [
@@ -25,13 +27,36 @@ const FROM = [
   { value: "exchange", label: "Exchange" },
 ] as const;
 
-/** Deposit, from a shielded wallet (a shielded address) or from an exchange (a transparent one Mitoshi shields). */
-export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+/**
+ * Deposit, from a shielded wallet (a shielded address) or from an exchange (a transparent one Mitoshi shields). Opened
+ * with an amount (a funding that needs more), it says how much to send, and the shielded QR asks for exactly that.
+ */
+export function DepositDrawer({
+  open,
+  onClose,
+  amountZat = null,
+}: {
+  open: boolean;
+  onClose: () => void;
+  amountZat?: number | null;
+}) {
   const [from, setFrom] = useState<From>("wallet");
+  // An exchange deposit pays the move into the shielded pool, so it has to bring that much more.
+  const send = amountZat === null ? null : from === "wallet" ? amountZat : amountZat + SHIELD_FEE_ZAT;
   return (
     <Drawer open={open} onClose={onClose} title={`Deposit ${UNIT}`}>
       <Segmented options={FROM} value={from} onChange={setFrom} className="self-center" />
-      {from === "wallet" ? <ShieldedDeposit open={open} /> : <ExchangeDeposit open={open} unit={UNIT} />}
+      {send === null ? null : (
+        <p className="num rounded-lg bg-accent-wash px-4 py-3 text-center font-semibold text-[15px]">
+          Send {from === "exchange" ? "at least " : ""}
+          {zec(send)} {UNIT}
+        </p>
+      )}
+      {from === "wallet" ? (
+        <ShieldedDeposit open={open} amount={amountZat === null ? undefined : zec(amountZat)} />
+      ) : (
+        <ExchangeDeposit open={open} unit={UNIT} />
+      )}
     </Drawer>
   );
 }
@@ -40,7 +65,7 @@ export function DepositDrawer({ open, onClose }: { open: boolean; onClose: () =>
  * From a shielded wallet: a never-used shielded address as a dotted QR, and the deposit followed live: seen in a
  * block, counted to the 10 confirmations the wallet needs, then where it came from.
  */
-function ShieldedDeposit({ open }: { open: boolean }) {
+function ShieldedDeposit({ open, amount }: { open: boolean; amount?: string | undefined }) {
   const w = useWallet();
   const [address, setAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +104,7 @@ function ShieldedDeposit({ open }: { open: boolean }) {
         freshLabel="Another fresh address"
         openInWallet
         loading="Making a fresh address"
+        {...(amount ? { amount } : {})}
       />
 
       <div className="flex flex-col gap-3 rounded-lg bg-surface-2/60 p-4">
