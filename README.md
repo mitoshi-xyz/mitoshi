@@ -186,7 +186,7 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 | --- | --- | --- |
 | **Privacy:** "Does it actually preserve privacy, or does it only look like it does? Leaks are disqualifying, not deductions." | Shielded balance in the browser, one fresh wallet per position, standard amounts at random times, confidential NEAR swaps, every call over Oblivious HTTP, no server-side state. Residuals are written down, not hidden | [Who sees what](#who-sees-what) · [threat model](https://docs.mitoshi.xyz/docs/privacy) · [gateway allowlist](services/gateway/src/constants.ts) |
 | **Usefulness:** "Would someone use this on Monday." | Traders on public venues get copied and front-run through their wallet, in their own words; Mitoshi trades the venues they already use (predictions, US stocks, gold, crypto perps, tokens) with no account and no sign-up | [The problem](#the-problem) · [mitoshi.xyz](https://mitoshi.xyz) |
-| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; a mainnet funding from the browser wallet to Hyperliquid; 40 unit tests | [Proof and evidence](#proof-and-evidence) |
+| **Execution:** "Does it run. Working beats ambitious." | Live on mainnet with live venue data; a full mainnet round trip on Hyperliquid (fund, trade, close, home to shielded ZEC); 42 unit tests | [Proof and evidence](#proof-and-evidence) |
 | **Originality:** "Built for this hackathon, not repackaged." | Written during the build window; a full Zcash wallet on librustzcash compiled to WASI for the browser, and one shielded balance behind four public venues | [Commit history](https://github.com/mitoshi-xyz/mitoshi/commits/main) |
 | **Private Markets:** "anything where the price should be public and the participants should not." | The venues' prices and books stay public; the trader behind each position does not | [One trade, start to finish](#one-trade-start-to-finish) |
 | **Working demo:** "Something the judges can open and use." | A shared wallet with real money on Hyperliquid, opened by the link in the submission at judge.mitoshi.xyz; or mitoshi.xyz with your own wallet | [judge.mitoshi.xyz](https://judge.mitoshi.xyz) |
@@ -195,18 +195,19 @@ ZECATHON's brief: *"Thirty days to build something on Zcash that does not leak."
 
 ## Proof and evidence
 
-Dated: the mainnet funding on 2026-10-27, the rest checked on 2026-10-23.
+Dated: the mainnet round trip on 2026-10-28, the mainnet funding on 2026-10-27, the rest checked on 2026-10-23.
 
 | What | Evidence |
 | --- | --- |
+| A mainnet round trip on Hyperliquid (2026-10-28) | A fresh wallet funded from shielded ZEC, Hyperliquid user `0xd3e31bdd4ddcda81600e6e52624591e4fd789390`, went long 0.00019 BTC at 81,637: `0x97d69e42c5226f5f995004478cdc490202cd002860258e313b9f49958426494a`, block 1,200,413,769. It closed, and Send home paid 0.00366141 ZEC into the shielded pool: `84dcc1af2b7d8ad3428e9c9e4a4021f259be63169132703755c947f08291bdb7`, block 3,533,665, 14:32:12 UTC. The explorer does not decode that v6 transaction's shielded part; its sums show it (0.02337471 ZEC in from NEAR's public addresses, 0.0195633 back as change, 0.00015 fee, 0.00366141 shielded). Both explorers are on screen in the [demo video](https://youtu.be/Ll-X6zQsO6Q) |
 | A mainnet funding, end to end (2026-10-27) | The browser wallet proved an Ironwood spend of 0.005 ZEC (fee 0.00015) into NEAR Intents 1Click: `fd46b7ee43b4c5ce10844f0dff51902d7945c6ce66327b8752504b3e26ecfdf5`, block 3,532,740. The fresh wallet held 6.13 USDC on Hyperliquid, ready to trade, 14 min later; NEAR's swap cost $0.35 |
 | The browser wallet builds, proves and broadcasts an Ironwood spend | NU7 testnet `ceb45a85df00f55d8a7b6c4318c65aa22c33c702a4bff476c2feef0dee7d4e5d`, height 4,529,708, 9,166 bytes; proving-key warm-up 11.8 s, proof about 17.5 s single-threaded |
 | Sends from the app, direct and over OHTTP | `c1569f9f34a75c6896b272f7804ed501285acbfb472ce1dcf53fc869fa6938e2` (height 4,529,789) and `8a14a08bc1af88c6b8f644fdc22d11731e431a8b2257fccac4a3768430981b86` (height 4,529,846) |
-| No third-party request from a page | On mitoshi.xyz the resource list holds one host, mitoshi.xyz |
+| No third-party request from a page | On mitoshi.xyz the resource list holds one host, mitoshi.xyz; /demo loads YouTube's player only after you press play |
 | Confidential swaps on NEAR | A dry 1Click quote over OHTTP accepted in confidential mode: 0.01 ZEC → 11.86 USDC on HyperCore, about 465 s |
 | Polymarket over OHTTP | Market lookup, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and the gateway's builder signer returning signed relayer headers |
 | Gateway egress | Ireland (Vercel dub1) for every visitor, so no venue learns a user's country |
-| Unit tests | 40 passing: engine 25 (denominations, rest rules, scheduling, one wallet per position, registry, keys, leak meter, ZIP 318 migration), rails 8 (1Click quotes, the signature check, the mode and fees read back), venues 7 (4 Polymarket Perps signing, 3 Solana transactions) |
+| Unit tests | 42 passing: engine 25 (denominations, rest rules, scheduling, one wallet per position, registry, keys, leak meter, ZIP 318 migration), rails 8 (1Click quotes, the signature check, the mode and fees read back), venues 9 (4 Polymarket Perps signing, 2 Perps candles, 3 Solana transactions) |
 
 The testnet transactions were read back with `GetTransaction` from the light server the wallet syncs from; public
 testnet explorers follow an older testnet chain and do not show them.
@@ -269,13 +270,12 @@ Checks: `pnpm lint && pnpm typecheck && pnpm test`. Rebuild the wallet WASM with
 
 ## Prior work
 
-Mitoshi was written for ZECATHON; this repository's history starts on 2026-10-22. It shares only its name and brand
-with an earlier, unrelated project, and uses none of its code.
+Mitoshi was written for ZECATHON; this repository's history starts on 2026-10-22.
 
 ## Honest limits
 
-- **A full mainnet round trip has not run yet.** Funding a fresh wallet has (see [Proof](#proof-and-evidence)); a
-  mainnet trade, close and trip home have not.
+- **One venue's round trip has run on mainnet so far.** Hyperliquid's did on 2026-10-28 (see
+  [Proof](#proof-and-evidence)); Polymarket's and Solana's have not run end to end on mainnet yet.
 - **The venue sees the trade.** Each wallet's orders are public on its venue; Mitoshi hides who placed them, not what was
   traded.
 - **Polymarket's trip home is not a confidential swap.** Its bridge pays out an inexact amount, which NEAR's

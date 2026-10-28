@@ -75,11 +75,12 @@ docs.
 | Gateway egress | Ireland (Vercel dub1), for every visitor |
 | Polymarket over OHTTP | Market lookups, pUSD reads, a bridge quote (60 USDC → 59.987 pUSD), and the builder signer returning signed relayer headers |
 | Confidential swaps on NEAR | A dry 1Click quote over OHTTP accepted in confidential mode: 0.01 ZEC → 11.86 USDC on HyperCore, about 465 s |
-| Unit tests | 40 passing: engine 25, rails 8, venues 7 (4 Polymarket Perps signing, 3 Solana transactions; counted from the code) |
+| A mainnet round trip on Hyperliquid (2026-10-28) | Hyperliquid user `0xd3e31bdd4ddcda81600e6e52624591e4fd789390` went long 0.00019 BTC at 81,637: `0x97d69e42c5226f5f995004478cdc490202cd002860258e313b9f49958426494a`, block 1,200,413,769. Send home paid 0.00366141 ZEC into the shielded pool: `84dcc1af2b7d8ad3428e9c9e4a4021f259be63169132703755c947f08291bdb7`, block 3,533,665 (the explorer does not decode a v6 transaction's shielded part; its sums show it: 0.02337471 ZEC in, 0.0195633 change, 0.00015 fee) |
+| Unit tests | 42 passing: engine 25, rails 8, venues 9 (4 Polymarket Perps signing, 2 Perps candles, 3 Solana transactions; counted from the code) |
 
 <Callout type="warn" title="Not yet run on mainnet">
-The full round trip on each venue (fund a fresh wallet, trade, close, come home) has not run on mainnet yet. Until it
-has, no live trade is claimed here.
+Hyperliquid's round trip has run on mainnet (above). Polymarket's and Solana's (fund a fresh wallet, trade, close,
+come home) have not run end to end on mainnet yet, so no live trade is claimed on those venues.
 </Callout>
 
 The tests:
