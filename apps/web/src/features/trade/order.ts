@@ -12,6 +12,8 @@ export interface Order {
   /** Margin in USD, as typed (a string, never a float until it is read). */
   margin: string;
   leverage: number;
+  /** Cross margin (the whole wallet backs it) or isolated (only this margin is at risk, the default). */
+  cross: boolean;
   kind: "market" | "limit";
   limit: string;
   /** Exit prices, as typed; empty means none. */
@@ -24,6 +26,7 @@ export function useOrder(market: PerpMarket | undefined) {
     side: "long",
     margin: "",
     leverage: DEFAULT_LEVERAGE,
+    cross: false,
     kind: "market",
     limit: "",
     tp: "",
@@ -100,7 +103,7 @@ export function quoteOrder(o: Order, market: PerpMarket, mark: number, equity = 
             maxLeverage: market.maxLeverage,
             isLong,
             equity,
-            isolated: market.onlyIsolated,
+            isolated: market.onlyIsolated || !o.cross,
           })
         : null,
     fee: notional * market.takerFee,

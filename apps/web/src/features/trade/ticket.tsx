@@ -82,7 +82,10 @@ export function Ticket({
 
   // What backs a cross-margin position: the account's equity, or before the first trade the funding still in spot.
   const equity = Math.max(account?.equity ?? 0, account?.free ?? 0);
-  const q = quoteOrder(order, market, mark, equity);
+  // A venue will not switch margin mode under an open position, so a held market keeps the position's own mode.
+  const held = account?.positions.find((p) => p.marketId === market.id);
+  const cross = market.onlyIsolated ? false : held ? held.cross : order.cross;
+  const q = quoteOrder({ ...order, cross }, market, mark, equity);
   const free = account?.free ?? 0;
   const busy = phase === "signing" || phase === "sent";
   const problem = !wallet
@@ -109,6 +112,7 @@ export function Ticket({
           isBuy: q.isLong,
           size: q.size,
           leverage: order.leverage,
+          cross,
           ...(order.kind === "limit" ? { limitPx: Number(order.limit) } : {}),
           ...(q.tp ? { takeProfitPx: q.tp } : {}),
           ...(q.sl ? { stopLossPx: q.sl } : {}),
@@ -227,7 +231,7 @@ export function Ticket({
       <div className="flex gap-2">
         <Chip
           icon={<Gauge size={16} />}
-          label="Leverage"
+          label={cross ? "Cross" : "Isolated"}
           value={`${order.leverage}×`}
           onClick={() => setSheet("leverage")}
         />
@@ -288,7 +292,9 @@ export function Ticket({
         isLong={q.isLong}
         margin={q.margin}
         equity={equity}
-        onChange={(leverage) => setOrder({ leverage })}
+        cross={cross}
+        locked={market.onlyIsolated || Boolean(held)}
+        onChange={(leverage, c) => setOrder({ leverage, cross: c })}
       />
       <ExitsSheet
         open={sheet === "exits"}

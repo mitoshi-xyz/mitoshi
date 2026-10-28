@@ -151,7 +151,7 @@ export const hlDriver: PerpDriver = {
     step("Moving the funding into the perp account");
     await account.readyForPerps();
     step(`Setting ${args.leverage}× leverage`);
-    await account.setLeverage(perp, args.leverage, true);
+    await account.setLeverage(perp, args.leverage, args.cross);
     step("Signing with this wallet's own key");
     return account.order(
       {

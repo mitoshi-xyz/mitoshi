@@ -259,7 +259,7 @@ export const pmDriver: PerpDriver = {
     const available = registered ? (await perps.state()).available : 0;
     if (available < margin) await moveIn(w, step);
     step(`Setting ${args.leverage}× leverage`);
-    await perps.setLeverage(instrument, args.leverage, true);
+    await perps.setLeverage(instrument, args.leverage, args.cross);
     step("Signing with this wallet's own key");
     return perps.order(
       {

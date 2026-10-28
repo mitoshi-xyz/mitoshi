@@ -89,6 +89,8 @@ export interface PerpOrderArgs {
   /** Size in the market's units (coins or contracts). */
   size: number;
   leverage: number;
+  /** Cross margin (the whole account backs the position) or isolated (only this order's margin is at risk). */
+  cross: boolean;
   limitPx?: number;
   takeProfitPx?: number;
   stopLossPx?: number;
