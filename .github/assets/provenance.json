@@ -1,7 +1,7 @@
 {
   "banner.png": {
     "made": "2026-10-28",
-    "how": "Composed in HTML (source/banner.html) and rendered with headless Chrome at a 1920x900 viewport.",
+    "how": "Composed in HTML (source/banner.html) and rendered with headless Chrome: a 1920x987 window (its page area is 87 px shorter), cropped to 1920x900 from the top.",
     "screens": [
       "apps/web/public/captures/event.jpg",
       "apps/web/public/captures/terminal.jpg",
@@ -33,7 +33,12 @@
   },
   "apps/web/public/og.png": {
     "made": "2026-10-28",
-    "how": "source/banner.html#og rendered with headless Chrome at 1920x1008, then scaled to 1200x630.",
+    "how": "source/banner.html#og rendered the same way at 1920x1008, then scaled to 1200x630.",
     "note": "The link preview; the same words and screens as banner.png."
+  },
+  "logo-512.png": {
+    "made": "2026-10-28",
+    "how": "apps/web/src/app/icon.svg rendered at 512x512 the same way.",
+    "note": "The organisation's avatar on GitHub."
   }
 }
